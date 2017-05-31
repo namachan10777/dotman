@@ -1,0 +1,10 @@
+[Unit]
+Description = disable /sys/firmware/acpi/interrupts/gpe13
+
+[Service]
+ExecStart = /usr/local/bin/disable_gpe13.sh
+Restart = always
+Type = simple
+
+[Install]
+WantedBy = multi-user.target
