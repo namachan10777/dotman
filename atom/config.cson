@@ -1,0 +1,68 @@
+"*":
+  "atom-material-ui":
+    colors:
+      abaseColor: "#ffa726"
+      accentColor: "#9f6918"
+      predefinedColor: "Orange"
+    fonts: {}
+    tabs:
+      compactTabs: true
+    ui: {}
+  build:
+    buildOnSave: true
+    saveOnBuild: true
+  core:
+    ignoredNames: [
+      ".git"
+      ".hg"
+      ".svn"
+      ".DS_Store"
+      "._*"
+      "Thumbs.db"
+      "desktop.ini"
+      "*.cmx"
+      "*.cma"
+      "*.cmo"
+      "*.cmt"
+      "*.cmi"
+      "*.cmti"
+      "*.o"
+      "*.omc"
+      "*.automaton"
+      "*.omakedb"
+      "*.lock"
+    ]
+    telemetryConsent: "no"
+    themes: [
+      "atom-material-ui"
+      "base16-tomorrow-dark-theme"
+    ]
+  editor:
+    atomicSoftTabs: false
+    fontFamily: "Fira Code"
+    fontSize: 12
+    showInvisibles: true
+    softTabs: false
+    tabLength: 4
+    tabType: "hard"
+  "exception-reporting":
+    userId: "d09137fe-0244-4bcc-ba61-50030667b217"
+  "tree-view":
+    hideIgnoredNames: true
+  welcome:
+    showOnStartup: false
+".beamer.latex.tex.text":
+  editor:
+    tabLength: 4
+".bibtex.text":
+  editor:
+    tabLength: 4
+".latex.log.text":
+  editor:
+    tabLength: 4
+".latex.memoir.tex.text":
+  editor:
+    tabLength: 4
+".latex.tex.text":
+  editor:
+    tabLength: 4
