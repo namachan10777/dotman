@@ -1,0 +1,10 @@
+XDG_CONFIG_HOME=$HOME/.config
+XDG_CACHE_HOME=$HOME/.cache
+
+export XDG_CONFIG_HOME
+OCAMLPARAM="_,bin-annot=1"
+OPAMKEEPBUILDDIR=1
+export OCAMLPARAM
+export OPAMKEEPBUILDDIR
+
+eval `opam config env`
