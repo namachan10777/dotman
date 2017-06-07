@@ -1,5 +1,5 @@
 TMP_LINK=$HOME/tmp
-TMP_SRC=/tmp/.$HOME/tmpdir
+TMP_SRC=/tmp/.$USERNAME/tmpdir
 
 if [ ! -e $TMP_LINK ]
 then
