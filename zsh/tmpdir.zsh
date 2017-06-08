@@ -1,8 +1,9 @@
 TMP_LINK=$HOME/tmp
 TMP_SRC=/tmp/.$USERNAME/tmpdir
 
+mkdir -p $TMP_SRC
+
 if [ ! -e $TMP_LINK ]
 then
-	mkdir -p $TMP_SRC
 	ln -s $TMP_SRC $TMP_LINK
 fi
