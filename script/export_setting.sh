@@ -1,14 +1,29 @@
 #!/usr/bin/sh
 
-XDG_CONFIG_HOME=$HOME/.config
+LOCAL_REPO=$(cd $(dirname $0)/..;pwd)
 
-LOCAL_REPO=$HOME/Dropbox/Project/original/scripts
+source $LOCAL_REPO/zsh/var.zsh
 
-mkdir -p $HOME/.zsh
-cp $LOCAL_REPO/zsh/* $HOME/.zsh
+if [ ! -e $ZSH_CONFIG_HOME ];then
+	ln -s $LOCAL_REPO/zsh $ZSH_CONFIG_HOME
+fi
 
-mkdir -p $XDG_CONFIG_HOME/nvim
-cp $LOCAL_REPO/neovim/* $XDG_CONFIG_HOME/nvim
-cp $LOCAL_REPO/latex/.latexmkrc $HOME
-sudo cp $LOCAL_REPO/script/*.sh /usr/local/bin
-sudo cp $LOCAL_REPO/service/* /etc/systemd/system
+if [ ! -e $XDG_CONFIG_HOME/nvim ]; then
+	ln -s $LOCAL_REPO/neovim $XDG_CONFIG_HOME/nvim
+fi
+
+if [ ! -e $HOME/.latexmkrc ]; then
+	ln -s $LOCAL_REPO/latex/.latexmkrc $HOME/.latexmkrc
+fi
+	
+for f in $LOCAL_REPO/script/*.sh; do
+	if [ ! -e /usr/local/bin/$(basename $f) ]; then
+		sudo ln -s $f /usr/local/bin/$(basename $f)
+	fi
+done
+
+for f in $LOCAL_REPO/service/*.service; do
+	if [ ! -e /etc/systemd/system/$(basename $f) ]; then
+		sudo ln -s $f  /etc/systemd/system/$(basename $f)
+	fi
+done
