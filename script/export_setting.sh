@@ -23,7 +23,5 @@ for f in $LOCAL_REPO/script/*.sh; do
 done
 
 for f in $LOCAL_REPO/service/*.service; do
-	if [ ! -e /etc/systemd/system/$(basename $f) ]; then
-		sudo ln -s $f  /etc/systemd/system/$(basename $f)
-	fi
+	sudo cp $f /etc/systemd/system/$(basename $f)
 done
