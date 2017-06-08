@@ -1,6 +1,6 @@
 echo $ZSH_CONFIG_HOME
 
-if [ ! -e $ZSH_CONFIG_HOME/foreign/opam.sh ]; then
+if [ ! -e $ZSH_FOREIGN_PACKAGE_HOME/opam_completion_zsh.sh ]; then
 	source $ZSH_CONFIG_HOME/fetch_script/opam.zsh
 fi
 
