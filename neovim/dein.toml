@@ -4,7 +4,7 @@ repo = 'cespare/vim-toml'
 [[plugins]]
 repo = 'Shougo/deoplete.nvim'
 	on_event = 'InsertCharPre'
-	hook_source = '''
+	hook_add = '''
 		let g:deoplete#enable_at_startup = 1
 		let g:deoplete#auto_complete_delay = 0
 		let g:deoplete#auto_complete_start_length = 1
