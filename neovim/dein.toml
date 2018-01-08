@@ -39,3 +39,6 @@ repo = 'dag/vim-fish'
 	hook_add = '''
 		compiler fish
 	'''
+
+[[plugins]]
+repo = 'itchyny/lightline.vim'
