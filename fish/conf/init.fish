@@ -1,6 +1,10 @@
 set -gx LANG en_US.UTF-8
 set -gx EDITOR vim
 
+function v
+	nvim $argv
+end
+
 switch $TERM
 	case linux
 	case '*'
