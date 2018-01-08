@@ -33,3 +33,9 @@ repo = 't9md/vim-quickhl'
 		nmap <Space>M <Plug>(quickhl-manual-reset)
 		xmap <Space>M <Plug>(quickhl-manual-reset)
 	'''
+
+[[plugins]]
+repo = 'dag/vim-fish'
+	hook_add = '''
+		compiler fish
+	'''
