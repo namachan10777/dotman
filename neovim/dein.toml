@@ -24,3 +24,12 @@ repo = 'Shougo/deoplete.nvim'
 		endfunction
 	'''
 	on_i = 1
+
+[[plugins]]
+repo = 't9md/vim-quickhl'
+	hook_add = '''
+		nmap <Space>m <Plug>(quickhl-manual-this)
+		xmap <Space>m <Plug>(quickhl-manual-this)
+		nmap <Space>M <Plug>(quickhl-manual-reset)
+		xmap <Space>M <Plug>(quickhl-manual-reset)
+	'''
