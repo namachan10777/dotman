@@ -1,6 +1,8 @@
 set -gx LANG en_US.UTF-8
 set -gx EDITOR vim
 
+eval (opam config env)
+
 function v
 	nvim $argv
 end
