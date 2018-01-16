@@ -42,3 +42,6 @@ repo = 'dag/vim-fish'
 
 [[plugins]]
 repo = 'itchyny/lightline.vim'
+
+[[plugins]]
+repo = 'lervag/vimtex'
