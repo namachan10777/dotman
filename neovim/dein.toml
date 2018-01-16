@@ -48,3 +48,15 @@ repo = 'lervag/vimtex'
 
 [[plugins]]
 repo = 'vim-scripts/rdark'
+
+[[plugins]]
+repo = 'Shougo/neoyank.vim'
+
+[[plugins]]
+repo = 'Shougo/unite.vim'
+	hook_add = '''
+		let g:unite_source_history_yank_enable=1
+		nnoremap <silent> ,uy :<C-u>Unite history/yank<CR>
+		nnoremap <silent> ,uf :<C-u>Unite file<CR>
+		nnoremap <silent> ,un :<C-u>Unite file/new<CR>
+	'''
