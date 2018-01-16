@@ -60,3 +60,10 @@ repo = 'Shougo/unite.vim'
 		nnoremap <silent> ,uf :<C-u>Unite file<CR>
 		nnoremap <silent> ,un :<C-u>Unite file/new<CR>
 	'''
+
+[[plugins]]
+repo = 'scrooloose/nerdtree'
+	hook_add = '''
+		nnoremap <silent> ,ne :NERDTreeToggle<CR>
+		nnoremap <silent> ,n :NERDTreeCWD<CR>
+	'''
