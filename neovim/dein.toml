@@ -45,3 +45,6 @@ repo = 'itchyny/lightline.vim'
 
 [[plugins]]
 repo = 'lervag/vimtex'
+
+[[plugins]]
+repo = 'vim-scripts/rdark'
