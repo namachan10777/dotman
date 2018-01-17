@@ -3,6 +3,8 @@ set -gx EDITOR vim
 set -gx OCAMLPARAM "_, bin-annot=1"
 set -gx OPAMKEEPBUILDDIR 1
 
+set -gx XDG_CONFIG_HOME ~/.config
+
 eval (opam config env)
 
 function v
