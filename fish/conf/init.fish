@@ -1,6 +1,6 @@
 set -gx LANG en_US.UTF-8
 set -gx EDITOR vim
-set -gx OCAMLPARAM "_, bin-annot=1"
+set -gx OCAMLPARAM "_,bin-annot=1"
 set -gx OPAMKEEPBUILDDIR 1
 
 set -gx XDG_CONFIG_HOME ~/.config
