@@ -62,3 +62,6 @@ repo = 'scrooloose/nerdtree'
 		nnoremap <silent> ,ne :NERDTreeToggle<CR>
 		nnoremap <silent> ,n :NERDTreeCWD<CR>
 	'''
+
+[[plugins]]
+repo = 'KabbAmine/yowish.vim'
