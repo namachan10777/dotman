@@ -11,6 +11,18 @@ function v
 	nvim $argv
 end
 
+function c
+	cd $argv
+end
+
+function l
+	ls $argv
+end
+
+function m
+	mv $argv
+end
+
 switch $TERM
 	case linux
 	case '*'
