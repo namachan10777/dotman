@@ -1,0 +1,8 @@
+# main view
+set main-view = id date author:email-user commit-title:graph=yes,refs=yes
+# blame view
+set blame-view = date:default author:email-user id:yes,color line-number:yes,interval=1 text
+
+# keybind
+bind main R !git rebase -i %(commit)
+bind diff R !git rebase -i %(commit)
