@@ -1,1 +1,0 @@
-alias pac='apacman'
