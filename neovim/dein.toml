@@ -50,10 +50,8 @@ repo = 'vim-scripts/rdark'
 repo = 'Shougo/neoyank.vim'
 
 [[plugins]]
-repo = 'Shougo/unite.vim'
+repo = 'Shougo/denite.nvim'
 	hook_add = '''
-		let g:unite_source_history_yank_enable=1
-		nnoremap <silent> ,uy :<C-u>Unite history/yank<CR>
 	'''
 
 [[plugins]]
