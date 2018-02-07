@@ -23,6 +23,10 @@ function m
 	mv $argv
 end
 
+function pac
+	packer $argv
+end
+
 switch $TERM
 	case linux
 	case '*'
