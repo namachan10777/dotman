@@ -63,3 +63,6 @@ repo = 'scrooloose/nerdtree'
 
 [[plugins]]
 repo = 'KabbAmine/yowish.vim'
+
+[[plugins]]
+repo = 'ToruNiina/satysfi.vim'
