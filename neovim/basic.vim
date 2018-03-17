@@ -1,4 +1,5 @@
 set number
+set noswapfile
 syntax on
 filetype plugin on
 set tabstop=4
