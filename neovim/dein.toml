@@ -66,3 +66,6 @@ repo = 'KabbAmine/yowish.vim'
 
 [[plugins]]
 repo = 'ToruNiina/satysfi.vim'
+
+[[plugins]]
+repo = 'h1mesuke/vim-alignta'
