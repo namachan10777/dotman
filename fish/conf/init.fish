@@ -23,6 +23,10 @@ function m
 	mv $argv
 end
 
+function clipb
+	xsel --clipboard --input
+end
+
 function pac
 	packer $argv
 end
