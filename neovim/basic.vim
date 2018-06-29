@@ -20,6 +20,12 @@ if has("autocmd")
 	au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 endif
 
+" undo永続化
+let s:undoDir = expand("~/.nvimundo")
+call system('mkdir ' . s:undoDir)
+let &undodir = s:undoDir
+set undofile
+
 " 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
