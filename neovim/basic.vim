@@ -8,6 +8,7 @@ set noexpandtab
 set guicursor=
 set nohlsearch
 
+" 編集位置保存設定
 augroup BufRead,BufNewFile *.elm setfiletype elm
 augroup fileTypeIndent
 	autocmd!
@@ -19,11 +20,12 @@ if has("autocmd")
 	au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 endif
 
+" 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
-
 colorscheme artesanal
 
+" 透過関連
 highlight Normal ctermbg=NONE guibg=NONE
 highlight NonText ctermbg=NONE guibg=NONE
 highlight SpecialKey ctermbg=NONE guibg=NONE
