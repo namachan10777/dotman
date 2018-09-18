@@ -8,12 +8,17 @@ set noexpandtab
 set guicursor=
 set nohlsearch
 
+" terminalからの脱出
+tnoremap <C-j> <C-\><C-n>
+
 " 編集位置保存設定
 augroup BufRead,BufNewFile *.elm setfiletype elm
 augroup fileTypeIndent
 	autocmd!
 	autocmd BufNewFile,BufRead *.elm setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 	autocmd BufNewFile,BufRead *.yml setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+	autocmd BufNewFile,BufRead *.js  setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+	autocmd BufNewFile,BufRead *.vue  setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
 
 if has("autocmd")

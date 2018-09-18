@@ -77,7 +77,12 @@ repo = 'tomasr/molokai'
 repo = 'thinca/vim-quickrun'
 
 [[plugins]]
+repo = 'jason0x43/vim-js-indent'
+
+[[plugins]]
 repo = 'leafgarland/typescript-vim'
+	hook_add = '''
+	'''
 
 [[plugins]]
 repo = 'ElmCast/elm-vim'
@@ -87,3 +92,15 @@ repo = 'digitaltoad/vim-pug'
 
 [[plugins]]
 repo = 'wimstefan/vim-artesanal'
+
+[[plugins]]
+repo = 'elixir-lang/vim-elixir'
+
+[[plugins]]
+repo ='posva/vim-vue'
+
+[[plugins]]
+repo = 'digitaltoad/vim-pug'
+
+[[plugins]]
+repo = 'posva/vim-vue'
