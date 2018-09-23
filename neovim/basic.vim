@@ -23,6 +23,10 @@ augroup fileTypeIndent
 	autocmd BufNewFile,BufRead *.saty setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
 
+" 不可視文字の可視化
+set list
+set listchars=tab:»-,trail:-,nbsp:%,eol:↲
+
 if has("autocmd")
 	au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 endif
