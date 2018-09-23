@@ -19,6 +19,8 @@ augroup fileTypeIndent
 	autocmd BufNewFile,BufRead *.yml setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 	autocmd BufNewFile,BufRead *.js  setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 	autocmd BufNewFile,BufRead *.vue  setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+	autocmd BufNewFile,BufRead *.satyh setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+	autocmd BufNewFile,BufRead *.saty setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
 
 if has("autocmd")
