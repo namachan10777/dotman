@@ -5,7 +5,6 @@ set -gx OPAMKEEPBUILDDIR 1
 
 set -gx XDG_CONFIG_HOME ~/.config
 
-eval (opam config env)
 set PATH ~/.cargo/bin $PATH
 
 function v
@@ -30,6 +29,10 @@ end
 
 function pac
 	packer $argv
+end
+
+function stdwn
+	sudo shutdown -h now
 end
 
 switch $TERM
