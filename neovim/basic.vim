@@ -11,7 +11,6 @@ set nohlsearch
 " terminalからの脱出
 tnoremap <C-j> <C-\><C-n>
 
-" 編集位置保存設定
 augroup BufRead,BufNewFile *.elm setfiletype elm
 augroup fileTypeIndent
 	autocmd!
@@ -27,6 +26,7 @@ augroup END
 set list
 set listchars=tab:»-,trail:-,nbsp:%
 
+" 編集位置保存設定
 if has("autocmd")
 	au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 endif
