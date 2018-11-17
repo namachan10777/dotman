@@ -1,27 +1,100 @@
+# basic
+# 補完で有名なやつ
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+on_event = 'InsertCharPre'
+hook_add = '''
+	let g:deoplete#enable_at_startup = 1
+	let g:deoplete#auto_complete_delay = 0
+	let g:deoplete#auto_complete_start_length = 1
+	let g:deoplete#enable_camel_case = 0
+	let g:deoplete#enable_inogre_case = 0
+	let g:deoplete#enable_refresh_always = 0
+	let g:deoplete#enable_smart_case = 1
+	let g:deoplete#file#enable_buffer_path = 1
+	let g:deoplete#max_list = 10000
+	let g:deoplete#min_pattern_length = 2
+	call deoplete#custom#source('_', 'matchers', ['matcher_full_fuzzy'])
+	inoremap <silent><expr> <TAB>
+		\ pumvisible() ? "\<C-n>" :
+		\ "\<TAB>"
+'''
+on_i = 1
+
+# ファイルとかをいい感じに探せる有名なやつ
+[[plugins]]
+repo = 'Shougo/denite.nvim'
+hook_add = '''
+'''
+
+# deniteにヤンク履歴を残すやつ
+[[plugins]]
+repo = 'Shougo/neoyank.vim'
+
+# 左側にディレクトリツリーを出せる
+[[plugins]]
+repo = 'scrooloose/nerdtree'
+hook_add = '''
+	nnoremap <silent> ,ne :NERDTreeToggle<CR>
+	nnoremap <silent> ,n :NERDTreeCWD<CR>
+'''
+
+# コード片を実行できる。けどあんまり使ってない
+[[plugins]]
+repo = 'thinca/vim-quickrun'
+
+# 特定の単語をハイライトできる。便利
+[[plugins]]
+repo = 't9md/vim-quickhl'
+hook_add = '''
+	nmap <Space>m <Plug>(quickhl-manual-this)
+	xmap <Space>m <Plug>(quickhl-manual-this)
+	nmap <Space>M <Plug>(quickhl-manual-reset)
+	xmap <Space>M <Plug>(quickhl-manual-reset)
+'''
+
+# 所謂powerline
+[[plugins]]
+repo = 'itchyny/lightline.vim'
+
+# languages
+## TypeScript or JavaScript
+[[plugins]]
+repo = 'jason0x43/vim-js-indent'
+
+[[plugins]]
+repo = 'leafgarland/typescript-vim'
+	hook_add = '''
+	'''
+
+[[plugins]]
+repo ='posva/vim-vue'
+
+# TeX
+[[plugins]]
+repo = 'lervag/vimtex'
+
+# satysfi
+[[plugins]]
+repo = 'ToruNiina/satysfi.vim'
+
+# Elm
+[[plugins]]
+repo = 'ElmCast/elm-vim'
+
+# Pug
+[[plugins]]
+repo = 'digitaltoad/vim-pug'
+
+# Elixir
+[[plugins]]
+repo = 'elixir-lang/vim-elixir'
+
+# TOML
 [[plugins]]
 repo = 'cespare/vim-toml'
 
-[[plugins]]
-repo = 'Shougo/deoplete.nvim'
-	on_event = 'InsertCharPre'
-	hook_add = '''
-		let g:deoplete#enable_at_startup = 1
-		let g:deoplete#auto_complete_delay = 0
-		let g:deoplete#auto_complete_start_length = 1
-		let g:deoplete#enable_camel_case = 0
-		let g:deoplete#enable_inogre_case = 0
-		let g:deoplete#enable_refresh_always = 0
-		let g:deoplete#enable_smart_case = 1
-		let g:deoplete#file#enable_buffer_path = 1
-		let g:deoplete#max_list = 10000
-		let g:deoplete#min_pattern_length = 2
-		call deoplete#custom#source('_', 'matchers', ['matcher_full_fuzzy'])
-		inoremap <silent><expr> <TAB>
-			\ pumvisible() ? "\<C-n>" :
-			\ "\<TAB>"
-	'''
-	on_i = 1
-
+# Rust
 [[plugins]]
 repo = 'sebastianmarkow/deoplete-rust'
 on_ft = 'rust'
@@ -34,89 +107,6 @@ hook_add = '''
 	nmap <buffer> gd <plug>DeopleteRustGoToDefinitionDefault
 	nmap <buffer> K  <plug>DeopleteRustShowDocumentation
 '''
-
-[[plugins]]
-repo = 't9md/vim-quickhl'
-	hook_add = '''
-		nmap <Space>m <Plug>(quickhl-manual-this)
-		xmap <Space>m <Plug>(quickhl-manual-this)
-		nmap <Space>M <Plug>(quickhl-manual-reset)
-		xmap <Space>M <Plug>(quickhl-manual-reset)
-	'''
-
-[[plugins]]
-repo = 'dag/vim-fish'
-	hook_add = '''
-		compiler fish
-	'''
-
-[[plugins]]
-repo = 'itchyny/lightline.vim'
-
-[[plugins]]
-repo = 'lervag/vimtex'
-
-[[plugins]]
-repo = 'vim-scripts/rdark'
-
-[[plugins]]
-repo = 'Shougo/neoyank.vim'
-
-[[plugins]]
-repo = 'Shougo/denite.nvim'
-	hook_add = '''
-	'''
-
-[[plugins]]
-repo = 'scrooloose/nerdtree'
-	hook_add = '''
-		nnoremap <silent> ,ne :NERDTreeToggle<CR>
-		nnoremap <silent> ,n :NERDTreeCWD<CR>
-	'''
-
-[[plugins]]
-repo = 'KabbAmine/yowish.vim'
-
-[[plugins]]
-repo = 'ToruNiina/satysfi.vim'
-
-[[plugins]]
-repo = 'h1mesuke/vim-alignta'
-
-[[plugins]]
-repo = 'tomasr/molokai'
-
-[[plugins]]
-repo = 'thinca/vim-quickrun'
-
-[[plugins]]
-repo = 'jason0x43/vim-js-indent'
-
-[[plugins]]
-repo = 'leafgarland/typescript-vim'
-	hook_add = '''
-	'''
-
-[[plugins]]
-repo = 'ElmCast/elm-vim'
-
-[[plugins]]
-repo = 'digitaltoad/vim-pug'
-
-[[plugins]]
-repo = 'wimstefan/vim-artesanal'
-
-[[plugins]]
-repo = 'elixir-lang/vim-elixir'
-
-[[plugins]]
-repo ='posva/vim-vue'
-
-[[plugins]]
-repo = 'digitaltoad/vim-pug'
-
-[[plugins]]
-repo = 'posva/vim-vue'
 
 [[plugins]]
 repo = 'rust-lang/rust.vim'
@@ -132,3 +122,19 @@ hook_add = '''
 	let g:racer_cmd = '~/.cargo/bin/racer'
 	let $RUST_SRC_PATH = '/home/namachan/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src'
 '''
+
+# colorscheme
+[[plugins]]
+repo = 'vim-scripts/rdark'
+
+[[plugins]]
+repo = 'KabbAmine/yowish.vim'
+
+[[plugins]]
+repo = 'h1mesuke/vim-alignta'
+
+[[plugins]]
+repo = 'tomasr/molokai'
+
+[[plugins]]
+repo = 'wimstefan/vim-artesanal'
