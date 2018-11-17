@@ -61,38 +61,47 @@ repo = 'itchyny/lightline.vim'
 ## TypeScript or JavaScript
 [[plugins]]
 repo = 'jason0x43/vim-js-indent'
+on_ft = ['javascript', 'typescript']
 
 [[plugins]]
 repo = 'leafgarland/typescript-vim'
-	hook_add = '''
-	'''
+hook_add = '''
+'''
+on_ft = 'typescript'
 
 [[plugins]]
 repo ='posva/vim-vue'
+on_ft = 'vue'
 
 # TeX
 [[plugins]]
 repo = 'lervag/vimtex'
+on_ft = 'tex'
 
 # satysfi
 [[plugins]]
 repo = 'ToruNiina/satysfi.vim'
+on_ft = 'satysfi'
 
 # Elm
 [[plugins]]
 repo = 'ElmCast/elm-vim'
+on_ft = 'elm'
 
 # Pug
 [[plugins]]
 repo = 'digitaltoad/vim-pug'
+on_ft = 'pug'
 
 # Elixir
 [[plugins]]
 repo = 'elixir-lang/vim-elixir'
+on_ft = 'elixir'
 
 # TOML
 [[plugins]]
 repo = 'cespare/vim-toml'
+on_ft = 'toml'
 
 # Rust
 [[plugins]]
