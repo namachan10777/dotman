@@ -1,0 +1,49 @@
+*raw
+:PREROUTING ACCEPT [208:98369]
+:OUTPUT ACCEPT [235:87701]
+-A PREROUTING -m rpfilter --invert -j DROP
+COMMIT
+
+*nat
+:PREROUTING ACCEPT [19:1691]
+:INPUT ACCEPT [1:89]
+:OUTPUT ACCEPT [203:14267]
+:POSTROUTING ACCEPT [203:14267]
+:DOCKER - [0:0]
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+-A DOCKER -i docker0 -j RETURN
+COMMIT
+
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [933:331755]
+:DOCKER - [0:0]
+:DOCKER-ISOLATION-STAGE-1 - [0:0]
+:DOCKER-ISOLATION-STAGE-2 - [0:0]
+:DOCKER-USER - [0:0]
+:TCP - [0:0]
+:UDP - [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
+-A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+-A INPUT -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT -j REJECT --reject-with icmp-proto-unreachable
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-ISOLATION-STAGE-1
+-A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -o docker0 -j DOCKER
+-A FORWARD -i docker0 ! -o docker0 -j ACCEPT
+-A FORWARD -i docker0 -o docker0 -j ACCEPT
+-A DOCKER-ISOLATION-STAGE-1 -i docker0 ! -o docker0 -j DOCKER-ISOLATION-STAGE-2
+-A DOCKER-ISOLATION-STAGE-1 -j RETURN
+-A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP
+-A DOCKER-ISOLATION-STAGE-2 -j RETURN
+-A DOCKER-USER -j RETURN
+COMMIT
