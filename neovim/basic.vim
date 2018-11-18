@@ -22,6 +22,13 @@ augroup fileTypeIndent
 	autocmd BufNewFile,BufRead *.saty setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
 
+function s:MoveToFileAtStart()
+	normal("\<C-w>")
+endfunction
+
+autocmd vimenter * NERDTreeToggle | wincmd p
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
 " 不可視文字の可視化
 set list
 set listchars=tab:»-,trail:-,nbsp:%
