@@ -11,7 +11,6 @@ set nohlsearch
 " terminalからの脱出
 tnoremap <C-j> <C-\><C-n>
 
-augroup BufRead,BufNewFile *.elm setfiletype elm
 augroup fileTypeIndent
 	autocmd!
 	autocmd BufNewFile,BufRead *.elm setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
@@ -20,14 +19,14 @@ augroup fileTypeIndent
 	autocmd BufNewFile,BufRead *.vue  setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 	autocmd BufNewFile,BufRead *.satyh setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 	autocmd BufNewFile,BufRead *.saty setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+	autocmd BufNewFile,BufRead *.elm setfiletype elm
 augroup END
 
-function s:MoveToFileAtStart()
-	normal("\<C-w>")
-endfunction
-
-autocmd vimenter * NERDTreeToggle | wincmd p
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+augroup NERDTreeSetting
+	autocmd!
+	autocmd vimenter * NERDTreeToggle | wincmd p
+	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+augroup END
 
 " 不可視文字の可視化
 set list
