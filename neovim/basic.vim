@@ -24,7 +24,12 @@ augroup END
 
 augroup NERDTreeSetting
 	autocmd!
-	autocmd vimenter * NERDTreeToggle | wincmd p
+	autocmd StdinReadPre * let s:std_in = 1
+	if argc() == 0 || argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in")
+		autocmd vimenter * NERDTreeToggle
+	else
+		autocmd vimenter * NERDTreeToggle | wincmd p
+	endif
 	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 augroup END
 
