@@ -34,10 +34,6 @@ repo = 'Shougo/neoyank.vim'
 # 左側にディレクトリツリーを出せる
 [[plugins]]
 repo = 'scrooloose/nerdtree'
-hook_add = '''
-	nnoremap <silent> ,ne :NERDTreeToggle<CR>
-	nnoremap <silent> ,n :NERDTreeCWD<CR>
-'''
 
 # コード片を実行できる。けどあんまり使ってない
 [[plugins]]
