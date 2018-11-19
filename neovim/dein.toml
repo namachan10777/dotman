@@ -135,6 +135,7 @@ repo = 'rust-lang/rust.vim'
 on_ft = 'rust'
 hook_source = '''
 	let g:rustfmt_autosave = 1
+	nnoremap <Space>t :RustTest!<CR>
 '''
 
 # colorscheme
