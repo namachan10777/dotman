@@ -53,15 +53,6 @@ hook_add = '''
 [[plugins]]
 repo = 'itchyny/lightline.vim'
 
-# LSP
-#[[plugins]]
-#repo = 'autozimu/LanguageClient-neovim'
-#hook_add = '''
-#	let g:LanguageClient_serverCommands = {
-#		\ 'rust': ['~/.cargo/bin/rustup', 'run', 'nightly', 'rls'],
-#	\}
-#'''
-
 # 構文チェッカ
 [[plugins]]
 repo = 'w0rp/ale'
