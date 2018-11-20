@@ -1,0 +1,1 @@
+nnoremap r diw hi
