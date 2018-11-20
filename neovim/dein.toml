@@ -34,6 +34,8 @@ repo = 'Shougo/neoyank.vim'
 # 左側にディレクトリツリーを出せる
 [[plugins]]
 repo = 'scrooloose/nerdtree'
+hook_add = '''
+'''
 
 # コード片を実行できる。けどあんまり使ってない
 [[plugins]]
@@ -113,8 +115,8 @@ hook_add = '''
 	let g:deoplete#sources#rust#rust_source_path='/home/namachan/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src'
 	let g:deoplete#sources#rust#show_dupliates = 1
 	let g:deoplete#sources#rust#disable_keymap = 1
-	nmap <buffer> gd <plug>DeopleteRustGoToDefinitionDefault
-	nmap <buffer> K  <plug>DeopleteRustShowDocumentation
+	nnoremap <buffer> gd <plug>DeopleteRustGoToDefinitionDefault
+	nnoremap <buffer> K  <plug>DeopleteRustShowDocumentation
 '''
 
 [[plugins]]
