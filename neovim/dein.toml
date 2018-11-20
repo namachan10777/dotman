@@ -127,6 +127,10 @@ hook_source = '''
 	nnoremap <Space>t :RustTest!<CR>
 '''
 
+# fish
+[[plugins]]
+repo = 'dag/vim-fish'
+
 # colorscheme
 [[plugins]]
 repo = 'vim-scripts/rdark'
@@ -142,3 +146,4 @@ repo = 'tomasr/molokai'
 
 [[plugins]]
 repo = 'wimstefan/vim-artesanal'
+
