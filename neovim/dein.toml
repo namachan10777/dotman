@@ -127,6 +127,10 @@ hook_source = '''
 	nnoremap <Space>t :RustTest!<CR>
 '''
 
+# OpenSCAD
+[[plugins]]
+repo = 'sirtaj/vim-openscad'
+
 # fish
 [[plugins]]
 repo = 'dag/vim-fish'
