@@ -22,5 +22,4 @@ augroup SaveEditPos
 	set undofile
 	" 編集位置保存設定
 	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
-	
 augroup END
