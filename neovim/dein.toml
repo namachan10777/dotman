@@ -151,3 +151,5 @@ repo = 'tomasr/molokai'
 [[plugins]]
 repo = 'wimstefan/vim-artesanal'
 
+[[plugins]]
+repo = 'vim-scripts/Gummybears'

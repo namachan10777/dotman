@@ -11,7 +11,7 @@ set nohlsearch
 " 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
-colorscheme artesanal
+colorscheme gummybears
 
 " 透過関連
 highlight Normal ctermbg=NONE guibg=NONE
