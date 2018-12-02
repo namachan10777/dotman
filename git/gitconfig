@@ -1,0 +1,15 @@
+[user]
+	email = namachan10777@gmail.com
+	name = namachan10777
+	signingkey = 83ABEC5E55193AB4C461C59DB18528827F450293
+[commit]
+	gpgsign = true
+[gpg]
+	program = gpg
+[color]
+	status = auto
+	branch = auto
+	interactive = auto
+	diff = auto
+[diff]
+	indentHeuristic = true
