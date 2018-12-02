@@ -35,6 +35,10 @@ function stdwn
 	sudo shutdown -h now
 end
 
+function diff
+	icdiff
+end
+
 switch $TERM
 	case linux
 	case '*'
