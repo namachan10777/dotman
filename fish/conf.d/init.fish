@@ -39,6 +39,13 @@ end
 function diff
 	icdiff $argv
 end
+
+
+set TMPDIR /tmp/.(whoami)-tmp
+
+if not test -e ~/tmp
+	mkdir -p $TMPDIR
+	ln -s $TMPDIR ~/tmp
 end
 
 switch $TERM
@@ -48,11 +55,4 @@ switch $TERM
 		set -gx XMODIFIERS "@im=fcitx"
 		set -gx QT_IM_MODULE fcitx
 		set -gx GTK_IM_MODULE fcitx
-end
-
-set TMPDIR /tmp/.(whoami)-tmp
-
-if not test -e ~/tmp
-	mkdir -p $TMPDIR
-	ln -s $TMPDIR ~/tmp
 end
