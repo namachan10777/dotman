@@ -2,6 +2,7 @@ set -gx LANG en_US.UTF-8
 set -gx EDITOR nvim
 set -gx OCAMLPARAM "_,bin-annot=1"
 set -gx OPAMKEEPBUILDDIR 1
+eval (opam env)
 
 set -gx XDG_CONFIG_HOME ~/.config
 
