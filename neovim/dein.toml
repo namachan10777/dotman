@@ -79,6 +79,9 @@ on_ft = 'vue'
 [[plugins]]
 repo = 'lervag/vimtex'
 on_ft = 'tex'
+hook_add = '''
+	let g:vimtex_indent_enabled=0
+'''
 
 # satysfi
 [[plugins]]
