@@ -7,5 +7,5 @@ augroup fileTypeIndent
 	autocmd BufNewFile,BufRead *.satyh setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 	autocmd BufNewFile,BufRead *.saty setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 	autocmd BufNewFile,BufRead *.elm setfiletype elm
-	autocmd BufNewFile,BufRead *.clj setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
+	autocmd BufNewFile,BufRead *.clj setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
