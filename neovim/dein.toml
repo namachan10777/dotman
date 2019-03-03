@@ -175,3 +175,6 @@ repo = 'wimstefan/vim-artesanal'
 
 [[plugins]]
 repo = 'vim-scripts/Gummybears'
+
+[[plugins]]
+repo = 'scottymoon/vim-twilight'
