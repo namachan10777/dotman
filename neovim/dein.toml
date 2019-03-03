@@ -131,6 +131,11 @@ hook_source = '''
 [[plugins]]
 repo = 'sirtaj/vim-openscad'
 
+# Clojure
+[[plugins]]
+repo = 'tpope/vim-fireplace'
+on_ft = 'clojure'
+
 # fish
 [[plugins]]
 repo = 'dag/vim-fish'
