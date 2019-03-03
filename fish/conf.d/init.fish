@@ -36,7 +36,8 @@ function stdwn
 end
 
 function diff
-	icdiff
+	icdiff $argv
+end
 end
 
 switch $TERM
