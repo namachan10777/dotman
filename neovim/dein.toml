@@ -59,6 +59,24 @@ repo = 'itchyny/lightline.vim'
 [[plugins]]
 repo = 'w0rp/ale'
 
+# 検索位置表示
+[[plugins]]
+repo = 'osyo-manga/vim-anzu'
+hook_add = '''
+" mapping
+	nmap n <Plug>(anzu-n-with-echo)
+	nmap N <Plug>(anzu-N-with-echo)
+	nmap * <Plug>(anzu-star-with-echo)
+	nmap # <Plug>(anzu-sharp-with-echo)
+
+	" clear status
+	nmap <Esc><Esc> <Plug>(anzu-clear-search-status)
+
+
+	" statusline
+	set statusline=%{anzu#search_status()}
+'''
+
 # Git
 [[plugins]]
 repo = 'airblade/vim-gitgutter'
