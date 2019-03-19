@@ -59,6 +59,13 @@ repo = 'itchyny/lightline.vim'
 [[plugins]]
 repo = 'w0rp/ale'
 
+# Git
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+
+[[plugins]]
+repo = 'tpope/vim-fugitive'
+
 # languages
 ## TypeScript or JavaScript
 [[plugins]]
