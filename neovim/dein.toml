@@ -62,7 +62,7 @@ repo = 'w0rp/ale'
 # 検索位置表示
 [[plugins]]
 repo = 'osyo-manga/vim-anzu'
-hook_add = '''
+hook_pos_source = '''
 " mapping
 	nmap n <Plug>(anzu-n-with-echo)
 	nmap N <Plug>(anzu-N-with-echo)
@@ -71,7 +71,6 @@ hook_add = '''
 
 	" clear status
 	nmap <Esc><Esc> <Plug>(anzu-clear-search-status)
-
 
 	" statusline
 	set statusline=%{anzu#search_status()}
