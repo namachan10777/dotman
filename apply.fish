@@ -42,6 +42,9 @@ function applyIptables
 	sudo systemctl enable iptables.service
 end
 
+if not test -e ~/.local/share/omf/init.fish
+	curl -L https://get.oh-my.fish | fish
+end
 applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
 applyWithConfirm (echo $HERE/git/gitconfig) (echo $HOME/.gitconfig)
 applyWithConfirm (echo $HERE/latex/latexmkrc) (echo $HOME/.latexmkrc)
