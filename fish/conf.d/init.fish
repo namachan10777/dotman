@@ -9,6 +9,10 @@ set -gx XDG_CONFIG_HOME ~/.config
 set PATH ~/.cargo/bin $PATH
 set PATH ~/.gem/ruby/2.6.0/bin $PATH
 
+function py
+	ipython
+end
+
 function ...
 	cd ../../
 end
