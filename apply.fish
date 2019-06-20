@@ -45,6 +45,9 @@ end
 echo "cleaning broken symlinks"
 find -L . -type l | xargs unlink
 
+if not test -e ~/.local/share/omf/init.fish
+	curl -L https://get.oh-my.fish | fish
+end
 applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
 applyWithConfirm (echo $HERE/git/gitconfig) (echo $HOME/.gitconfig)
 applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)
