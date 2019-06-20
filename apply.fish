@@ -42,9 +42,13 @@ function applyIptables
 	sudo systemctl enable iptables.service
 end
 
+echo "cleaning broken symlinks"
+find -L . -type l | xargs unlink
+
 applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
 applyWithConfirm (echo $HERE/git/gitconfig) (echo $HOME/.gitconfig)
-applyWithConfirm (echo $HERE/latex/latexmkrc) (echo $HOME/.latexmkrc)
 applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)
-applyWithConfirm (echo $HERE/tig/tigrc) (echo $HOME/.tigrc)
+for f in $HERE/misc/.*
+	applyWithConfirm (echo $f) (echo $HOME/(basename $f))
+end
 applyIptables
