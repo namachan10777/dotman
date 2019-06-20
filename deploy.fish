@@ -42,8 +42,7 @@ function applyIptables
 	sudo systemctl enable iptables.service
 end
 
-echo "cleaning broken symlinks"
-find -L . -type l | xargs unlink
+find $HOME/ -maxdepth 1 -xtype l | xargs unlink
 
 if not test -e ~/.local/share/omf/init.fish
 	curl -L https://get.oh-my.fish | fish
