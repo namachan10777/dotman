@@ -70,3 +70,5 @@ else
 	sudo rm /etc/iptables/iptables.rules
 	sudo ln -s $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
 end
+
+echo "deploy succeded!"
