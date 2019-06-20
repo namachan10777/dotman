@@ -174,20 +174,6 @@ on_ft = 'clojure'
 [[plugins]]
 repo = 'dag/vim-fish'
 
-# Markdown
-[[plugins]]
-repo = 'previm/previm'
-hook_add = '''
-	augroup PrevimSetting
-		autocmd!
-		autocmd BufNewFile,BufRead *.{md|mdwn|mkd|mkdn|mark*} set filetype=markdown
-		let g:previm_open_cmd = 'open'
-	augroup END
-'''
-
-[[plugins]]
-repo = 'tyru/open-browser.vim'
-
 # colorscheme
 [[plugins]]
 repo = 'vim-scripts/rdark'
