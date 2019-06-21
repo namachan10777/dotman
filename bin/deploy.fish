@@ -39,18 +39,20 @@ if test (count $argv) -gt 0 && test $argv[1] = "-i"
 	end
 	applyIptables
 else
-	rm -r $XDG_CONFIG_HOME/fish
+	safeRm $XDG_CONFIG_HOME/fish
 	ln -s $HERE/fish $XDG_CONFIG_HOME/fish
 
-	rm -r $XDG_CONFIG_HOME/nvim
+	safeRm $XDG_CONFIG_HOME/nvim
 	ln -s $HERE/neovim $XDG_CONFIG_HOME/nvim
 
 	for f in $HERE/misc/.*
-		rm $HOME/(basename $f)
+		safeRm $HOME/(basename $f)
 		ln -s $f $HOME/(basename $f)
 	end
 
-	sudo rm /etc/iptables/iptables.rules
+	if test -e /etc/iptables/iptables.rules
+		sudo rm /etc/iptables/iptables.rules
+	end
 	sudo ln -s $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
 end
 

@@ -1,10 +1,19 @@
 #!/usr/bin/fish
 
-set HERE (cd (dirname (status -f)); and pwd)
+set HERE (cd (dirname (status -f))/../; and pwd)
 
 if not test $XDG_CONFIG_HOME
 	set -gx XDG_CONFIG_HOME $HOME/.config
 end
+
+function safeRm
+	if test -L $argv[1]
+		unlink $argv[1]
+	else if test -e $argv[1]
+		mv $argv[1] ($argv[1]).origin
+	end
+end
+		
 
 function confirm
 	set MSG $argv[1]
