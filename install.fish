@@ -27,6 +27,6 @@ else
 	echo "git, curl or wget required"
 end
 
-if test -e $DOTPATH/deploy.fish
-	source $DOTPATH/deploy.fish
+if test -e $DOTPATH/bin/deploy.fish
+	source $DOTPATH/bin/deploy.fish
 end
