@@ -15,9 +15,15 @@ hook_add = '''
 	let g:deoplete#max_list = 10000
 	let g:deoplete#min_pattern_length = 2
 	call deoplete#custom#source('_', 'matchers', ['matcher_full_fuzzy'])
+
 	inoremap <silent><expr> <TAB>
-		\ pumvisible() ? "\<C-n>" :
-		\ "\<TAB>"
+	\ pumvisible() ? "\<C-n>" :
+	\ <SID>check_back_space() ? "\<TAB>" :
+	\ deoplete#mappings#manual_complete()
+	function! s:check_back_space() abort "{{{
+		let col = col('.') - 1
+		return !col || getline('.')[col - 1] =~ '\s'
+	endfunction"}}}
 '''
 on_i = 1
 
@@ -167,20 +173,6 @@ on_ft = 'clojure'
 # fish
 [[plugins]]
 repo = 'dag/vim-fish'
-
-# Markdown
-[[plugins]]
-repo = 'previm/previm'
-hook_add = '''
-	augroup PrevimSetting
-		autocmd!
-		autocmd BufNewFile,BufRead *.{md|mdwn|mkd|mkdn|mark*} set filetype=markdown
-		let g:previm_open_cmd = 'open'
-	augroup END
-'''
-
-[[plugins]]
-repo = 'tyru/open-browser.vim'
 
 # colorscheme
 [[plugins]]

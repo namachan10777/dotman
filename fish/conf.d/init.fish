@@ -65,6 +65,7 @@ end
 
 switch $TERM
 	case linux
+		sudo loadkeys ~/.keystrings
 	case '*'
 		# fcitx setting
 		set -gx XMODIFIERS "@im=fcitx"

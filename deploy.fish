@@ -42,12 +42,33 @@ function applyIptables
 	sudo systemctl enable iptables.service
 end
 
+find $HOME/ -maxdepth 1 -xtype l | xargs unlink
+
 if not test -e ~/.local/share/omf/init.fish
 	curl -L https://get.oh-my.fish | fish
 end
-applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
-applyWithConfirm (echo $HERE/git/gitconfig) (echo $HOME/.gitconfig)
-applyWithConfirm (echo $HERE/latex/latexmkrc) (echo $HOME/.latexmkrc)
-applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)
-applyWithConfirm (echo $HERE/tig/tigrc) (echo $HOME/.tigrc)
-applyIptables
+
+if test (count $argv) -gt 0 && test $argv[1] = "-i"
+	applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
+	applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)
+	for f in $HERE/misc/.*
+		applyWithConfirm (echo $f) (echo $HOME/(basename $f))
+	end
+	applyIptables
+else
+	rm -r $XDG_CONFIG_HOME/fish
+	ln -s $HERE/fish $XDG_CONFIG_HOME/fish
+
+	rm -r $XDG_CONFIG_HOME/nvim
+	ln -s $HERE/neovim $XDG_CONFIG_HOME/nvim
+
+	for f in $HERE/misc/.*
+		rm $HOME/(basename $f)
+		ln -s $f $HOME/(basename $f)
+	end
+
+	sudo rm /etc/iptables/iptables.rules
+	sudo ln -s $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
+end
+
+echo "deploy succeded!"
