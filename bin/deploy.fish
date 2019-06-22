@@ -36,7 +36,7 @@ if test ! -z "$INVALID_LINKS"
 end
 
 if test ! -e ~/.local/share/omf/init.fish
-	curl -L https://get.oh-my.fish | fish
+	curl -L https://get.oh-my.fish | sed '/exit $code/d' | fish
 end
 
 if test ! -e /etc/iptables
