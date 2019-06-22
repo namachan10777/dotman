@@ -33,11 +33,11 @@ if test ! -z "$INVALID_LINKS"
 	unlink $INVALID_LINKS
 end
 
-if not test -e ~/.local/share/omf/init.fish
+if test ! -e ~/.local/share/omf/init.fish
 	curl -L https://get.oh-my.fish | fish
 end
 
-if test (count $argv) -gt 0 && test $argv[1] = "-i"
+if test (count $argv) -gt 0; and test $argv[1] = "-i"
 	applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
 	applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)
 	for f in $HERE/misc/.*
