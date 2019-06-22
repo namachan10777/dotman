@@ -15,20 +15,9 @@ function has
 end
 
 if has "git" 
-	echo "downloading by git"
 	git clone "https://github.com/namachan10777/scripts.git" $DOTPATH
-else if has "curl"; or has "wget"
-	set tarball "https://github.com/namachan10777/scripts/archive/master.tar.gz"
-
-	if has "curl"
-		curl -L $tarball | tar zx
-	else
-		wget -O - $tarball | tar zx
-	end
-	
-	mv -f scripts-master $DOTPATH
 else
-	echo "git, curl or wget required"
+	echo "git required"
 	exit 1
 end
 
