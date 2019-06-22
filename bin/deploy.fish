@@ -17,15 +17,21 @@ function applyIptables
 	if test -e /etc/iptables/iptables.rules
 		if confirm "Are you sure to overwrite /etc/iptables/iptables.rules? [y/N]"
 			sudo rm /etc/iptables/iptables.rules
-			sudo ln -s $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
+			sudo cp $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
 		end
 	else
-		ln -s $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
+		if test -L /etc/iptables/iptables.rules
+			sudo unlink /etc/iptables/iptables.rules
+		end
+		sudo cp $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
 	end
 	sudo systemctl enable iptables.service
 end
 
-find $HOME/ -maxdepth 1 -xtype l | xargs unlink
+set INVALID_LINKS (find $HOME/ -maxdepth 1 -xtype l)
+if test ! -z "$INVALID_LINKS"
+	unlink $INVALID_LINKS
+end
 
 if not test -e ~/.local/share/omf/init.fish
 	curl -L https://get.oh-my.fish | fish
@@ -52,8 +58,10 @@ else
 
 	if test -e /etc/iptables/iptables.rules
 		sudo rm /etc/iptables/iptables.rules
+	else if test -L /etc/iptables/iptables.rules
+		sudo unlink /etc/iptables/iptables.rules
 	end
-	sudo ln -s $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
+	sudo cp $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
 end
 
 echo "deploy succeded!"
