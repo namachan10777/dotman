@@ -10,10 +10,14 @@ echo " |___/\___|_|  |_| .__/ \__|___/ "
 echo "                 |_|             "
 
 rm -rf ~/.dotfiles
+function has
+	return (type $argv[1] > /dev/null 2>&1)
+end
 
-if test -e git
+if has "git" 
+	echo "downloading by git"
 	git clone "https://github.com/namachan10777/scripts.git" $DOTPATH
-else if test -o (test -e curl) (test -e wget)
+else if test (has "curl") -o (has "wget")
 	set tarball "https://github.com/namachan10777/scripts/archive/master.tar.gz"
 
 	if test -e curl
