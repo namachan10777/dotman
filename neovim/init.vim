@@ -3,4 +3,4 @@ runtime! filetype.vim
 runtime! package.vim
 runtime! autocmds.vim
 runtime! keybind.vim
-runtime! show.vim
+runtime! general.vim
