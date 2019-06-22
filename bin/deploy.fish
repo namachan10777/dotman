@@ -39,6 +39,10 @@ if test ! -e ~/.local/share/omf/init.fish
 	curl -L https://get.oh-my.fish | fish
 end
 
+if test ! -e /etc/iptables
+	withSu "mkdir /etc/iptables"
+end
+
 if test (count $argv) -gt 0; and test $argv[1] = "-i"
 	applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
 	applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)
