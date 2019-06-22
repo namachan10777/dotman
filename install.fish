@@ -17,10 +17,10 @@ end
 if has "git" 
 	echo "downloading by git"
 	git clone "https://github.com/namachan10777/scripts.git" $DOTPATH
-else if test (has "curl") -o (has "wget")
+else if has "curl"; or has "wget"
 	set tarball "https://github.com/namachan10777/scripts/archive/master.tar.gz"
 
-	if test -e curl
+	if has "curl"
 		curl -L $tarball | tar zvf
 	else
 		wget -O - $tarball | tar zvf
@@ -29,6 +29,7 @@ else if test (has "curl") -o (has "wget")
 	mv -f scripts-master $DOTPATH
 else
 	echo "git, curl or wget required"
+	exit 1
 end
 
 if test -e $DOTPATH/bin/deploy.fish
