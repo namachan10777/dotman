@@ -62,6 +62,7 @@ else
 		withSu "unlink /etc/iptables/iptables.rules"
 	end
 	withSu "cp "$HERE"/iptables/iptables.rules /etc/iptables/iptables.rules"
+	withSu "systemctl enable iptables.service"
 end
 
 echo "deploy succeded!"
