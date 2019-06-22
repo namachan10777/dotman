@@ -16,16 +16,16 @@ end
 function applyIptables
 	if test -e /etc/iptables/iptables.rules
 		if confirm "Are you sure to overwrite /etc/iptables/iptables.rules? [y/N]"
-			sudo rm /etc/iptables/iptables.rules
-			sudo cp $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
+			witSu "rm /etc/iptables/iptables.rules"
+			withSu "cp "$HERE"/iptables/iptables.rules /etc/iptables/iptables.rules"
 		end
 	else
 		if test -L /etc/iptables/iptables.rules
-			sudo unlink /etc/iptables/iptables.rules
+			withSu "unlink /etc/iptables/iptables.rules"
 		end
-		sudo cp $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
+		withSu "cp "$HERE"/iptables/iptables.rules /etc/iptables/iptables.rules"
 	end
-	sudo systemctl enable iptables.service
+	withSu "systemctl enable iptables.service"
 end
 
 set INVALID_LINKS (find $HOME/ -maxdepth 1 -xtype l)
@@ -57,11 +57,11 @@ else
 	end
 
 	if test -e /etc/iptables/iptables.rules
-		sudo rm /etc/iptables/iptables.rules
+		withSu "rm /etc/iptables/iptables.rules"
 	else if test -L /etc/iptables/iptables.rules
-		sudo unlink /etc/iptables/iptables.rules
+		withSu "unlink /etc/iptables/iptables.rules"
 	end
-	sudo cp $HERE/iptables/iptables.rules /etc/iptables/iptables.rules
+	withSu "cp "$HERE"/iptables/iptables.rules /etc/iptables/iptables.rules"
 end
 
 echo "deploy succeded!"
