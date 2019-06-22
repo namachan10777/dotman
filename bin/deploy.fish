@@ -35,10 +35,6 @@ if test ! -z "$INVALID_LINKS"
 	unlink $INVALID_LINKS
 end
 
-if test ! -e ~/.local/share/omf/init.fish
-	curl -L https://get.oh-my.fish | sed '/exit $code/d' | fish
-end
-
 if test ! -e /etc/iptables
 	withSu "mkdir /etc/iptables"
 end
@@ -74,3 +70,7 @@ else
 end
 
 echo "deploy succeded!"
+
+if test ! -e ~/.local/share/omf/init.fish
+	curl -L https://get.oh-my.fish | fish
+end
