@@ -6,7 +6,7 @@ set tabstop=4
 set shiftwidth=4
 set noexpandtab
 set guicursor=
-set nohlsearch
+set hls
 
 " 以下カラースキーム設定
 set background=dark
