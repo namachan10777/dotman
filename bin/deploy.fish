@@ -25,7 +25,9 @@ function applyIptables
 		end
 		withSu "cp "$HERE"/iptables/iptables.rules /etc/iptables/iptables.rules"
 	end
-	withSu "systemctl enable iptables.service"
+	if has "systemctl"
+		withSu "systemctl enable iptables.service"
+	end
 end
 
 set INVALID_LINKS (find $HOME/ -maxdepth 1 -xtype l)
@@ -62,7 +64,9 @@ else
 		withSu "unlink /etc/iptables/iptables.rules"
 	end
 	withSu "cp "$HERE"/iptables/iptables.rules /etc/iptables/iptables.rules"
-	withSu "systemctl enable iptables.service"
+	if has "systemctl"
+		withSu "systemctl enable iptables.service"
+	end
 end
 
 echo "deploy succeded!"
