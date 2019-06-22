@@ -10,5 +10,5 @@ jobs:
           name: test
           command: |
             fish ./install.fish
-            fish ./bin/test.fish
+            fish ~/.dotfiles/bin/test.fish
 
