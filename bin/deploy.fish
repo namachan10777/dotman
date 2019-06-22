@@ -72,5 +72,7 @@ end
 echo "deploy succeded!"
 
 if test ! -e ~/.local/share/omf/init.fish
-	curl -L https://get.oh-my.fish | fish
+	if test ! $NONINTERACTIVE; or test $NONINTERACTIVE != 0
+		curl -L https://get.oh-my.fish | fish
+	end
 end
