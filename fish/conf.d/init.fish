@@ -3,7 +3,6 @@ set -gx EDITOR nvim
 set -gx OCAMLPARAM "_,bin-annot=1"
 set -gx OPAMKEEPBUILDDIR 1
 eval (opam env)
-source $XDG_CONFIG_HOME/fish/config.fish
 
 set -gx XDG_CONFIG_HOME ~/.config
 
