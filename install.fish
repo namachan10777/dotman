@@ -21,9 +21,9 @@ else if has "curl"; or has "wget"
 	set tarball "https://github.com/namachan10777/scripts/archive/master.tar.gz"
 
 	if has "curl"
-		curl -L $tarball | tar zvf
+		curl -L $tarball | tar zx
 	else
-		wget -O - $tarball | tar zvf
+		wget -O - $tarball | tar zx
 	end
 	
 	mv -f scripts-master $DOTPATH
