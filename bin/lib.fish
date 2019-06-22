@@ -21,7 +21,10 @@ function withSu
 		eval "sudo "$argv[1]
 	end
 end
-		
+
+function has
+	return (type $argv[1] > /dev/null 2>&1)
+end
 
 function confirm
 	set MSG $argv[1]
