@@ -1,0 +1,14 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: namachan10777/scripts:latest
+
+    steps:
+      - checkout
+      - run:
+          name: test
+          command: |
+            fish ./install.fish
+            fish ./bin/test.fish
+
