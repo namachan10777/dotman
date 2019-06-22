@@ -8,6 +8,8 @@ set noexpandtab
 set guicursor=
 set hls
 
+set clipboard=unnamed
+
 " 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
