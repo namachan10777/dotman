@@ -24,6 +24,10 @@ function ....
 	cd ../../../
 end
 
+function grep
+	echo "use 'rg'!"
+end
+
 function v
 	nvim $argv
 end
