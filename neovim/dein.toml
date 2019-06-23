@@ -19,6 +19,16 @@ hook_add = '''
 '''
 on_i = 1
 
+# インストールが面倒なので注意(deinだと上手く行かないので手でbinariesを追加すること
+[[plugins]]
+repo = 'tbodt/deoplete-tabnine'
+hook_add = '''
+	call deoplete#custom#var('tabnine', {
+		\ 'line_limit': 500,
+		\ 'max_num_results': 20,
+	\})
+'''
+
 # ファイルとかをいい感じに探せる有名なやつ
 [[plugins]]
 repo = 'Shougo/denite.nvim'
