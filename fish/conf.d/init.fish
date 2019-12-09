@@ -57,12 +57,14 @@ if not test -e ~/tmp
 	ln -s $TMPDIR ~/tmp
 end
 
-switch $TERM
-	case linux
-		sudo loadkeys ~/.keystrings
-	case '*'
-		# fcitx setting
-		set -gx XMODIFIERS "@im=fcitx"
-		set -gx QT_IM_MODULE fcitx
-		set -gx GTK_IM_MODULE fcitx
+if test $TERM
+	switch $TERM
+		case linux
+			sudo loadkeys ~/.keystrings
+		case '*'
+			# fcitx setting
+			set -gx XMODIFIERS "@im=fcitx"
+			set -gx QT_IM_MODULE fcitx
+			set -gx GTK_IM_MODULE fcitx
+	end
 end
