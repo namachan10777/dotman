@@ -39,6 +39,8 @@ if test ! -e /etc/iptables
 	withSu "mkdir /etc/iptables"
 end
 
+cp $HERE/env.fish $HERE/fish/env.fish
+
 if test (count $argv) -gt 0; and test $argv[1] = "-i"
 	applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
 	applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)

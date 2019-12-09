@@ -1,10 +1,7 @@
 #!/usr/bin/fish
 
 set HERE (cd (dirname (status -f))/../; and pwd)
-
-if not test $XDG_CONFIG_HOME
-	set -gx XDG_CONFIG_HOME $HOME/.config
-end
+source $HERE/env.fish
 
 function safeRm
 	if test -L $argv[1]
