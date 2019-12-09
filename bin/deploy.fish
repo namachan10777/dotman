@@ -69,10 +69,10 @@ else
 	end
 end
 
-echo "deploy succeded!"
+echo "Executing hooks..."
 
-if test ! -e ~/.local/share/omf/init.fish
-	if test ! $NONINTERACTIVE; or test $NONINTERACTIVE != 0
-		curl -L https://get.oh-my.fish | fish
-	end
+for f in $HERE/hooks/*.fish
+	source $f
 end
+
+echo "deploy succeded!"
