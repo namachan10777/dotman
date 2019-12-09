@@ -30,4 +30,14 @@ end
 check $HERE/neovim $XDG_CONFIG_HOME/nvim
 check $HERE/fish $XDG_CONFIG_HOME/fish
 
+for f in $HERE/hooks/*.fish
+	source $f
+	if check
+		echo "✔ "$f
+	else
+		echo "✘ "$f
+		set STATUS 1
+	end
+end
+
 exit $STATUS

@@ -75,6 +75,7 @@ echo "Executing hooks..."
 
 for f in $HERE/hooks/*.fish
 	source $f
+	install
 end
 
 echo "deploy succeded!"
