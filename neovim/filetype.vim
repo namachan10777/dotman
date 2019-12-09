@@ -10,3 +10,8 @@ augroup fileTypeIndent
 	autocmd BufNewFile,BufRead *.elm setfiletype elm
 	autocmd BufNewFile,BufRead *.clj setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 augroup END
+
+augroup fileTypeSyntaxHighlighting
+	autocmd!
+	autocmd BufNewFile,BufRead *.vue syntax sync fromstart
+augroup END
