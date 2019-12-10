@@ -1,6 +1,10 @@
 function install
-	echo "Installing omf"
-	curl -L https://get.oh-my.fish | fish
+	if test -e $OMF_PATH
+		echo "Omf is already installed. skipping"
+	else
+		echo "Installing omf"
+		curl -L https://get.oh-my.fish | fish
+	end
 end
 
 function check
