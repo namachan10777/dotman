@@ -10,6 +10,17 @@ import shutil
 def normalize_path(path_string):
     return pathlib.Path(os.path.expanduser(os.path.expandvars(path_string))).absolute()
 
+def evacuate(path):
+    dest = path
+    count = 0
+    if path.is_symlink():
+        path.unlink()
+    while dest.exists():
+        dest = path.parent / (path.name + f'.pkg_save_{count}')
+        count += 1
+    if dest != path:
+        shutil.move(path, dest)
+
 def install_pkg(pkg_path):
     json_path = pkg_path / 'pkg.json' 
     with open(pkg_path / 'pkg.json', 'r') as f:
@@ -32,16 +43,18 @@ def install_pkg(pkg_path):
         for patch in patches:
             source = normalize_path(pkg_path / patch)
             dest   = normalize_path(dest_cfg['patch'][patch])
+            evacuate(dest)
             if cfg['link']:
                 os.symlink(source, dest)
             else:
                 shutil.copyfile(source, dest)
-
+                
         if fallback is not None:
+            evacuate(fallback)
             if cfg['link']:
                 os.symlink(pkg_path, fallback)
             else:
-                shutil.copyfile(pkg_path, dest)
+                shutil.copyfile(pkg_path, fallback)
 
             
 
