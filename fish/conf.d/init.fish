@@ -1,6 +1,8 @@
 set HERE (cd (dirname (status -f))/../; and pwd)
 source $HERE/env.fish
 
+set -gx GHQ_SELECTOR peco
+
 function py
 	ipython
 end
