@@ -1,0 +1,9 @@
+{
+	"workdir": "/tmp",
+	"install": [
+		[ "curl -L https://get.oh-my.fish | fish" ]
+	],
+	"check": [
+		[ "type omf > /dev/null 2>&1 "]
+	]
+}

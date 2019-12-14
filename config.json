@@ -1,0 +1,10 @@
+{
+	"pkgs": "./pkgs",
+	"hooks": "./hooks",
+	"additional_envs": {
+		"XDG_CONFIG_HOME": {
+			"value": "~/.config",
+			"overwrite": false
+		}
+	}
+}

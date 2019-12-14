@@ -1,0 +1,6 @@
+{
+	"link": false,
+	"dest": {
+		"patch": "/etc/iptables"
+	}
+}

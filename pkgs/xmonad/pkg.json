@@ -1,0 +1,6 @@
+{
+	"link": true,
+	"dest": {
+		"fallback": "~/.xmonad"
+	}
+}
