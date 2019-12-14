@@ -1,5 +1,5 @@
 function install
-	if test -e $OMF_PATH
+	if type omf > /dev/null 2>&1
 		echo "Omf is already installed. skipping"
 	else
 		echo "Installing omf"
