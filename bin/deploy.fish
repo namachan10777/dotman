@@ -44,6 +44,7 @@ ln -s $HERE/env.fish $HERE/fish/conf.d/env.fish
 if test (count $argv) -gt 0; and test $argv[1] = "-i"
 	applyWithConfirm (echo $HERE/fish) (echo $XDG_CONFIG_HOME/fish)
 	applyWithConfirm (echo $HERE/neovim) (echo $XDG_CONFIG_HOME/nvim)
+	applyWithConfirm (echo $HERE/xmonad) (echo $HOME/.xmonad)
 	for f in $HERE/misc/.*
 		applyWithConfirm (echo $f) (echo $HOME/(basename $f))
 	end
