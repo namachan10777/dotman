@@ -7,6 +7,7 @@ set -gx EDITOR nvim
 set -gx OCAMLPARAM "_,bin-annot=1"
 set -gx OPAMKEEPBUILDDIR 1
 set -gx GOPATH ~/.local/share/go
+set -gx GHQ_SELECTOR peco
 if type opam > /dev/null 2>&1
 	eval (opam env)
 end
