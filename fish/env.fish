@@ -16,5 +16,4 @@ set PATH ~/.cargo/bin $PATH
 set PATH ~/.gem/ruby/2.6.0/bin $PATH
 set PATH ~/anaconda3/bin $PATH
 set PATH $GOPATH/bin $PATH
-
-
+set PATH ~/.cabal/bin $PATH
