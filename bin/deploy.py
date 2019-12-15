@@ -87,7 +87,6 @@ def test_file(cfg, source, dest):
         
 
 if __name__ == '__main__':
-    cfg_path = normalize_path(sys.argv[1])
     parser = argparse.ArgumentParser()
     parser.add_argument('--deploy', '-d')
     parser.add_argument('--check', '-c')
