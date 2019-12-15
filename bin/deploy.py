@@ -7,6 +7,7 @@ import os.path
 import os
 import shutil
 import filecmp
+import argparse
 
 def normalize_path(path_string):
     return pathlib.Path(os.path.expanduser(os.path.expandvars(path_string))).absolute()
@@ -41,7 +42,7 @@ def traverse(f, pkg_path):
 
         # TODO
         if 'root' in cfg and cfg['root']:
-            return
+            return False
 
         acc = True
 
@@ -78,11 +79,36 @@ def test_file(cfg, source, dest):
 
 if __name__ == '__main__':
     cfg_path = normalize_path(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--deploy', '-d')
+    parser.add_argument('--check', '-c')
+    parsed = vars(parser.parse_args())
+
+    if parsed['check'] != None:
+        cfg_path = normalize_path(parsed['check'])
+    else:
+        cfg_path = normalize_path(parsed['deploy'])
+
     with open(cfg_path, 'r') as f:
         cfg = json.loads(f.read())
 
         hooks_path = cfg_path.parent / cfg['hooks']
         pkgs_path = cfg_path.parent / cfg['pkgs']
 
+        acc = True
+
         for pkg in pkgs_path.glob('*/'):
-            traverse(sync_file, pkg)
+            if parsed['check'] != None:
+                if traverse(test_file, pkg):
+                    acc &= True
+                    print(f'✔ pkg {pkg.name}')
+                else:
+                    acc &= False
+                    print(f'✘ pkg {pkg.name}')
+            else:
+                acc &= traverse(sync_file, pkg)
+
+        if acc:
+            exit(0)
+        else:
+            exit(1)
