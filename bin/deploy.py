@@ -13,22 +13,22 @@ def normalize_path(path_string):
     return pathlib.Path(os.path.expanduser(os.path.expandvars(path_string))).absolute()
 
 def compare_all(a, b, show_msg=False):
-        a_contents = [x for x in a.glob('**/*') if x.is_file()]
-        b_contents   = [x for x in b.glob('**/*') if x.is_file()]
-        if len(a_contents) != len(b_contents):
-            return False
-        diff = [x for x in zip(a_contents, b_contents) if not filecmp.cmp(x[0], x[1])]
-        if show_msg:
-            for x in diff:
-                print(f'{x[0]} and {x[1]} is differed')
-        return len(diff) == 0
+    a_contents = [x for x in a.glob('**/*') if x.is_file()]
+    b_contents   = [x for x in b.glob('**/*') if x.is_file()]
+    if len(a_contents) != len(b_contents):
+        return False
+    diff = [x for x in zip(a_contents, b_contents) if not filecmp.cmp(x[0], x[1])]
+    if show_msg:
+        for x in diff:
+            print(f'{x[0]} and {x[1]} is differed')
+    return len(diff) == 0
 
 def evacuate(path):
     dest = path
     count = 0
     if path.is_symlink():
         path.unlink()
-    while dest.exists() and not compare_all(path, dest):
+    while dest.exists():
         dest = path.parent / (path.name + f'.pkg_save_{count}')
         count += 1
     if dest != path:
@@ -41,8 +41,13 @@ def traverse(f, pkg_path):
         cfg = json.loads(cfg_file.read())
 
         # TODO
-        if 'root' in cfg and cfg['root']:
-            return False
+        if os.environ.get('USER') == 'root':
+            if 'root' in cfg and cfg['root'] == 'none':
+                return False
+        else:
+            if 'root' in cfg and cfg['root'] == 'only':
+                return True 
+
 
         acc = True
 
@@ -61,11 +66,15 @@ def traverse(f, pkg_path):
     return False
 
 def sync_file(cfg, source, dest):
-    evacuate(dest)
     if cfg['link']:
+        evacuate(dest)
         dest.symlink_to(source)
     else:
-        if not compare_all(source, dest):
+        if source.is_file():
+            evacuate(dest)
+            shutil.copy(source, dest)
+        elif not compare_all(source, dest):
+            evacuate(dest)
             shutil.copytree(source, dest)
 
     return True
@@ -94,6 +103,10 @@ if __name__ == '__main__':
 
         hooks_path = cfg_path.parent / cfg['hooks']
         pkgs_path = cfg_path.parent / cfg['pkgs']
+
+        for key in cfg['additional_envs'].keys():
+            if key not in os.environ or cfg['additional_envs'][key]['overwrite']:
+                os.environ[key] = cfg['additional_envs'][key]['value']
 
         acc = True
 
