@@ -1,6 +1,4 @@
 {
 	"link": true,
-	"dest": {
-		"fallback": "~/.xmonad"
-	}
+	"fallback": "~/.xmonad"
 }

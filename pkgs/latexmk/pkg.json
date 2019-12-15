@@ -1,8 +1,6 @@
 {
 	"link": true,
-	"dest": {
-		"patch": {
-			"latexmkrc": "~/.latexmkrc"
-		}
+	"patch": {
+		"latexmkrc": "~/.latexmkrc"
 	}
 }

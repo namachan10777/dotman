@@ -25,24 +25,23 @@ def install_pkg(pkg_path):
     json_path = pkg_path / 'pkg.json' 
     with open(pkg_path / 'pkg.json', 'r') as f:
         cfg = json.loads(f.read())
-        dest_cfg = cfg['dest']
 
         # TODO
         if 'root' in cfg and cfg['root']:
             return
 
         fallback = None
-        if 'fallback' in dest_cfg:
-            fallback = normalize_path(dest_cfg['fallback'])
+        if 'fallback' in cfg:
+            fallback = normalize_path(cfg['fallback'])
 
-        if 'patch' in dest_cfg:
-            patches = dest_cfg['patch'].keys()
+        if 'patch' in cfg:
+            patches = cfg['patch'].keys()
         else:
             patches = []
 
         for patch in patches:
             source = normalize_path(pkg_path / patch)
-            dest   = normalize_path(dest_cfg['patch'][patch])
+            dest   = normalize_path(cfg['patch'][patch])
             evacuate(dest)
             if cfg['link']:
                 os.symlink(source, dest)

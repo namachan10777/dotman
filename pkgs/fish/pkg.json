@@ -1,6 +1,4 @@
 {
 	"link": true,
-	"dest": {
-		"fallback": "$XDG_CONFIG_HOME/fish"
-	}
+	"fallback": "$XDG_CONFIG_HOME/fish"
 }

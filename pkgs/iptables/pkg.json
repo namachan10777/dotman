@@ -1,9 +1,7 @@
 {
 	"link": false,
 	"root": true,
-	"dest": {
-		"patch": {
-			"iptables": "/etc/iptables"
-		}
+	"patch": {
+		"iptables": "/etc/iptables"
 	}
 }

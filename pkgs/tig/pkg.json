@@ -1,8 +1,6 @@
 {
 	"link": true,
-	"dest": {
-		"patch": {
-			"tigrc": "~/.tigrc"
-		}
+	"patch": {
+		"tigrc": "~/.tigrc"
 	}
 }

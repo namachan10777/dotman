@@ -1,6 +1,4 @@
 {
 	"link": true,
-	"dest": {
-		"fallback": "$XDG_CONFIG_HOME/nvim"
-	}
+	"fallback": "$XDG_CONFIG_HOME/nvim"
 }
