@@ -1,0 +1,5 @@
+*.errors
+*.hi
+*.hs
+*.o
+*-x86_64-linux
