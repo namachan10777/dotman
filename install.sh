@@ -9,9 +9,9 @@ echo " \__ \ (__| |  | | |_) | |_\__ \ "
 echo " |___/\___|_|  |_| .__/ \__|___/ "
 echo "                 |_|             "
 
-rm -rf ~/.dotfiles
+#rm -rf ~/.dotfiles
 
-git clone "https://github.com/namachan10777/scripts.git" $DOTPATH
+#git clone "https://github.com/namachan10777/scripts.git" $DOTPATH
 cd $DOTPATH
-python $DOTPATH/bin/deploy.py
+python $DOTPATH/bin/deploy.py -d $DOTPATH/config.json
 
