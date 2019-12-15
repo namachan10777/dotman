@@ -13,5 +13,5 @@ rm -rf ~/.dotfiles
 
 git clone "https://github.com/namachan10777/scripts.git" $DOTPATH
 cd $DOTPATH
-python $DOTPATH/bin/deploy.py
+python $DOTPATH/bin/deploy.py $DOTPATH/config.json
 
