@@ -21,42 +21,40 @@ def evacuate(path):
     if dest != path:
         shutil.move(path, dest)
 
-def install_pkg(pkg_path):
+def traverse(f, pkg_path):
     json_path = pkg_path / 'pkg.json' 
-    with open(pkg_path / 'pkg.json', 'r') as f:
-        cfg = json.loads(f.read())
+    with open(pkg_path / 'pkg.json', 'r') as cfg_file:
+        cfg = json.loads(cfg_file.read())
 
         # TODO
         if 'root' in cfg and cfg['root']:
             return
 
-        fallback = None
-        if 'fallback' in cfg:
-            fallback = normalize_path(cfg['fallback'])
+        acc = True
 
         if 'patch' in cfg:
-            patches = cfg['patch'].keys()
-        else:
-            patches = []
-
-        for patch in patches:
-            source = normalize_path(pkg_path / patch)
-            dest   = normalize_path(cfg['patch'][patch])
-            evacuate(dest)
-            if cfg['link']:
-                os.symlink(source, dest)
-            else:
-                shutil.copyfile(source, dest)
+            for patch in cfg['patch'].keys():
+                source = normalize_path(pkg_path / patch)
+                dest   = normalize_path(cfg['patch'][patch])
+                acc &= f(cfg, source, dest)
                 
-        if fallback is not None:
-            evacuate(fallback)
-            if cfg['link']:
-                os.symlink(pkg_path, fallback)
-            else:
-                shutil.copyfile(pkg_path, fallback)
+        if 'fallback' in cfg:
+            if cfg['fallback'] is not None:
+                dest = normalize_path(cfg['fallback'])
+                evacuate(dest)
+                acc &= f(cfg, pkg_path, dest)
 
-            
+        return acc
+    return False
 
+def sync_file(cfg, source, dest):
+    evacuate(dest)
+    if cfg['link']:
+        dest.symlink_to(source)
+    else:
+        shutil.copyfile(source, dest)
+
+    return True
 
 if __name__ == '__main__':
     cfg_path = normalize_path(sys.argv[1])
@@ -67,4 +65,4 @@ if __name__ == '__main__':
         pkgs_path = cfg_path.parent / cfg['pkgs']
 
         for pkg in pkgs_path.glob('*/'):
-            install_pkg(pkg)
+            traverse(sync_file, pkg)
