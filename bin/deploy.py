@@ -6,20 +6,33 @@ import pathlib
 import os.path
 import os
 import shutil
+import filecmp
 
 def normalize_path(path_string):
     return pathlib.Path(os.path.expanduser(os.path.expandvars(path_string))).absolute()
+
+def compare_all(a, b, show_msg=False):
+        a_contents = [x for x in a.glob('**/*') if x.is_file()]
+        b_contents   = [x for x in b.glob('**/*') if x.is_file()]
+        if len(a_contents) != len(b_contents):
+            return False
+        diff = [x for x in zip(a_contents, b_contents) if not filecmp.cmp(x[0], x[1])]
+        if show_msg:
+            for x in diff:
+                print(f'{x[0]} and {x[1]} is differed')
+        return len(diff) == 0
 
 def evacuate(path):
     dest = path
     count = 0
     if path.is_symlink():
         path.unlink()
-    while dest.exists():
+    while dest.exists() and not compare_all(path, dest):
         dest = path.parent / (path.name + f'.pkg_save_{count}')
         count += 1
     if dest != path:
         shutil.move(path, dest)
+
 
 def traverse(f, pkg_path):
     json_path = pkg_path / 'pkg.json' 
@@ -41,7 +54,6 @@ def traverse(f, pkg_path):
         if 'fallback' in cfg:
             if cfg['fallback'] is not None:
                 dest = normalize_path(cfg['fallback'])
-                evacuate(dest)
                 acc &= f(cfg, pkg_path, dest)
 
         return acc
@@ -52,9 +64,17 @@ def sync_file(cfg, source, dest):
     if cfg['link']:
         dest.symlink_to(source)
     else:
-        shutil.copyfile(source, dest)
+        if not compare_all(source, dest):
+            shutil.copytree(source, dest)
 
     return True
+
+def test_file(cfg, source, dest):
+    if cfg['link']:
+        return dest.resolve() == source
+    else:
+        return compare_all(source, dest, show_msg=True)
+        
 
 if __name__ == '__main__':
     cfg_path = normalize_path(sys.argv[1])
