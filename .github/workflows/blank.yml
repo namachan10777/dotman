@@ -1,0 +1,17 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: apt-get install -y fish
+    - name: Run test
+      run: |
+        sh ./install.sh
+        python ./bin/deploy.py -c ./config.json
