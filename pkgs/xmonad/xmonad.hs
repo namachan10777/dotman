@@ -6,6 +6,7 @@ import XMonad.Util.Run(spawnPipe)
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.Spacing
 import XMonad.Hooks.EwmhDesktops(fullscreenEventHook, ewmh)
+import XMonad.Util.EZConfig
 
 main :: IO()
 main = do
