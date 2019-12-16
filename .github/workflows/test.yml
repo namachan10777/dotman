@@ -11,7 +11,12 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: sudo apt-get install -y fish
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+        architecture: 'x64'
     - name: Run test
       run: |
         sh ./install.sh
+        python --version
         python ./bin/deploy.py -c ./config.json
