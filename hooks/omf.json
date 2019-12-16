@@ -4,6 +4,6 @@
 		[ "curl -L https://get.oh-my.fish | fish" ]
 	],
 	"check": [
-		[ "type omf > /dev/null 2>&1 "]
+		[ "test -e $XDG_CONFIG_HOME/fish/conf.d/omf.fish"]
 	]
 }
