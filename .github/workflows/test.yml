@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install dependencies
-      run: apt-get install -y fish
+      run: sudo apt-get install -y fish
     - name: Run test
       run: |
         sh ./install.sh
