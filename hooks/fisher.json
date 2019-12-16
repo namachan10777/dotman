@@ -1,7 +1,7 @@
 {
 	"workdir": "/tmp",
 	"install": [
-		[ "echo Hello World" ]
+		[ "curl", "https://git.io/fisher --create-dirs -sLo ~/.config/fish/functions/fisher.fish" ]
 	],
 	"check": [
 		[ "test -e $XDG_CONFIG_HOME/fish/functions/fisher.fish" ]
