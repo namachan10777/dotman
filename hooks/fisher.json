@@ -4,6 +4,6 @@
 		[ "curl", "https://git.io/fisher --create-dirs -sLo ~/.config/fish/functions/fisher.fish" ]
 	],
 	"check": [
-		[ "type", "fisher > /dev/null 2>&1" ]
+		[ "test -e $XDG_CONFIG_HOME/fish/functions/fisher.fish" ]
 	]
 }

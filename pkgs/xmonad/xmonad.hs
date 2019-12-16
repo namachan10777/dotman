@@ -6,6 +6,7 @@ import XMonad.Util.Run(spawnPipe)
 import XMonad.Layout.ResizableTile
 import XMonad.Layout.Spacing
 import XMonad.Hooks.EwmhDesktops(fullscreenEventHook, ewmh)
+import XMonad.Util.EZConfig
 
 main :: IO()
 main = do
@@ -15,11 +16,15 @@ main = do
         , startupHook = myStartupHook
         , layoutHook = myLayout
         }
+       `additionalKeys`
+       [ ((mod1Mask .|. controlMask, xK_l     ), spawn "gnome-screensaver-command -l") ]
 
 
 myStartupHook = do
     spawn "feh --bg-scale /usr/share/backgrounds/xmonad/mountains.jpg"
     spawn "xcompmgr"
+    spawn "fcitx"
+    spawn "gnome-screensaver"
     spawn "xmobar $HOME/.xmonad/xmobarrc"
     spawn "xautolock -time 1 -locker \"gnome-screensaver-command -l\" -notify 10 -notifier \"notify-send -t 5000 -i gtk-dialog-info 'Locking in 10 seconds'"
 

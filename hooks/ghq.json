@@ -7,6 +7,6 @@
 		[ "make install" ]
 	],
 	"check": [
-		[ "type ghq > /dev/null 2>&1" ]
+		[ "test -e $GOPATH/bin/ghq" ]
 	]
 }

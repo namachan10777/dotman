@@ -8,6 +8,7 @@ import os
 import shutil
 import filecmp
 import argparse
+import subprocess
 
 def normalize_path(path_string):
     return pathlib.Path(os.path.expanduser(os.path.expandvars(path_string))).absolute()
@@ -84,10 +85,27 @@ def test_file(cfg, source, dest):
         return dest.resolve() == source
     else:
         return compare_all(source, dest, show_msg=True)
-        
+
+def execute_command(code, cwd):
+    return subprocess.run(['sh', '-c', code], cwd=cwd)
+
+def execute_hook(cfg, test_only=True):
+    check = '&&'.join(map(' '.join, cfg['check']))
+
+    if 'workdir' in cfg:
+        cwd = normalize_path(cfg['workdir'])
+    else:
+        cwd = None
+
+    if execute_command(check, cwd).returncode != 0:
+        if not test_only:
+            install = '&&'.join(map(' '.join, cfg['install']))
+            return execute_command(install, cwd).returncode == 0
+        return False
+    return True
+
 
 if __name__ == '__main__':
-    cfg_path = normalize_path(sys.argv[1])
     parser = argparse.ArgumentParser()
     parser.add_argument('--deploy', '-d')
     parser.add_argument('--check', '-c')
@@ -120,6 +138,19 @@ if __name__ == '__main__':
                     print(f'✘ pkg {pkg.name}')
             else:
                 acc &= traverse(sync_file, pkg)
+
+        for hook in hooks_path.glob('*'):
+            with open(hook, 'r') as hook_file:
+                hook_cfg = json.loads(hook_file.read())
+                if parsed['check'] != None:
+                    if execute_hook(hook_cfg, test_only=True):
+                        acc &= True
+                        print(f'✔ hook {hook.name}')
+                    else:
+                        acc &= False
+                        print(f'✘ hook {hook.name}')
+                else:
+                    execute_hook(hook_cfg, test_only=False)
 
         if acc:
             exit(0)
