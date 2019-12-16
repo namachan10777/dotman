@@ -17,6 +17,7 @@ jobs:
         architecture: 'x64'
     - name: Run test
       run: |
+        mkdir ~/.config
         sh ./install.sh
         python --version
         python ./bin/deploy.py -c ./config.json
