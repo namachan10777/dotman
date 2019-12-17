@@ -21,7 +21,7 @@ main = do
 
 
 myStartupHook = do
-    spawn "feh --bg-scale /usr/share/backgrounds/xmonad/mountains.jpg"
+    spawn "feh --bg-scale /usr/share/backgrounds/xmonad/background.png"
     spawn "xcompmgr"
     spawn "fcitx"
     spawn "gnome-screensaver"
