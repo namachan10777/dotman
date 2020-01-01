@@ -1,4 +1,4 @@
-set HERE (cd (dirname (status -f))/../; and pwd)
+set HERE (dirname (status -f))
 source $HERE/env.fish
 
 set -gx GHQ_SELECTOR peco
