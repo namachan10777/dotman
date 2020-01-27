@@ -17,7 +17,8 @@ main = do
         , layoutHook = myLayout
         }
        `additionalKeys`
-       [ ((mod1Mask .|. controlMask, xK_l     ), spawn "gnome-screensaver-command -l") ]
+       [ ((mod1Mask .|. controlMask, xK_l     ), spawn "gnome-screensaver-command -l")
+       , ((mod1Mask, xK_Print) , spawn "gnome-screenshot") ]
 
 
 myStartupHook = do
