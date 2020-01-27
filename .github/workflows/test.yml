@@ -18,6 +18,6 @@ jobs:
     - name: Run test
       run: |
         mkdir ~/.config
-        sh ./install.sh
         python --version
+        python ./bin/deploy.py -d ./config.json
         python ./bin/deploy.py -c ./config.json
