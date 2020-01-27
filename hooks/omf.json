@@ -1,7 +1,7 @@
 {
 	"workdir": "/tmp",
 	"install": [
-		[ "curl -L https://get.oh-my.fish | fish --noninteractive" ]
+		[ "curl -L https://get.oh-my.fish | fish" ]
 	],
 	"check": [
 		[ "test -e $XDG_CONFIG_HOME/fish/conf.d/omf.fish"]
