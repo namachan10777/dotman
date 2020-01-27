@@ -7,6 +7,8 @@ set shiftwidth=4
 set noexpandtab
 set guicursor=
 set hls
+set list
+set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
 
 set clipboard=unnamed
 
