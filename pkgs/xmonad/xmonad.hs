@@ -11,7 +11,7 @@ import XMonad.Util.EZConfig
 main :: IO()
 main = do
     xmonad $ ewmh $ docks def
-        { terminal    = "xfce4-terminal"
+        { terminal    = "alacritty"
         , borderWidth = 1
         , startupHook = myStartupHook
         , layoutHook = myLayout
