@@ -27,8 +27,12 @@ function c
 	cd $argv
 end
 
-function l
-	ls $argv
+function ls
+	exa $argv
+end
+
+function ll
+	exa -l $argv
 end
 
 function m
