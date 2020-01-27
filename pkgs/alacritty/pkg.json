@@ -1,0 +1,6 @@
+{
+	"link": true,
+	"patch": {
+		"$XDG_CONFIG_HOME/alacritty.yml": "alacritty.yml"
+	}
+}
