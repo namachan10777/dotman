@@ -6,7 +6,7 @@ window:
     x: 8
     y: 4
 
-background_opacity: 0.2
+background_opacity: 0.7
 
 colors:
   primary:
@@ -42,4 +42,4 @@ font:
   bold_italic:
     family: monospace
 
-  size: 11.5
+  size: 7.2
