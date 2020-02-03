@@ -35,6 +35,10 @@ function ll
 	exa -l $argv
 end
 
+function lt
+	exa -T $argv
+end
+
 function m
 	mv $argv
 end
