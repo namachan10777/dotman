@@ -15,6 +15,7 @@ main = do
         , borderWidth = 1
         , startupHook = myStartupHook
         , layoutHook = myLayout
+        , modMask = myModMask
         }
        `additionalKeys`
        [ ((mod1Mask .|. controlMask, xK_l     ), spawn "gnome-screensaver-command -l")
@@ -29,7 +30,7 @@ myStartupHook = do
     spawn "xmobar $HOME/.xmonad/xmobarrc"
     spawn "xautolock -time 1 -locker \"gnome-screensaver-command -l\" -notify 10 -notifier \"notify-send -t 5000 -i gtk-dialog-info 'Locking in 10 seconds'"
 
-
+myModMask = mod4Mask -- Superkey
 
 myLayout = avoidStruts $ smartSpacing sp (Mirror (tall) ||| tall) ||| Full
     where
