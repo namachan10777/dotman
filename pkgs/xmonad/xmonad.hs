@@ -8,6 +8,7 @@ import XMonad.Layout.Spacing
 import XMonad.Hooks.EwmhDesktops(fullscreenEventHook, ewmh)
 import XMonad.Util.EZConfig
 
+
 main :: IO()
 main = do
     xmonad $ ewmh $ docks def
@@ -18,8 +19,8 @@ main = do
         , modMask = myModMask
         }
        `additionalKeys`
-       [ ((mod1Mask .|. controlMask, xK_l     ), spawn "gnome-screensaver-command -l")
-       , ((mod1Mask, xK_Print) , spawn "gnome-screenshot") ]
+       [ ((myModMask .|. controlMask, xK_l     ), spawn "gnome-screensaver-command -l")
+       , ((myModMask, xK_Print) , spawn "gnome-screenshot") ]
 
 
 myStartupHook = do
