@@ -1,23 +1,9 @@
 # basic
 # 補完で有名なやつ
 [[plugins]]
-repo = 'Shougo/deoplete.nvim'
-on_event = 'InsertCharPre'
-hook_add = '''
-	let g:deoplete#enable_at_startup = 1
-	let g:deoplete#enable_camel_case = 1
-	let g:deoplete#enable_smart_case = 1
-
-	inoremap <silent><expr> <TAB>
-	\ pumvisible() ? "\<C-n>" :
-	\ <SID>check_back_space() ? "\<TAB>" :
-	\ deoplete#manual_complete()
-	function! s:check_back_space() abort "{{{
-		let col = col('.') - 1
-		return !col || getline('.')[col - 1] =~ '\s'
-	endfunction"}}}
-'''
-on_i = 1
+repo = 'neoclide/coc.nvim'
+build = 'yarn install --frozen-lockfile'
+merged = 0
 
 # ファイルとかをいい感じに探せる有名なやつ
 [[plugins]]
@@ -136,18 +122,6 @@ repo = 'cespare/vim-toml'
 on_ft = 'toml'
 
 # Rust
-[[plugins]]
-repo = 'sebastianmarkow/deoplete-rust'
-on_ft = 'rust'
-depends = ['deoplete.nvim']
-hook_add = '''
-	let g:deoplete#sources#rust#racer_binary='/home/namachan/.cargo/bin/racer'
-	let g:deoplete#sources#rust#rust_source_path='/home/namachan/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src'
-	let g:deoplete#sources#rust#show_dupliates = 1
-	let g:deoplete#sources#rust#disable_keymap = 1
-	nmap <buffer> gd <plug>DeopleteRustGoToDefinitionDefault
-	nmap <buffer> K  <plug>DeopleteRustShowDocumentation
-'''
 
 [[plugins]]
 repo = 'rust-lang/rust.vim'
