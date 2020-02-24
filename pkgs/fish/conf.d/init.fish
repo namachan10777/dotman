@@ -4,7 +4,6 @@ source $HERE/env.fish
 
 # envs {{{
 set -gx GHQ_SELECTOR peco
-set -gx 
 # }}}
 
 # abbr {{{
