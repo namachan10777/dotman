@@ -1,32 +1,22 @@
+# vim:fdm=marker
 set HERE (dirname (status -f))
 source $HERE/env.fish
 
+# envs {{{
 set -gx GHQ_SELECTOR peco
+# }}}
 
-function py
-	ipython
-end
+# abbr {{{
+abbr -a py ipython
+abbr -a .   "cd ../"
+abbr -a ..  "cd ../../"
+abbr -a ... "cd ../../../"
+abbr -a v nvim
+abbr -a c cd
+abbr -a stdwn "shutdown -h now"
+# }}}
 
-function ...
-	cd ../../
-end
-
-function ....
-	cd ../../../
-end
-
-function grep
-	echo "use 'rg'!"
-end
-
-function v
-	nvim $argv
-end
-
-function c
-	cd $argv
-end
-
+# alias {{{
 function ls
 	exa $argv
 end
@@ -39,34 +29,25 @@ function lt
 	exa -T $argv
 end
 
-function m
-	mv $argv
-end
-
 function clipb
 	xsel --clipboard --input
-end
-
-function pac
-	packer $argv
-end
-
-function stdwn
-	sudo shutdown -h now
 end
 
 function diff
 	icdiff $argv
 end
+# }}}
 
-
+# ~/tmp {{{
 set TMPDIR /tmp/.(whoami)-tmp
 
 if not test -e ~/tmp
 	mkdir -p $TMPDIR
 	ln -s $TMPDIR ~/tmp
 end
+# }}}
 
+# terminal local {{{
 if test $TERM
 	switch $TERM
 		case linux
@@ -78,3 +59,4 @@ if test $TERM
 			set -gx GTK_IM_MODULE fcitx
 	end
 end
+# }}}
