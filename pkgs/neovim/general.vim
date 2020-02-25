@@ -10,12 +10,12 @@ set hls
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
 
-set clipboard=unnamed
+set clipboard+=unnamed
 
 " 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
-colorscheme yowish
+colorscheme PaperColor
 
 " 透過関連
 highlight Normal ctermbg=NONE guibg=NONE

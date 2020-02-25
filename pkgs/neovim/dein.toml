@@ -191,3 +191,6 @@ repo = 'vim-scripts/Gummybears'
 
 [[plugins]]
 repo = 'scottymoon/vim-twilight'
+
+[[plugins]]
+repo = 'NLKNguyen/papercolor-theme'
