@@ -8,9 +8,8 @@ set -gx GHQ_SELECTOR peco
 
 # abbr {{{
 abbr -a py ipython
-abbr -a .   "cd ../"
-abbr -a ..  "cd ../../"
-abbr -a ... "cd ../../../"
+abbr -a ..  "cd ../"
+abbr -a ... "cd ../../"
 abbr -a v nvim
 abbr -a c cd
 abbr -a stdwn "shutdown -h now"
