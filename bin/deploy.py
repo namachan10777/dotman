@@ -57,7 +57,7 @@ def traverse(f, pkg_path):
                 source = normalize_path(pkg_path / patch)
                 dest   = normalize_path(cfg['patch'][patch])
                 acc &= f(cfg, source, dest)
-                
+
         if 'fallback' in cfg:
             if cfg['fallback'] is not None:
                 dest = normalize_path(cfg['fallback'])
