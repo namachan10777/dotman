@@ -83,3 +83,7 @@ check nvim
 check ipython
 check ghq
 # }}}
+
+# starship {{{
+starship init fish | source
+# }}}
