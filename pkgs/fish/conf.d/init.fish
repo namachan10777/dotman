@@ -62,3 +62,24 @@ if test $TERM
 	end
 end
 # }}}
+
+# install checker {{{
+function check
+	if not type $argv[1] > /dev/null 2>&1
+		echo $argv[1] "is yet installed"
+	end
+end
+
+check fd
+check rg
+check bat
+check hexyl
+check procs
+check gotop
+check battop
+check tokei
+check exa
+check nvim
+check ipython
+check ghq
+# }}}
