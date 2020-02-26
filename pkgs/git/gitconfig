@@ -1,0 +1,19 @@
+[user]
+	email = namachan10777@gmail.com
+	name = Nakano Masaki
+[commit]
+	gpgsign = true
+[gpg]
+	program = gpg
+[color]
+	status = auto
+	branch = auto
+	interactive = auto
+	diff = auto
+[diff]
+	indentHeuristic = true
+
+[ghq]
+	root = ~/Project
+[core]
+	pager = delta --dark
