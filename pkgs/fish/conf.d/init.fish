@@ -13,6 +13,9 @@ abbr -a ... "cd ../../"
 abbr -a v nvim
 abbr -a c cd
 abbr -a stdwn "shutdown -h now"
+abbr -a top gotop
+abbr -a btop battop
+abbr -a tk tokei
 # }}}
 
 # alias {{{
