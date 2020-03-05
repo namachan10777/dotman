@@ -1,4 +1,5 @@
 set number
+set relativenumber
 set noswapfile
 syntax on
 filetype plugin on
