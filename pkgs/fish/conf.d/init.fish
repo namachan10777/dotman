@@ -5,6 +5,7 @@ source $HERE/env.fish
 # envs {{{
 set -gx PATH ~/.ghcup/bin/ $PATH
 set -gx GHQ_SELECTOR peco
+set -gx PATH ~/.ghcup/bin/ $PATH
 # }}}
 
 # abbr {{{

@@ -28,7 +28,7 @@ myStartupHook = do
     spawn "xcompmgr"
     spawn "fcitx"
     spawn "gnome-screensaver"
-    spawn "xmobar $HOME/.xmonad/xmobarrc"
+    spawn "/home/m-nakano/.cabal/bin/xmobar $HOME/.xmonad/xmobarrc"
     spawn "xautolock -time 1 -locker \"gnome-screensaver-command -l\" -notify 10 -notifier \"notify-send -t 5000 -i gtk-dialog-info 'Locking in 10 seconds'"
 
 myModMask = mod4Mask -- Superkey
