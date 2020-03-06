@@ -17,6 +17,7 @@ abbr -a stdwn "shutdown -h now"
 abbr -a top gotop
 abbr -a btop battop
 abbr -a tk tokei
+abbr -a gpo git push origin
 # }}}
 
 # alias {{{
