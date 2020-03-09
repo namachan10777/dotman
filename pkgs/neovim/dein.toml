@@ -168,3 +168,6 @@ repo = 'scottymoon/vim-twilight'
 
 [[plugins]]
 repo = 'NLKNguyen/papercolor-theme'
+
+[[plugins]]
+repo = 'gregjurman/vim-nc'
