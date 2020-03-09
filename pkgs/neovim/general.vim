@@ -7,6 +7,7 @@ set tabstop=4
 set shiftwidth=4
 set noexpandtab
 set guicursor=
+set hidden
 set hls
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%
