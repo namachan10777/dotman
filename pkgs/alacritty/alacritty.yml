@@ -34,12 +34,12 @@ colors:
 
 font:
   normal:
-    family: monospace
+    family: Hack
   bold:
-    family: monospace
+    family: Hack
   italic:
-    family: monospace
+    family: Hack
   bold_italic:
-    family: monospace
+    family: Hack
 
   size: 7.2
