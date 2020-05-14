@@ -101,6 +101,10 @@ hook_add = '''
 repo = 'qnighy/satysfi.vim'
 on_ft = 'satysfi'
 
+# pest
+[[plugins]]
+repo = 'pest-parser/pest.vim'
+
 # Elm
 [[plugins]]
 repo = 'ElmCast/elm-vim'
