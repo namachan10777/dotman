@@ -98,7 +98,7 @@ hook_add = '''
 
 # satysfi
 [[plugins]]
-repo = 'ToruNiina/satysfi.vim'
+repo = 'qnighy/satysfi.vim'
 on_ft = 'satysfi'
 
 # Elm
