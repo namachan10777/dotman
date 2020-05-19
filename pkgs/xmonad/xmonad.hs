@@ -25,10 +25,10 @@ main = do
 
 myStartupHook = do
     spawn "feh --bg-scale /usr/share/backgrounds/xmonad/background.png"
-    spawn "xcompmgr"
+    spawn "picom -c -D 5"
     spawn "fcitx"
     spawn "gnome-screensaver"
-    spawn "/home/namachan/.cabal/bin/xmobar $HOME/.xmonad/xmobarrc"
+    spawn "polybar example"
     spawn "xautolock -time 1 -locker \"gnome-screensaver-command -l\" -notify 10 -notifier \"notify-send -t 5000 -i gtk-dialog-info 'Locking in 10 seconds'"
 
 myModMask = mod4Mask -- Superkey
