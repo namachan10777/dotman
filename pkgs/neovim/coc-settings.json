@@ -1,18 +1,4 @@
 {
 	"languageserver": {
-		"d": {
-			"command": "/home/burner/.dub/packages/.bin/dls-latest/dls",
-			"args": ["--stdio"],
-			"filetypes": ["d"],
-			"trace.server": "off",
-			"rootPatterns": ["dub.json", "dub.sdl"],
-			"initializationOptions": {},
-			"settings": {}
-		},
-		"ocaml": {
-			"command": "ocaml-language-server",
-			"args": ["--stdio"],
-			"filetypes": ["ocaml", "reason"]
-		}
 	}
 }
