@@ -14,7 +14,7 @@ call s:install('nerdtree', 'preservim/nerdtree')
 call s:install('coc', 'neoclide/coc.nvim')
 call s:install('satysfi', 'qnighy/satysfi.vim')
 call s:install('pest', 'pest-parser/pest.vim')
-call s:install('lightline', 'itchyny/lightline.vim')
+call s:install('airline', 'vim-airline/vim-airline')
 
 
 " undo persistence {{{
@@ -304,6 +304,7 @@ augroup END
 
 set foldmethod=marker
 
+set hidden
 set number
 set relativenumber
 set noswapfile
