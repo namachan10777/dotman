@@ -54,9 +54,11 @@ module-margin-right = 2
 font-0 = fixed:pixelsize=10;1
 font-1 = unifont:fontformat=truetype:size=8:antialias=false;0
 font-2 = siji:pixelsize=10;1
+font-3 = "Iosevka Nerd Font:pixelsize=14;3"
+font-4 = "IPAex Gothic:pixelsize=12"
 
-modules-left = bspwm
-modules-center = mpd
+modules-left = workspaces-xmonad
+modules-center = title-xmonad
 modules-right = filesystem xbacklight alsa pulseaudio xkeyboard memory cpu wlan eth battery temperature date powermenu
 
 tray-position = right
@@ -298,6 +300,20 @@ bar-volume-fill-font = 2
 bar-volume-empty = ─
 bar-volume-empty-font = 2
 bar-volume-empty-foreground = ${colors.foreground-alt}
+
+[module/title-xmonad]
+type = custom/script
+exec = tail -F /tmp/.xmonad-title-log
+exec-if = [ -p /tmp/.xmonad-title-log ]
+tail = true
+
+[module/workspaces-xmonad]
+type = custom/script
+exec = tail -F /tmp/.xmonad-workspace-log
+exec-if = [ -p /tmp/.xmonad-workspace-log ]
+tail = true
+format-padding = 1
+;format-margin = ${margin.for-modules}
 
 [module/alsa]
 type = internal/alsa
