@@ -31,7 +31,7 @@ main = do
         , logHook = eventLogHook workspaceLogfile titleLogfile
         }
        `additionalKeys`
-       [ ((myModMask .|. controlMask, xK_l     ), spawn "gnome-screensaver-command -l")
+       [ ((myModMask .|. controlMask, xK_l     ), spawn "light-locker-command -l")
        , ((myModMask, xK_Print) , spawn "gnome-screenshot") ]
 
 prepareLogFile :: [Char] -> IO()
@@ -72,12 +72,12 @@ eventLogHook workspaceLog titleLog = do
     io . appendFile titleLog . (++ "\n") =<< getTitleLog
 
 myStartupHook = do
-    spawn "feh --bg-scale /usr/share/backgrounds/xmonad/background.png"
+    spawn "feh --bg-scale /usr/share/lightdm-webkit/themes/litarvan/img/background.b9890328.png"
     spawn "picom -c -D 5"
     spawn "fcitx"
-    spawn "gnome-screensaver"
     spawn "polybar example"
-    spawn "xautolock -time 1 -locker \"gnome-screensaver-command -l\" -notify 10 -notifier \"notify-send -t 5000 -i gtk-dialog-info 'Locking in 10 seconds'"
+    spawn "light-locker"
+    spawn "xautolock -time 1 -locker \"light-locker-command -l\" -notify 10 -notifier \"notify-send -t 5000 -i gtk-dialog-info 'Locking in 10 seconds'"
 
 myModMask = mod4Mask -- Superkey
 
