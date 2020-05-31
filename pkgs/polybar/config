@@ -59,7 +59,7 @@ font-4 = "IPAex Gothic:pixelsize=12"
 
 modules-left = workspaces-xmonad
 modules-center = title-xmonad
-modules-right = filesystem xbacklight alsa pulseaudio xkeyboard memory cpu wlan eth battery temperature date powermenu
+modules-right = filesystem xbacklight pulseaudio xkeyboard memory cpu wlan eth battery temperature date powermenu
 
 tray-position = right
 tray-padding = 2
