@@ -32,7 +32,9 @@ main = do
         }
        `additionalKeys`
        [ ((myModMask .|. controlMask, xK_l     ), spawn "light-locker-command -l")
-       , ((myModMask, xK_Print) , spawn "gnome-screenshot") ]
+       , ((myModMask, xK_Print) , spawn "gnome-screenshot")
+       , ((myModMask, xK_F5) , spawn "xbacklight -dec 10")
+       , ((myModMask, xK_F6) , spawn "xbacklight -inc 10") ]
 
 prepareLogFile :: [Char] -> IO()
 prepareLogFile name = do
