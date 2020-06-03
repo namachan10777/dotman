@@ -1,17 +1,18 @@
 " package manager {{{
-function s:install(packname, source)
+function s:install(packname, source, command)
 	let s:repo_dir = '~/.local/share/nvim/site/pack/ever/start/'
 	let s:dest = s:repo_dir . a:packname
 	if !isdirectory(expand(s:dest))
 		echo 'installing ' . a:source . 'into' . s:dest
 		execute ('!git clone https://github.com/' . a:source) s:dest
+		execute ('cd ' . s:dest)
+		execute (a:command)
 	endif
 endfunction
 " }}}
 
-call s:install('papercolor', 'NLKNguyen/papercolor-theme')
-call s:install('nerdtree', 'preservim/nerdtree')
-call s:install('nvim-lsp', 'neovim/nvim-lsp')
+call s:install('papercolor', 'NLKNguyen/papercolor-theme', '')
+call s:install('nerdtree', 'preservim/nerdtree', '')
 
 
 " undo persistence {{{
