@@ -24,7 +24,7 @@ main = do
     prepareLogFile titleLogfile
     xmonad $ ewmh $ docks def
         { terminal    = "alacritty"
-        , borderWidth = 1
+        , borderWidth = 3
         , startupHook = myStartupHook
         , layoutHook = myLayout
         , modMask = myModMask
