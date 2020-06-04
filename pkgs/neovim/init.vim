@@ -17,6 +17,13 @@ call s:install('pest', 'pest-parser/pest.vim')
 call s:install('airline', 'vim-airline/vim-airline')
 call s:install('quickhl', 't9md/vim-quickhl')
 
+" language setting {{{
+augroup LanguageSetting
+	autocmd!
+	autocmd FileType satysfi setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
+	autocmd FileType ocaml,cpp setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
+augroup END
+" }}}
 
 " undo persistence {{{
 augroup SaveEditPos
@@ -319,10 +326,10 @@ set number
 set relativenumber
 set noswapfile
 syntax on
-filetype plugin on
-set tabstop=4
-set shiftwidth=4
-set noexpandtab
+filetype plugin indent on
+"set tabstop=4
+"set shiftwidth=4
+"set noexpandtab
 set guicursor=
 set hls
 set list
