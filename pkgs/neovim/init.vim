@@ -15,6 +15,7 @@ call s:install('coc', 'neoclide/coc.nvim')
 call s:install('satysfi', 'qnighy/satysfi.vim')
 call s:install('pest', 'pest-parser/pest.vim')
 call s:install('airline', 'vim-airline/vim-airline')
+call s:install('quickhl', 't9md/vim-quickhl')
 
 
 " undo persistence {{{
@@ -302,6 +303,13 @@ augroup NERDTreeSetting
 	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 augroup END
 
+" }}}
+
+" quickhl {{{
+nmap <Space>m <Plug>(quickhl-manual-this)
+xmap <Space>m <Plug>(quickhl-manual-this)
+nmap <Space>M <Plug>(quickhl-manual-reset)
+xmap <Space>M <Plug>(quickhl-manual-reset)
 " }}}
 
 set foldmethod=marker
