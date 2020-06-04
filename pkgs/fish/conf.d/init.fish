@@ -37,10 +37,6 @@ end
 function clipb
 	xsel --clipboard --input
 end
-
-function diff
-	icdiff $argv
-end
 # }}}
 
 # ~/tmp {{{
