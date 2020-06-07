@@ -37,10 +37,6 @@ end
 function clipb
 	xsel --clipboard --input
 end
-
-function diff
-	icdiff $argv
-end
 # }}}
 
 # ~/tmp {{{
@@ -90,3 +86,5 @@ check ghq
 # starship {{{
 starship init fish | source
 # }}}
+
+smua ~/.smua.json

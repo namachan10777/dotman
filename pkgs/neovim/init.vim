@@ -20,8 +20,8 @@ call s:install('quickhl', 't9md/vim-quickhl')
 " language setting {{{
 augroup LanguageSetting
 	autocmd!
-	autocmd FileType satysfi setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
-	autocmd FileType ocaml,cpp setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
+	autocmd FileType satysfi,yaml setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
+	autocmd FileType ocaml,cpp,c setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
 augroup END
 " }}}
 
