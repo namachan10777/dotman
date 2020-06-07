@@ -321,6 +321,18 @@ nmap <Space>M <Plug>(quickhl-manual-reset)
 xmap <Space>M <Plug>(quickhl-manual-reset)
 " }}}
 
+" vertical f {{{
+command -nargs=1 MyLineSearch let @m=<q-args> | call search('^\s*'. @m)
+command -nargs=1 MyLineBackSearch let @m=<q-args> | call search('^\s*'. @m, 'b')
+nnoremap <Space>f :MyLineSearch<Space>
+nnoremap <Space>F :MyLineBackSearch<Space>
+" }}}
+
+" command window {{{
+autocmd CmdwinEnter : g/^qa\?!\?$/d
+autocmd CmdwinEnter : g/^wq\?a\?!\?$/d
+" }}}
+
 set foldmethod=marker
 
 set hidden
