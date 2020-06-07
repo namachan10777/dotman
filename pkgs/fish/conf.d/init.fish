@@ -86,3 +86,5 @@ check ghq
 # starship {{{
 starship init fish | source
 # }}}
+
+smua ~/.smua.json
