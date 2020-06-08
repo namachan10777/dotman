@@ -152,7 +152,7 @@ augroup CoC
 	set nowritebackup
 
 	" Give more space for displaying messages.
-	set cmdheight=2
+	set cmdheight=3
 
 	" Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 	" delays and poor user experience.
@@ -362,4 +362,5 @@ highlight NonText ctermbg=NONE guibg=NONE
 highlight SpecialKey ctermbg=NONE guibg=NONE
 highlight EndOfBuffer ctermbg=NONE guibg=NONE
 highlight LineNr ctermbg=NONE guibg=NONE
+highlight CocUnderline ctermbg=Red cterm=underline
 endfunction
