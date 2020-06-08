@@ -9,6 +9,7 @@ function s:install(packname, source)
 endfunction
 " }}}
 
+call s:install('fish', 'dag/vim-fish')
 call s:install('papercolor', 'NLKNguyen/papercolor-theme')
 call s:install('nerdtree', 'preservim/nerdtree')
 call s:install('coc', 'neoclide/coc.nvim')
