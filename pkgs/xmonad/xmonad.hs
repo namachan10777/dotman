@@ -78,6 +78,7 @@ myStartupHook = do
     spawn "picom -c -D 5"
     spawn "fcitx"
     spawn "polybar example"
+    spawn "slack"
     spawn "light-locker"
     spawn "xautolock -time 1 -locker \"light-locker-command -l\" -notify 10 -notifier \"notify-send -t 5000 -i gtk-dialog-info 'Locking in 10 seconds'"
 
