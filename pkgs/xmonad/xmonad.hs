@@ -1,5 +1,6 @@
 import XMonad
 import System.IO
+import XMonad.Layout.NoFrillsDecoration
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Util.Run(spawnPipe)
@@ -33,6 +34,7 @@ main = do
        `additionalKeys`
        [ ((myModMask .|. controlMask, xK_l     ), spawn "light-locker-command -l")
        , ((myModMask, xK_Print) , spawn "gnome-screenshot")
+       , ((myModMask, xK_p) , spawn "rofi -show drun")
        , ((myModMask, xK_F5) , spawn "xbacklight -dec 10")
        , ((myModMask, xK_F6) , spawn "xbacklight -inc 10") ]
 
