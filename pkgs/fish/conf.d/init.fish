@@ -19,6 +19,7 @@ abbr -a top gotop
 abbr -a btop battop
 abbr -a tk tokei
 abbr -a gpo git push origin
+abbr -a lg lazygit
 # }}}
 
 # alias {{{
