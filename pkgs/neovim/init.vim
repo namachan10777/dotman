@@ -17,6 +17,8 @@ call s:install('satysfi', 'qnighy/satysfi.vim')
 call s:install('pest', 'pest-parser/pest.vim')
 call s:install('airline', 'vim-airline/vim-airline')
 call s:install('quickhl', 't9md/vim-quickhl')
+call s:install('toml', 'cespare/vim-toml')
+call s:install('lalrpop', 'qnighy/lalrpop.vim')
 
 " language setting {{{
 augroup LanguageSetting
