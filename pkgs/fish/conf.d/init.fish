@@ -88,4 +88,8 @@ check ghq
 starship init fish | source
 # }}}
 
+if test -n "$DESKTOP_SESSION"
+	eval 'set -gx '(gnome-keyring-daemon --start | sed -e 's/=/ /')
+end
+
 smua ~/.smua.json
