@@ -23,8 +23,8 @@ call s:install('lalrpop', 'qnighy/lalrpop.vim')
 " language setting {{{
 augroup LanguageSetting
 	autocmd!
-	autocmd FileType satysfi,yaml setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
-	autocmd FileType ocaml,cpp,c setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
+	autocmd FileType satysfi,yaml,tml setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
+	autocmd FileType ocaml,cpp,c,kibanate setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
 augroup END
 " }}}
 
