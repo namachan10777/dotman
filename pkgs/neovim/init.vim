@@ -19,11 +19,17 @@ call s:install('airline', 'vim-airline/vim-airline')
 call s:install('quickhl', 't9md/vim-quickhl')
 call s:install('toml', 'cespare/vim-toml')
 call s:install('lalrpop', 'qnighy/lalrpop.vim')
+call s:install('elm', 'ElmCast/elm-vim')
+call s:install('jsx', 'mxw/vim-jsx')
+call s:install('tsx', 'ianks/vim-tsx')
+call s:install('prettier', 'prettier/vim-prettier')
+call s:install('otynium', 'otyn0308/otynium')
 
 " language setting {{{
 augroup LanguageSetting
 	autocmd!
-	autocmd FileType satysfi,yaml,tml setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
+	autocmd FileType satysfi syntax sync fromstart
+	autocmd FileType satysfi,yaml,tml,javascript,typescript.tsx setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
 	autocmd FileType ocaml,cpp,c,kibanate setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
 augroup END
 " }}}
@@ -234,7 +240,7 @@ augroup END
 augroup mygroup
   autocmd!
   " Setup formatexpr specified filetype(s).
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  autocmd FileType typescript,json,javascript setl formatexpr=CocAction('formatSelected')
   " Update signature help on jump placeholder.
   autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
 augroup end
@@ -357,13 +363,20 @@ set clipboard+=unnamed
 " 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
-colorscheme PaperColor
+colorscheme tango
 
 " 透過関連
-highlight Normal ctermbg=NONE guibg=NONE
-highlight NonText ctermbg=NONE guibg=NONE
-highlight SpecialKey ctermbg=NONE guibg=NONE
-highlight EndOfBuffer ctermbg=NONE guibg=NONE
-highlight LineNr ctermbg=NONE guibg=NONE
-highlight CocUnderline ctermbg=Red cterm=underline
+highlight Normal          ctermbg=NONE    guibg=NONE
+highlight NonText         ctermbg=NONE    guibg=NONE
+highlight SpecialKey      ctermbg=NONE    guibg=NONE
+highlight EndOfBuffer     ctermbg=NONE    guibg=NONE
+highlight LineNr          ctermbg=NONE    guibg=NONE
+highlight CocUnderline    ctermbg=Red     cterm=underline
+highlight CocInfoSign     ctermfg=Yellow  guifg=#fab005
+highlight CocErrorSign    ctermfg=Red     guifg=#ff0000
+highlight CocWarningSign  ctermfg=Brown   guifg=#ff922b
+highlight CocInfoSign     ctermfg=Yellow  guifg=#fab005
+highlight CocHintSign     ctermfg=Blue    guifg=#15aabf
+highlight CocSelectedText ctermfg=Red     guifg=#fb4934
+highlight CocCodeLens     ctermfg=Gray    guifg=#999999
 endfunction
