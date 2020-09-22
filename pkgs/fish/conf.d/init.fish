@@ -3,7 +3,9 @@ set HERE (dirname (status -f))
 source $HERE/env.fish
 
 # envs {{{
-set -gx PATH ~/.ghcup/bin/ $PATH
+set -gx PATH ~/.ghcup/bin/ ~/.npm/bin $PATH
+set -gx NPM_PACKAGES ~/.npm
+set -gx NODE_PATH ~/.npm/lib/node_modules $NODE_PATH
 set -gx GHQ_SELECTOR peco
 set -gx PATH ~/.ghcup/bin/ ~/.cache/npm/bin/ $PATH
 # }}}
