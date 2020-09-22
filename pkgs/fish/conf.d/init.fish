@@ -51,41 +51,6 @@ if not test -e ~/tmp
 end
 # }}}
 
-# terminal local {{{
-if test $TERM
-	switch $TERM
-		case linux
-			sudo loadkeys ~/.keystrings
-		case '*'
-			# fcitx setting
-			set -gx XMODIFIERS "@im=fcitx"
-			set -gx QT_IM_MODULE fcitx
-			set -gx GTK_IM_MODULE fcitx
-	end
-end
-# }}}
-
-# install checker {{{
-function check
-	if not type $argv[1] > /dev/null 2>&1
-		echo $argv[1] "is yet installed"
-	end
-end
-
-check fd
-check rg
-check bat
-check hexyl
-check procs
-check gotop
-check battop
-check tokei
-check exa
-check nvim
-check ipython
-check ghq
-# }}}
-
 # starship {{{
 starship init fish | source
 # }}}
@@ -93,5 +58,3 @@ starship init fish | source
 if test -n "$DESKTOP_SESSION"
 	eval 'set -gx '(gnome-keyring-daemon --start | sed -e 's/=/ /')
 end
-
-smua ~/.smua.json
