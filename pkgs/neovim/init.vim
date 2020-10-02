@@ -11,7 +11,6 @@ endfunction
 
 call s:install('fish', 'dag/vim-fish')
 call s:install('papercolor', 'NLKNguyen/papercolor-theme')
-call s:install('nerdtree', 'preservim/nerdtree')
 call s:install('coc', 'neoclide/coc.nvim')
 call s:install('satysfi', 'qnighy/satysfi.vim')
 call s:install('pest', 'pest-parser/pest.vim')
@@ -24,6 +23,9 @@ call s:install('jsx', 'mxw/vim-jsx')
 call s:install('tsx', 'ianks/vim-tsx')
 call s:install('prettier', 'prettier/vim-prettier')
 call s:install('otynium', 'otyn0308/otynium')
+call s:install('chadtree', 'ms-jpq/chadtree')
+
+
 
 " language setting {{{
 augroup LanguageSetting
@@ -31,6 +33,7 @@ augroup LanguageSetting
 	autocmd FileType satysfi syntax sync fromstart
 	autocmd FileType satysfi,yaml,tml,javascript,typescript.tsx setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
 	autocmd FileType ocaml,cpp,c,kibanate setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
+	autocmd FileType Makefile setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=4
 augroup END
 " }}}
 
@@ -44,25 +47,6 @@ augroup SaveEditPos
 	" 編集位置保存設定
 	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 augroup END
-" }}}
-
-" NERDTree {{{
-augroup NERDTreeSetting
-	autocmd!
-	if winwidth('%') > 120
-		autocmd StdinReadPre * let s:std_in = 1
-		if argc() == 0 || argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in")
-			" ディレクトリ又は指定なしではツリーにフォーカス
-			autocmd vimenter * NERDTreeToggle
-		else
-			" ファイル指定して開いた場合はバッファにフォーカス
-			autocmd vimenter * NERDTreeToggle | wincmd p
-		endif
-	endif
-	" NERDTree以外のバッファが閉じられたらNERDTreeも閉じる
-	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-augroup END
-
 " }}}
 
 " mkdir -p {{{
@@ -102,6 +86,24 @@ augroup Lazy
 	autocmd VimEnter * call LazySetting()
 augroup END
 
+" CHADTree {{{
+augroup CHADTreeSetting
+	autocmd!
+	if winwidth('%') > 120
+		autocmd StdinReadPre * let s:std_in = 1
+		if argc() == 0 || argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in")
+			" ディレクトリ又は指定なしではツリーにフォーカス
+			autocmd vimenter * CHADOpen
+		else
+			" ファイル指定して開いた場合はバッファにフォーカス
+			autocmd vimenter * CHADOpen | wincmd p
+		endif
+		" CHADTree以外のバッファが閉じられたらCHADTreeも閉じる
+	endif
+	autocmd bufenter * if (winnr("$") == 1 && exists("b:CHADTree") && b:CHADTree.isTabTree()) | q | endif
+augroup END
+
+" }}}
 
 autocmd FileType rust let b:coc_root_patterns = ['Cargo.toml']
 
@@ -304,24 +306,6 @@ nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
 " }}}
 
-" NERDTree {{{
-augroup NERDTreeSetting
-	autocmd!
-	if winwidth('%') > 120
-		autocmd StdinReadPre * let s:std_in = 1
-		if argc() == 0 || argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in")
-			" ディレクトリ又は指定なしではツリーにフォーカス
-			autocmd vimenter * NERDTreeToggle
-		else
-			" ファイル指定して開いた場合はバッファにフォーカス
-			autocmd vimenter * NERDTreeToggle | wincmd p
-		endif
-		" NERDTree以外のバッファが閉じられたらNERDTreeも閉じる
-	endif
-	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-augroup END
-
-" }}}
 
 " quickhl {{{
 nmap <Space>m <Plug>(quickhl-manual-this)
@@ -363,7 +347,6 @@ set clipboard+=unnamed
 " 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
-colorscheme tango
 
 " 透過関連
 highlight Normal          ctermbg=NONE    guibg=NONE

@@ -8,6 +8,7 @@ set -gx OCAMLPARAM "_,bin-annot=1"
 set -gx OPAMKEEPBUILDDIR 1
 set -gx GOPATH ~/.local/share/go
 set -gx GHQ_SELECTOR peco
+set -gx DOCKER_BUILDKIT 1
 if type opam > /dev/null 2>&1
 	eval (opam env)
 end
