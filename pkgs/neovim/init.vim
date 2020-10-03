@@ -9,21 +9,32 @@ function s:install(packname, source)
 endfunction
 " }}}
 
-call s:install('fish', 'dag/vim-fish')
-call s:install('papercolor', 'NLKNguyen/papercolor-theme')
-call s:install('nerdtree', 'preservim/nerdtree')
-call s:install('coc', 'neoclide/coc.nvim')
-call s:install('satysfi', 'qnighy/satysfi.vim')
-call s:install('pest', 'pest-parser/pest.vim')
-call s:install('airline', 'vim-airline/vim-airline')
-call s:install('quickhl', 't9md/vim-quickhl')
-call s:install('toml', 'cespare/vim-toml')
-call s:install('lalrpop', 'qnighy/lalrpop.vim')
-call s:install('elm', 'ElmCast/elm-vim')
-call s:install('jsx', 'mxw/vim-jsx')
-call s:install('tsx', 'ianks/vim-tsx')
-call s:install('prettier', 'prettier/vim-prettier')
-call s:install('otynium', 'otyn0308/otynium')
+let s:minpac_dir = '~/.config/nvim/pack/minpac/opt/minpac'
+if !isdirectory(expand(s:minpac_dir))
+	execute('!git clone https://github.com/k-takata/minpac.git ' . s:minpac_dir)
+endif
+
+if &compatible
+	set nocompatible
+endif
+packadd minpac
+call minpac#init()
+
+call minpac#add('dag/vim-fish')
+call minpac#add('NLKNguyen/papercolor-theme')
+call minpac#add('preservim/nerdtree')
+call minpac#add('neoclide/coc.nvim')
+call minpac#add('qnighy/satysfi.vim')
+call minpac#add('pest-parser/pest.vim')
+call minpac#add('vim-airline/vim-airline')
+call minpac#add('t9md/vim-quickhl')
+call minpac#add('cespare/vim-toml')
+call minpac#add('qnighy/lalrpop.vim')
+call minpac#add('ElmCast/elm-vim')
+call minpac#add('mxw/vim-jsx')
+call minpac#add('ianks/vim-tsx')
+call minpac#add('prettier/vim-prettier')
+call minpac#add('otyn0308/otynium')
 
 " language setting {{{
 augroup LanguageSetting
@@ -363,7 +374,6 @@ set clipboard+=unnamed
 " 以下カラースキーム設定
 set background=dark
 let g:artesanal_transp_bg = 0
-colorscheme tango
 
 " 透過関連
 highlight Normal          ctermbg=NONE    guibg=NONE
