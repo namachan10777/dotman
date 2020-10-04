@@ -37,6 +37,9 @@ call minpac#add('otyn0308/otynium')
 call minpac#add('lambdalisue/fern.vim')
 call minpac#add('lambdalisue/nerdfont.vim')
 call minpac#add('lambdalisue/fern-renderer-nerdfont.vim')
+call minpac#add('lambdalisue/fern-git-status.vim')
+call minpac#add('lambdalisue/fern-mapping-git.vim')
+call minpac#add('lambdalisue/fern-hijack.vim')
 
 " language setting {{{
 augroup LanguageSetting
@@ -93,6 +96,8 @@ augroup END
 
 " fern {{{
 let g:fern#renderer = "nerdfont"
+nnoremap <space>f :Fern . -drawer<CR>
+xnoremap <space>f :Fern . -drawer<CR>
 " }}}
 
 augroup Lazy
@@ -308,13 +313,6 @@ nmap <Space>m <Plug>(quickhl-manual-this)
 xmap <Space>m <Plug>(quickhl-manual-this)
 nmap <Space>M <Plug>(quickhl-manual-reset)
 xmap <Space>M <Plug>(quickhl-manual-reset)
-" }}}
-
-" vertical f {{{
-command -nargs=1 MyLineSearch let @m=<q-args> | call search('^\s*'. @m)
-command -nargs=1 MyLineBackSearch let @m=<q-args> | call search('^\s*'. @m, 'b')
-nnoremap <Space>f :MyLineSearch<Space>
-nnoremap <Space>F :MyLineBackSearch<Space>
 " }}}
 
 " command window {{{
