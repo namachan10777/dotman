@@ -22,7 +22,6 @@ call minpac#init()
 
 call minpac#add('dag/vim-fish')
 call minpac#add('NLKNguyen/papercolor-theme')
-call minpac#add('preservim/nerdtree')
 call minpac#add('neoclide/coc.nvim')
 call minpac#add('qnighy/satysfi.vim')
 call minpac#add('pest-parser/pest.vim')
@@ -35,6 +34,9 @@ call minpac#add('mxw/vim-jsx')
 call minpac#add('ianks/vim-tsx')
 call minpac#add('prettier/vim-prettier')
 call minpac#add('otyn0308/otynium')
+call minpac#add('lambdalisue/fern.vim')
+call minpac#add('lambdalisue/nerdfont.vim')
+call minpac#add('lambdalisue/fern-renderer-nerdfont.vim')
 
 " language setting {{{
 augroup LanguageSetting
@@ -55,25 +57,6 @@ augroup SaveEditPos
 	" 編集位置保存設定
 	autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 augroup END
-" }}}
-
-" NERDTree {{{
-augroup NERDTreeSetting
-	autocmd!
-	if winwidth('%') > 120
-		autocmd StdinReadPre * let s:std_in = 1
-		if argc() == 0 || argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in")
-			" ディレクトリ又は指定なしではツリーにフォーカス
-			autocmd vimenter * NERDTreeToggle
-		else
-			" ファイル指定して開いた場合はバッファにフォーカス
-			autocmd vimenter * NERDTreeToggle | wincmd p
-		endif
-	endif
-	" NERDTree以外のバッファが閉じられたらNERDTreeも閉じる
-	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-augroup END
-
 " }}}
 
 " mkdir -p {{{
@@ -106,6 +89,10 @@ augroup KeyBinding
 	" terminalからの脱出
 	tmap <C-j> [exit_term]
 augroup END
+" }}}
+
+" fern {{{
+let g:fern#renderer = "nerdfont"
 " }}}
 
 augroup Lazy
@@ -161,6 +148,7 @@ augroup END
 " }}}
 
 function LazySetting()
+
 
 " coc {{{
 augroup CoC
@@ -313,25 +301,6 @@ nnoremap <silent> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
-" }}}
-
-" NERDTree {{{
-augroup NERDTreeSetting
-	autocmd!
-	if winwidth('%') > 120
-		autocmd StdinReadPre * let s:std_in = 1
-		if argc() == 0 || argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in")
-			" ディレクトリ又は指定なしではツリーにフォーカス
-			autocmd vimenter * NERDTreeToggle
-		else
-			" ファイル指定して開いた場合はバッファにフォーカス
-			autocmd vimenter * NERDTreeToggle | wincmd p
-		endif
-		" NERDTree以外のバッファが閉じられたらNERDTreeも閉じる
-	endif
-	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-augroup END
-
 " }}}
 
 " quickhl {{{
