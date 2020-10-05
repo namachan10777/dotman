@@ -40,6 +40,7 @@ call minpac#add('lambdalisue/fern-renderer-nerdfont.vim')
 call minpac#add('lambdalisue/fern-git-status.vim')
 call minpac#add('lambdalisue/fern-mapping-git.vim')
 call minpac#add('lambdalisue/fern-hijack.vim')
+call minpac#add('ctrlpvim/ctrlp.vim')
 
 " language setting {{{
 augroup LanguageSetting
