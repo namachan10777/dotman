@@ -9,23 +9,38 @@ function s:install(packname, source)
 endfunction
 " }}}
 
-call s:install('fish', 'dag/vim-fish')
-call s:install('papercolor', 'NLKNguyen/papercolor-theme')
-call s:install('coc', 'neoclide/coc.nvim')
-call s:install('satysfi', 'qnighy/satysfi.vim')
-call s:install('pest', 'pest-parser/pest.vim')
-call s:install('airline', 'vim-airline/vim-airline')
-call s:install('quickhl', 't9md/vim-quickhl')
-call s:install('toml', 'cespare/vim-toml')
-call s:install('lalrpop', 'qnighy/lalrpop.vim')
-call s:install('elm', 'ElmCast/elm-vim')
-call s:install('jsx', 'mxw/vim-jsx')
-call s:install('tsx', 'ianks/vim-tsx')
-call s:install('prettier', 'prettier/vim-prettier')
-call s:install('otynium', 'otyn0308/otynium')
-call s:install('chadtree', 'ms-jpq/chadtree')
+let s:minpac_dir = '~/.config/nvim/pack/minpac/opt/minpac'
+if !isdirectory(expand(s:minpac_dir))
+	execute('!git clone https://github.com/k-takata/minpac.git ' . s:minpac_dir)
+endif
 
+if &compatible
+	set nocompatible
+endif
+packadd minpac
+call minpac#init()
 
+call minpac#add('dag/vim-fish')
+call minpac#add('NLKNguyen/papercolor-theme')
+call minpac#add('neoclide/coc.nvim')
+call minpac#add('qnighy/satysfi.vim')
+call minpac#add('pest-parser/pest.vim')
+call minpac#add('vim-airline/vim-airline')
+call minpac#add('t9md/vim-quickhl')
+call minpac#add('cespare/vim-toml')
+call minpac#add('qnighy/lalrpop.vim')
+call minpac#add('ElmCast/elm-vim')
+call minpac#add('mxw/vim-jsx')
+call minpac#add('ianks/vim-tsx')
+call minpac#add('prettier/vim-prettier')
+call minpac#add('otyn0308/otynium')
+call minpac#add('lambdalisue/fern.vim')
+call minpac#add('lambdalisue/nerdfont.vim')
+call minpac#add('lambdalisue/fern-renderer-nerdfont.vim')
+call minpac#add('lambdalisue/fern-git-status.vim')
+call minpac#add('lambdalisue/fern-mapping-git.vim')
+call minpac#add('lambdalisue/fern-hijack.vim')
+call minpac#add('ctrlpvim/ctrlp.vim')
 
 " language setting {{{
 augroup LanguageSetting
@@ -79,6 +94,12 @@ augroup KeyBinding
 	" terminalからの脱出
 	tmap <C-j> [exit_term]
 augroup END
+" }}}
+
+" fern {{{
+let g:fern#renderer = "nerdfont"
+nnoremap <space>f :Fern . -drawer<CR>
+xnoremap <space>f :Fern . -drawer<CR>
 " }}}
 
 augroup Lazy
@@ -152,6 +173,7 @@ augroup END
 " }}}
 
 function LazySetting()
+
 
 " coc {{{
 augroup CoC
@@ -306,19 +328,11 @@ nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
 nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
 " }}}
 
-
 " quickhl {{{
 nmap <Space>m <Plug>(quickhl-manual-this)
 xmap <Space>m <Plug>(quickhl-manual-this)
 nmap <Space>M <Plug>(quickhl-manual-reset)
 xmap <Space>M <Plug>(quickhl-manual-reset)
-" }}}
-
-" vertical f {{{
-command -nargs=1 MyLineSearch let @m=<q-args> | call search('^\s*'. @m)
-command -nargs=1 MyLineBackSearch let @m=<q-args> | call search('^\s*'. @m, 'b')
-nnoremap <Space>f :MyLineSearch<Space>
-nnoremap <Space>F :MyLineBackSearch<Space>
 " }}}
 
 " command window {{{
