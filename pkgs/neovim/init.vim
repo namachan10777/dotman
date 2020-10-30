@@ -47,6 +47,7 @@ augroup LanguageSetting
 	autocmd!
 	autocmd FileType satysfi syntax sync fromstart
 	autocmd FileType satysfi,yaml,tml,javascript,typescript.tsx setl shiftwidth=2 tabstop=2 expandtab softtabstop=2
+	autocmd FileType java setl shiftwidth=4 tabstop=4 expandtab softtabstop=2
 	autocmd FileType ocaml,cpp,c,kibanate setl shiftwidth=4 tabstop=4 noexpandtab softtabstop=2
 augroup END
 " }}}
