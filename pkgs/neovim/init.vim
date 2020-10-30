@@ -41,6 +41,7 @@ call minpac#add('lambdalisue/fern-git-status.vim')
 call minpac#add('lambdalisue/fern-mapping-git.vim')
 call minpac#add('lambdalisue/fern-hijack.vim')
 call minpac#add('ctrlpvim/ctrlp.vim')
+call minpac#add('jalvesaq/Nvim-R')
 call minpac#add('namachan10777/tml.vim')
 
 " language setting {{{
