@@ -84,6 +84,19 @@ input * {
     # Change normal to inverse to use left mouse button for resizing and right
     # mouse button for dragging.
     floating_modifier $mod normal
+    for_window [window_role="pop-up"] floating enable
+    for_window [window_role="bubble"] floating enable
+    for_window [window_role="task_dialog"] floating enable
+    for_window [window_role="Preferences"] floating enable
+    for_window [window_type="dialog"] floating enable
+    for_window [window_type="menu"] floating enable
+    for_window [window_role="About"] floating enable
+    for_window [class="xdg-desktop-portal-kde"] floating enable
+    for_window [class="ksysguard"] floating enable
+    for_window [class="ksysguard"] sticky enable
+    #for_window [app_id="mpv"] layout tabbed
+    for_window [class="Wine"] floating enable
+    for_window [app_id="lutris"] floating enable
 
     # Reload the configuration file
     bindsym $mod+Shift+c reload
