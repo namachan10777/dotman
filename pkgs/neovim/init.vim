@@ -41,6 +41,8 @@ call minpac#add('lambdalisue/fern-git-status.vim')
 call minpac#add('lambdalisue/fern-mapping-git.vim')
 call minpac#add('lambdalisue/fern-hijack.vim')
 call minpac#add('ctrlpvim/ctrlp.vim')
+call minpac#add('jalvesaq/Nvim-R')
+call minpac#add('namachan10777/tml.vim')
 
 " language setting {{{
 augroup LanguageSetting
@@ -107,25 +109,6 @@ augroup Lazy
 	autocmd!
 	autocmd VimEnter * call LazySetting()
 augroup END
-
-" CHADTree {{{
-augroup CHADTreeSetting
-	autocmd!
-	if winwidth('%') > 120
-		autocmd StdinReadPre * let s:std_in = 1
-		if argc() == 0 || argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in")
-			" ディレクトリ又は指定なしではツリーにフォーカス
-			autocmd vimenter * CHADOpen
-		else
-			" ファイル指定して開いた場合はバッファにフォーカス
-			autocmd vimenter * CHADOpen | wincmd p
-		endif
-		" CHADTree以外のバッファが閉じられたらCHADTreeも閉じる
-	endif
-	autocmd bufenter * if (winnr("$") == 1 && exists("b:CHADTree") && b:CHADTree.isTabTree()) | q | endif
-augroup END
-
-" }}}
 
 autocmd FileType rust let b:coc_root_patterns = ['Cargo.toml']
 
