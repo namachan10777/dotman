@@ -82,6 +82,9 @@ input * {
     # Start your launcher
     bindsym $mod+d exec $menu
 
+    # Screenshot:w
+    bindsym $mod+Print exec grim
+
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
     # Despite the name, also works for non-floating windows.
