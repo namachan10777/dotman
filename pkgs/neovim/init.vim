@@ -346,12 +346,14 @@ set clipboard+=unnamed
 set background=dark
 let g:artesanal_transp_bg = 0
 
+colorscheme otynium
+
 " 透過関連
-highlight Normal          ctermbg=NONE    guibg=NONE
-highlight NonText         ctermbg=NONE    guibg=NONE
-highlight SpecialKey      ctermbg=NONE    guibg=NONE
-highlight EndOfBuffer     ctermbg=NONE    guibg=NONE
-highlight LineNr          ctermbg=NONE    guibg=NONE
+"highlight Normal          ctermbg=NONE    guibg=NONE
+"highlight NonText         ctermbg=NONE    guibg=NONE
+"highlight SpecialKey      ctermbg=NONE    guibg=NONE
+"highlight EndOfBuffer     ctermbg=NONE    guibg=NONE
+"highlight LineNr          ctermbg=NONE    guibg=NONE
 highlight CocUnderline    ctermbg=Red     cterm=underline
 highlight CocInfoSign     ctermfg=Yellow  guifg=#fab005
 highlight CocErrorSign    ctermfg=Red     guifg=#ff0000
