@@ -20,6 +20,7 @@ endif
 packadd minpac
 call minpac#init()
 
+call minpac#add('nvim-treesitter/nvim-treesitter')
 call minpac#add('dag/vim-fish')
 call minpac#add('NLKNguyen/papercolor-theme')
 call minpac#add('neoclide/coc.nvim')
@@ -323,6 +324,16 @@ xmap <Space>M <Plug>(quickhl-manual-reset)
 autocmd CmdwinEnter : g/^qa\?!\?$/d
 autocmd CmdwinEnter : g/^wq\?a\?!\?$/d
 " }}}
+"
+lua <<EOF
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = "maintained", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+  highlight = {
+    enable = true,              -- false will disable the whole extension
+    disable = { "c", "rust" },  -- list of language that will be disabled
+  },
+}
+EOF
 
 set foldmethod=marker
 
