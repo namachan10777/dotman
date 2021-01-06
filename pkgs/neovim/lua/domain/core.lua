@@ -42,6 +42,8 @@ local load_core = function()
 	else
 		vim.api.nvim_command('set signcolumn=yes')
 	end
+	vim.api.nvim_command('inoremap <silent><expr><TAB> pumvisible() ? \"\\<C-n>\" : \"\\<TAB>\"')
+	-- vim.api.nvim_set_keymap('i', '<TAB>', '<C-n>', { noremap = true })
 
 	vim.api.nvim_command('function! Check_back_space() abort\n'
 	.. 'let col = col(\'.\') - 1\n'
