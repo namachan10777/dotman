@@ -5,6 +5,16 @@ local load_core = function()
 		{ 'otyn0308/otynium' }
 	})
 	vim.api.nvim_command('colorscheme otynium')
+	vim.api.nvim_command('set tabstop=4')
+	vim.api.nvim_command('set shiftwidth=4')
+	vim.api.nvim_command('set noexpandtab')
+	vim.api.nvim_command('set number')
+	vim.api.nvim_command('set relativenumber')
+
+	vim.api.nvim_set_keymap('n', 'r', 'diwi', { noremap = false })
+	vim.api.nvim_set_keymap('n', 'j', 'gj', { noremap = false })
+	vim.api.nvim_set_keymap('n', 'k', 'gk', { noremap = false })
+	vim.api.nvim_set_keymap('t', '<C-j>', '<C-\\><C-n>', { noremap = false })
 end
 
 
