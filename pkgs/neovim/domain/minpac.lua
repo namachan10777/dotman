@@ -2,7 +2,7 @@ local global = require('domain.global')
 local fs = require('util.fs')
 local minpac = setmetatable({}, { __index = { repos = {}, config_files = {} } })
 
-function minpac:load_repos()
+function minpac:load_repos(repos)
 	local minpac_dir = fs.concat({global.config_dir,'nvim','pack','minpac','opt','minpac'})
 	local cmd = 'git clone https://github.com/k-takata/minpac ' .. minpac_dir
 	if vim.fn.has('vim_starting') then
@@ -12,7 +12,13 @@ function minpac:load_repos()
 		vim.api.nvim_command('packadd minpac')
 		vim.api.nvim_call_function('minpac#init', {})
 		vim.api.nvim_call_function('minpac#add', { 'k-takana/minpac', { type='opt' }})
-		vim.api.nvim_call_function('minpac#add', { 'otyn0308/otynium' })
+		for i = 1, #repos do
+			if #repos == 1 then
+				vim.api.nvim_call_function('minpac#add', { repos[i][1] })
+			else
+				vim.api.nvim_call_function('minpac#add', { repos[i][1], repos[i][2] })
+			end
+		end
 	end
 end
 
