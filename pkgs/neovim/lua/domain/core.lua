@@ -19,6 +19,8 @@ local load_core = function()
 		{ 'cespare/vim-toml' },
 		{ 'qnighy/lalrpop.vim' },
 		{ 'namachan10777/tml.vim' },
+		-- utilities
+		{ 't9md/vim-quickhl' },
 	})
 	vim.api.nvim_command('colorscheme otynium')
 	vim.api.nvim_command('set tabstop=4')
@@ -60,6 +62,12 @@ local load_core = function()
 	.. 'endfunction\n')
 	vim.api.nvim_command('autocmd CursorHold * silent call CocActionAsync(\'highlight\')')
 	vim.api.nvim_command('set statusline^=%{coc#status()}%{get(b:,\'coc_current_function\',\'\')}')
+
+	-- quickhl
+	vim.api.nvim_set_keymap('n', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
+	vim.api.nvim_set_keymap('x', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
+	vim.api.nvim_set_keymap('n', '<Space>M', '<Plug>(quickhl-manual-reset)', { noremap = false})
+	vim.api.nvim_set_keymap('x', '<Space>M', '<Plug>(quickhl-manual-reset)', { noremap = false})
 
 end
 
