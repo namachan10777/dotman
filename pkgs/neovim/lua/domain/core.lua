@@ -9,7 +9,16 @@ local load_core = function()
 		{ 'lambdalisue/fern-git-status.vim' },
 		{ 'lambdalisue/fern-mapping-git.vim' },
 		{ 'lambdalisue/fern-hijack.vim' },
-		{ 'neoclide/coc.nvim' }
+		{ 'neoclide/coc.nvim' },
+		-- Syntax highlights
+		{ 'pest-parser/pest.vim' },
+		{ 'ElmCast/elm-vim' },
+		{ 'prettier/vim-prettier' },
+		{ 'jalvesaq/Nvim-R' },
+		{ 'qnighy/satysfi.vim' },
+		{ 'cespare/vim-toml' },
+		{ 'qnighy/lalrpop.vim' },
+		{ 'namachan10777/tml.vim' },
 	})
 	vim.api.nvim_command('colorscheme otynium')
 	vim.api.nvim_command('set tabstop=4')
