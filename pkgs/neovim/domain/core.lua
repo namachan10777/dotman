@@ -11,11 +11,12 @@ local load_core = function()
 	vim.api.nvim_command('set number')
 	vim.api.nvim_command('set relativenumber')
 
-	vim.api.nvim_set_keymap('n', 'r', 'diwi', { noremap = false })
-	vim.api.nvim_set_keymap('n', 'j', 'gj', { noremap = false })
-	vim.api.nvim_set_keymap('n', 'k', 'gk', { noremap = false })
-	vim.api.nvim_set_keymap('t', '<C-j>', '<C-\\><C-n>', { noremap = false })
 end
+	-- remap
+	vim.api.nvim_set_keymap('n', 'r', 'diwi', { noremap = true })
+	vim.api.nvim_set_keymap('n', 'j', 'gj', { noremap = true })
+	vim.api.nvim_set_keymap('n', 'k', 'gk', { noremap = true })
+	vim.api.nvim_set_keymap('t', '<C-j>', '<C-\\><C-n>', { noremap = true })
 
 
 load_core()
