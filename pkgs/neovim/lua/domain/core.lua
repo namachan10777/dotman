@@ -24,6 +24,8 @@ local load_core = function()
 		{ 'namachan10777/tml.vim' },
 		-- utilities
 		{ 't9md/vim-quickhl' },
+
+		{ 'nvim-treesitter/nvim-treesitter' },
 	})
 
 	vim.api.nvim_command('colorscheme otynium')
@@ -86,6 +88,14 @@ local load_core = function()
 	vim.api.nvim_set_keymap('x', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
 	vim.api.nvim_set_keymap('n', '<Space>M', '<Plug>(quickhl-manual-reset)', { noremap = false})
 	vim.api.nvim_set_keymap('x', '<Space>M', '<Plug>(quickhl-manual-reset)', { noremap = false})
+
+	require('nvim-treesitter.configs').setup {
+		ensure_installed = 'maintained',
+		highlight = {
+			enable = true,
+			disable = {},
+		}
+	}
 
 end
 
