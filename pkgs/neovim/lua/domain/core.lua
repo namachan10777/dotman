@@ -47,6 +47,10 @@ local load_core = function()
 	vim.o.writebackup = false
 	vim.o.cmdheight=2
 	vim.o.updatetime=300
+	vim.o.hls = true
+	vim.wo.list = true
+	vim.o.listchars = 'tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%'
+	print(vim.o.listchars)
 	if vim.api.nvim_call_function('has', { 'patch-8.1.1564' }) then
 		vim.o.signcolumn = 'number';
 	else
