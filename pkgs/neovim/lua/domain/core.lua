@@ -40,6 +40,13 @@ local load_core = function()
 	vim.api.nvim_set_keymap('n', '<space>f', ':Fern . -drawer<CR>', { noremap = true })
 	vim.api.nvim_set_keymap('x', '<space>f', ':Fern . -drawer<CR>', { noremap = true })
 
+	-- save edit position
+	vim.o.undofile = true
+	vim.cmd('augroup SaveEditPos')
+	vim.cmd('autocmd!')
+	vim.cmd('autocmd BufReadPost * if line(\"\'\\\"\") > 1 && line(\"\'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif')
+	vim.cmd('augroup END')
+
 	-- coc
 	-- TODO select buffer by TAB
 	vim.o.hidden = true
