@@ -12,6 +12,10 @@ function fs.exists(file)
 	return ok, err
 end
 
+function fs.mkdir(path)
+	return os.execute('mkdir '..path)
+end
+
 function fs.isdir(path)
 	return fs.exists(path .. '/')
 end

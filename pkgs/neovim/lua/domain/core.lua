@@ -1,4 +1,5 @@
 local minpac = require 'domain.minpac'
+local fs = require 'util.fs'
 
 local load_core = function()
 	minpac:load_repos({
@@ -48,6 +49,9 @@ local load_core = function()
 
 	-- save edit position
 	vim.o.undofile = true
+	if not fs.exists(vim.o.undodir) then
+		fs.mkdir(vim.o.undodir)
+	end
 	vim.cmd('augroup SaveEditPos')
 	vim.cmd('autocmd!')
 	vim.cmd('autocmd BufReadPost * if line(\"\'\\\"\") > 1 && line(\"\'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif')
@@ -63,7 +67,7 @@ local load_core = function()
 	vim.o.hls = true
 	vim.wo.list = true
 	vim.o.listchars = 'tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%'
-	if vim.api.nvim_call_function('has', { 'patch-8.1.1564' }) then
+	if vim.fn.has('patch-8.1.1564') then
 		vim.o.signcolumn = 'number';
 	else
 		vim.o.signcolumn = 'yes';
