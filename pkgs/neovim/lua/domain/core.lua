@@ -58,6 +58,8 @@ local load_core = function()
 	if not fs.exists(vim.o.undodir) then
 		fs.mkdir(vim.o.undodir)
 	end
+	vim.o.undolevels = 1000
+	vim.o.undoreload = 10000
 	vim.cmd('augroup SaveEditPos')
 	vim.cmd('autocmd!')
 	vim.cmd('autocmd BufReadPost * if line(\"\'\\\"\") > 1 && line(\"\'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif')
@@ -93,7 +95,7 @@ local load_core = function()
 	vim.api.nvim_command('autocmd CursorHold * silent call CocActionAsync(\'highlight\')')
 	vim.o.statusline = vim.o.statusline .. '%{coc#status()}%{get(b:,\'coc_current_function\',\'\')}'
 
-	vim.o.statusline = vim.o.statusline .. '%{lua NearestMethodOrFunction()}'
+	-- vim.o.statusline = vim.o.statusline .. '%{lua NearestMethodOrFunction()}'
 	vim.api.nvim_command('autocmd VimEnter * call vista#RunForNearestMethodOrFunction()')
 
 	-- quickhl
