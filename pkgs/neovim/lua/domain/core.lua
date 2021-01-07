@@ -1,6 +1,10 @@
 local minpac = require 'domain.minpac'
 local fs = require 'util.fs'
 
+function NearestMethodOrFunction()
+	return vim.b.vista_nearest_method_or_function
+end
+
 local load_core = function()
 	minpac:load_repos({
 		{ 'otyn0308/otynium' },
@@ -13,6 +17,7 @@ local load_core = function()
 		{ 'neoclide/coc.nvim' },
 		{ 'vim-airline/vim-airline' },
 		-- { 'itchyny/lightline.vim' },
+		{ 'liuchengxu/vista.vim' },
 		-- Syntax highlights
 		{ 'JuliaEditorSupport/julia-vim' },
 		{ 'pest-parser/pest.vim' },
@@ -46,7 +51,8 @@ local load_core = function()
 	vim.api.nvim_set_var('fern#renderer', 'nerdfont')
 	vim.api.nvim_set_keymap('n', '<space>f', ':Fern . -drawer<CR>', { noremap = true })
 	vim.api.nvim_set_keymap('x', '<space>f', ':Fern . -drawer<CR>', { noremap = true })
-
+	vim.api.nvim_set_keymap('n', '<space>v', ':Vista coc<CR>', { noremap = true })
+	vim.api.nvim_set_keymap('x', '<space>v', ':Vista coc<CR>', { noremap = true })
 	-- save edit position
 	vim.o.undofile = true
 	if not fs.exists(vim.o.undodir) then
@@ -86,6 +92,9 @@ local load_core = function()
   	end
 	vim.api.nvim_command('autocmd CursorHold * silent call CocActionAsync(\'highlight\')')
 	vim.o.statusline = vim.o.statusline .. '%{coc#status()}%{get(b:,\'coc_current_function\',\'\')}'
+
+	vim.o.statusline = vim.o.statusline .. '%{lua NearestMethodOrFunction()}'
+	vim.api.nvim_command('autocmd VimEnter * call vista#RunForNearestMethodOrFunction()')
 
 	-- quickhl
 	vim.api.nvim_set_keymap('n', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
