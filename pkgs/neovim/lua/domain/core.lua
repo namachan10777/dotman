@@ -23,11 +23,11 @@ local load_core = function()
 		{ 't9md/vim-quickhl' },
 	})
 	vim.api.nvim_command('colorscheme otynium')
-	vim.api.nvim_command('set tabstop=4')
-	vim.api.nvim_command('set shiftwidth=4')
-	vim.api.nvim_command('set noexpandtab')
-	vim.api.nvim_command('set number')
-	vim.api.nvim_command('set relativenumber')
+	vim.bo.tabstop=4
+	vim.bo.shiftwidth=4
+	vim.bo.expandtab=false
+	vim.wo.number = true
+	vim.wo.relativenumber = true
 
 	-- remap
 	vim.api.nvim_set_keymap('n', 'r', 'diwi', { noremap = true })
@@ -42,16 +42,15 @@ local load_core = function()
 
 	-- coc
 	-- TODO select buffer by TAB
-	vim.api.nvim_command('set hidden')
-	vim.api.nvim_command('set nobackup')
-	vim.api.nvim_command('set nowritebackup')
-	vim.api.nvim_command('set cmdheight=2')
-	vim.api.nvim_command('set updatetime=300')
-	vim.api.nvim_command('set shortmess+=c')
+	vim.o.hidden = true
+	vim.o.backup = false
+	vim.o.writebackup = false
+	vim.o.cmdheight=2
+	vim.o.updatetime=300
 	if vim.api.nvim_call_function('has', { 'patch-8.1.1564' }) then
-		vim.api.nvim_command('set signcolumn=number')
+		vim.o.signcolumn = 'number';
 	else
-		vim.api.nvim_command('set signcolumn=yes')
+		vim.o.signcolumn = 'yes';
 	end
 	vim.api.nvim_command('inoremap <silent><expr><TAB> pumvisible() ? \"\\<C-n>\" : \"\\<TAB>\"')
 	-- vim.api.nvim_set_keymap('i', '<TAB>', '<C-n>', { noremap = true })
@@ -60,8 +59,13 @@ local load_core = function()
 	.. 'let col = col(\'.\') - 1\n'
 	.. 'return !col || getline(\'.\')[col - 1]  =~# \'\\s\'\n'
 	.. 'endfunction\n')
+	if vim.api.nvim_call_function('exists', {'*complete_info'}) then
+		vim.api.nvim_command('inoremap <expr> <cr> complete_info()[\"selected\"] != \"-1\" ? \"\\<C-y>\" : \"\\<C-g>u\\<CR>\"')
+	else
+		vim.api.nvim_command('inoremap <expr><CR> pumvisible() ? \"\\<C-y>\" : \"\\<C-g>u\\<CR>\"')
+  	end
 	vim.api.nvim_command('autocmd CursorHold * silent call CocActionAsync(\'highlight\')')
-	vim.api.nvim_command('set statusline^=%{coc#status()}%{get(b:,\'coc_current_function\',\'\')}')
+	vim.o.statusline = vim.o.statusline .. '%{coc#status()}%{get(b:,\'coc_current_function\',\'\')}'
 
 	-- quickhl
 	vim.api.nvim_set_keymap('n', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
