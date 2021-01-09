@@ -18,4 +18,5 @@ set PATH ~/.gem/ruby/2.6.0/bin $PATH
 set PATH ~/anaconda3/bin $PATH
 set PATH $GOPATH/bin $PATH
 set PATH ~/.cabal/bin $PATH
+set PATH ~/.local/bin/ $PATH
 set -gx LS_COLORS (dircolors | head -n1 | sed -e "s/^.*'\(.*\)'.*/\1/")
