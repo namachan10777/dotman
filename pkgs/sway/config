@@ -82,6 +82,7 @@ input * {
     # Start your launcher
     bindsym $mod+d exec $menu
 
+    # Screenshot
     bindsym $mod+Print exec grim
 
     # Drag floating windows by holding down $mod and left mouse button.
