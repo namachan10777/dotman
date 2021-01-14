@@ -1,7 +1,0 @@
-{
-	"link": false,
-	"root": "only",
-	"patch": {
-		"iptables.rules": "/etc/iptables"
-	}
-}
