@@ -13,6 +13,7 @@ local load_core = function()
 		{ 'vim-airline/vim-airline' },
 		-- { 'itchyny/lightline.vim' },
 		-- Syntax highlights
+		{ 'JuliaEditorSupport/julia-vim' },
 		{ 'pest-parser/pest.vim' },
 		{ 'ElmCast/elm-vim' },
 		{ 'prettier/vim-prettier' },
@@ -24,6 +25,7 @@ local load_core = function()
 		-- utilities
 		{ 't9md/vim-quickhl' },
 	})
+
 	vim.api.nvim_command('colorscheme otynium')
 	vim.bo.tabstop=4
 	vim.bo.shiftwidth=4
