@@ -10,7 +10,8 @@ local load_core = function()
 		{ 'lambdalisue/fern-mapping-git.vim' },
 		{ 'lambdalisue/fern-hijack.vim' },
 		{ 'neoclide/coc.nvim' },
-		{ 'itchyny/lightline.vim' },
+		{ 'vim-airline/vim-airline' },
+		-- { 'itchyny/lightline.vim' },
 		-- Syntax highlights
 		{ 'pest-parser/pest.vim' },
 		{ 'ElmCast/elm-vim' },
