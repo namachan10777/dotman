@@ -1,17 +1,17 @@
 ALACRITTY_SOURCES := pkgs/alacritty/alacritty.yml
-FISH_SOURCES      := $(wildcard pkgs/fish/*)
+FISH_SOURCES      := $(shell find pkgs/fish -type f)
 GIT_SOURCE        := pkgs/git/gitconfig
 LATEXMK_SOURCE    := pkgs/latexmk/latexmkrc
 LAZYGIT_SOURCE    := pkgs/lazygit/config.yml
-NVIM_SOURCES      := $(wildcard pkgs/neovim/*)
+NVIM_SOURCES      := $(shell find pkgs/neovim -type f)
 SWAY_SOURCE       := pkgs/sway/config
 TIG_SOURCE        := pkgs/tig/tigrc
 
-UDEV_SOURCES      := $(wildcard pkgs/udev/*.rules)
-IPTABLES_SOURCES  := $(wildcard pkgs/iptables/*.rules)
+UDEV_SOURCES      := $(shell find pkgs/udev -name *.rules -type f)
+IPTABLES_SOURCES  := $(shell find pkgs/iptables/ -name *.rules -type f)
 
 ALACRITTY_TARGETS := $(XDG_CONFIG_HOME)/alacritty/alacritty.yml
-FISH_TARGETS      := $(patsubst pkgs/neovim/%,$(XDG_CONFIG_HOME)/fish/%,$(FISH_SOURCES))
+FISH_TARGETS      := $(patsubst pkgs/fish/%,$(XDG_CONFIG_HOME)/fish/%,$(FISH_SOURCES))
 GIT_TARGET        := $(HOME)/.gitconfig
 LATEXMK_TARGET    := $(HOME)/.latexmkrc
 LAZYGIT_TARGET    := $(XDG_CONFIG_HOME)/jessedufield/config.yml
@@ -38,6 +38,8 @@ install-all: $(UDEV_TARGETS) $(IPTABLES_TARGETS)
 
 .PHONY: clean
 clean:
+	@echo $(FISH_TARGETS)
+	@echo $(FISH_SOURCES)
 	rm -f $(ALACRITTY_TARGETS)
 	rm -rf $(FISH_TARGETS)
 	rm -f $(LATEXMK_TARGET)
@@ -53,36 +55,31 @@ clean-system:
 	rm -f $(UDEV_TARGETS) $(IPTABLES_TARGETS)
 
 $(GIT_TARGET): $(GIT_SOURCE)
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 $(LATEXMK_TARGET): $(LATEXMK_SOURCE)
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 $(TIG_TARGET): $(TIG_SOURCE)
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 $(SWAY_TARGET): $(SWAY_SOURCE)
-	mkdir -p $(XDG_CONFIG_HOME)/sway
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 $(LAZYGIT_TARGET): $(LAZYGIT_SOURCE)
-	mkdir -p $(XDG_CONFIG_HOME)/jessedufield/lazygit
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/nvim/%: pkgs/neovim/%
-	mkdir -p $(XDG_CONFIG_HOME)/nvim
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/alacritty/%: pkgs/alacritty/%
-	mkdir -p $(XDG_CONFIG_HOME)/alacritty
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/fish/%: pkgs/fish/%
-	mkdir -p $(XDG_CONFIG_HOME)/fish
-	cp -ar $< $@
+	bash copy.sh $< $@
 
 /etc/udev/%: pkgs/udev/%
-	cp -r $< $@
+	bash copy.sh $< $@
 
 /etc/iptables/%: pkgs/iptables/%
-	cp -r $< $@
+	bash copy.sh $< $@
