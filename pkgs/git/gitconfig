@@ -17,3 +17,5 @@
 	root = ~/Project
 [core]
 	pager = delta --dark
+[pull]
+	rebase = true
