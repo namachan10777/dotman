@@ -42,4 +42,4 @@ font:
   bold_italic:
     family: Hack
 
-  size: 13
+  size: $ALACRITTY_FONT_SIZE
