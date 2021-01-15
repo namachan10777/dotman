@@ -1,2 +1,7 @@
 #!/bin/bash
-yay -S git vim fish sway slack discord bluez make cmake ninja
+
+DEV=(git vim make cmake ninja)
+WORKSPACE=(fish sway slack discord)
+HARDWARE=(bluez)
+
+yay -S $DEV $WORKSPACE $HARDWARE
