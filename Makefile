@@ -72,7 +72,7 @@ $(LAZYGIT_TARGET): $(LAZYGIT_SOURCE)
 $(XDG_CONFIG_HOME)/nvim/%: pkgs/neovim/%
 	bash copy.sh $< $@
 
-$(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml
+$(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml hooks/set_alacritty_font_size.sh
 	bash copy.sh $< $@
 	bash hooks/set_alacritty_font_size.sh $@
 
