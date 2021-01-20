@@ -22,6 +22,9 @@ TIG_TARGET        := $(HOME)/.tigrc
 UDEV_TARGETS      := $(patsubst pkgs/udev/%,/etc/udev/rules.d/%,$(UDEV_SOURCES))
 IPTABLES_TARGETS  := $(patsubst pkgs/iptables/%,/etc/iptables/%,$(IPTABLES_SOURCES))
 
+UTIL_SOURCES     := $(wildcard bin/*)
+UTIL_TARGETS     := $(patsubst bin/%,/usr/local/bin/%,$(UTIL_SOURCES))
+
 .PHONY: install
 install: \
 	$(FISH_TARGETS) \
@@ -34,7 +37,7 @@ install: \
 	$(TIG_TARGET)
 
 .PHONY: install-system
-install-system: $(UDEV_TARGETS) $(IPTABLES_TARGETS)
+install-system: $(UDEV_TARGETS) $(IPTABLES_TARGETS) $(UTIL_TARGETS)
 
 .PHONY: clean
 clean:
@@ -53,6 +56,7 @@ clean-system:
 	@echo $(IPTABLES_SOURCES)
 	@echo $(IPTABLES_TARGETS)
 	rm -f $(UDEV_TARGETS) $(IPTABLES_TARGETS)
+	rm -f $(UTIL_TARGETS)
 
 $(GIT_TARGET): $(GIT_SOURCE)
 	bash copy.sh $< $@
@@ -79,8 +83,11 @@ $(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml hooks/s
 $(XDG_CONFIG_HOME)/fish/%: pkgs/fish/%
 	bash copy.sh $< $@
 
-/etc/udev/%: pkgs/udev/%
+/etc/udev/rules.d/%: pkgs/udev/%
 	bash copy.sh $< $@
 
 /etc/iptables/%: pkgs/iptables/%
+	bash copy.sh $< $@
+
+/usr/local/bin/%: bin/%
 	bash copy.sh $< $@

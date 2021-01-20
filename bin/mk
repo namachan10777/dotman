@@ -1,15 +1,14 @@
 #!/bin/sh
 
-
 DIR=$(pwd)
 if test -e $DIR/Makefile; then
-	make
+	make $*
 else
 	while true
 	do
 		DIR=$(dirname $DIR)
 		if test -e $DIR/Makefile; then
-			make -C $DIR
+			make -C $DIR $*
 			break
 		elif test $DIR = "/"; then
 			echo "Makefile not found"
