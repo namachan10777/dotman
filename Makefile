@@ -34,7 +34,7 @@ install: \
 	$(TIG_TARGET)
 
 .PHONY: install-system
-install-all: $(UDEV_TARGETS) $(IPTABLES_TARGETS)
+install-system: $(UDEV_TARGETS) $(IPTABLES_TARGETS)
 
 .PHONY: clean
 clean:
