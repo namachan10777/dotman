@@ -1,6 +1,7 @@
 [user]
-	email = namachan10777@gmail.com
+	email = nakano.masaki.sj@tsukuba.ac.jp
 	name = Nakano Masaki
+	signingkey = 99106AAD75017BD4
 [commit]
 	gpgsign = true
 [gpg]
