@@ -6,6 +6,7 @@ LAZYGIT_SOURCE    := pkgs/lazygit/config.yml
 NVIM_SOURCES      := $(shell find pkgs/neovim -type f)
 SWAY_SOURCE       := pkgs/sway/config
 TIG_SOURCE        := pkgs/tig/tigrc
+GPG_SOURCES       := $(wildcard pkgs/gpg/*)
 
 UDEV_SOURCES      := $(shell find pkgs/udev -name *.rules -type f)
 IPTABLES_SOURCES  := $(shell find pkgs/iptables/ -name *.rules -type f)
@@ -18,6 +19,7 @@ LAZYGIT_TARGET    := $(XDG_CONFIG_HOME)/jessedufield/config.yml
 NVIM_TARGETS      := $(patsubst pkgs/neovim/%,$(XDG_CONFIG_HOME)/nvim/%,$(NVIM_SOURCES))
 SWAY_TARGET       := $(XDG_CONFIG_HOME)/sway/config
 TIG_TARGET        := $(HOME)/.tigrc
+GPG_TARGETS       := $(patsubst pkgs/gpg/%,$(HOME)/.gnupg/%,$(GPG_SOURCES))
 
 UDEV_TARGETS      := $(patsubst pkgs/udev/%,/etc/udev/rules.d/%,$(UDEV_SOURCES))
 IPTABLES_TARGETS  := $(patsubst pkgs/iptables/%,/etc/iptables/%,$(IPTABLES_SOURCES))
@@ -34,7 +36,8 @@ install: \
 	$(LAZYGIT_TARGET) \
 	$(NVIM_TARGETS) \
 	$(SWAY_TARGET) \
-	$(TIG_TARGET)
+	$(TIG_TARGET) \
+	$(GPG_TARGETS)
 
 .PHONY: install-system
 install-system: $(UDEV_TARGETS) $(IPTABLES_TARGETS) $(UTIL_TARGETS)
@@ -81,6 +84,9 @@ $(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml hooks/s
 	bash hooks/set_alacritty_font_size.sh $@
 
 $(XDG_CONFIG_HOME)/fish/%: pkgs/fish/%
+	bash copy.sh $< $@
+
+$(HOME)/.gnupg/%: pkgs/gpg/%
 	bash copy.sh $< $@
 
 /etc/udev/rules.d/%: pkgs/udev/%
