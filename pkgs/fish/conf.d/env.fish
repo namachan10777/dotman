@@ -2,6 +2,9 @@ if not test $XDG_CONFIG_HOME
 	set -gx XDG_CONFIG_HOME $HOME/.config
 end
 
+set -gx SSH_AUTH_SOCK (gpgconf --list-dirs agent-ssh-socket)
+gpgconf --launch gpg-agent
+
 set -gx LANG en_US.UTF-8
 set -gx EDITOR nvim
 set -gx OCAMLPARAM "_,bin-annot=1"
