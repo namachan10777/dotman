@@ -67,6 +67,7 @@ local load_core = function()
 
 	-- coc
 	-- TODO select buffer by TAB
+	vim.o.swapfile = false
 	vim.o.hidden = true
 	vim.o.backup = false
 	vim.o.writebackup = false
