@@ -54,7 +54,7 @@ local load_core = function()
 	vim.api.nvim_set_keymap('n', '<space>v', ':Vista coc<CR>', { noremap = true })
 	vim.api.nvim_set_keymap('x', '<space>v', ':Vista coc<CR>', { noremap = true })
 	-- save edit position
-	vim.o.undofile = true
+	vim.bo.undofile = true
 	if not fs.exists(vim.o.undodir) then
 		fs.mkdir(vim.o.undodir)
 	end
