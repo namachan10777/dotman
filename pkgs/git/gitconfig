@@ -20,3 +20,5 @@
 	pager = delta --dark
 [pull]
 	rebase = true
+[url "git@github.com:namachan10777"]
+	insteadOf = https://github.com/namachan
