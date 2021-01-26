@@ -10,6 +10,7 @@ GPG_SOURCES       := $(wildcard pkgs/gpg/*)
 
 UDEV_SOURCES      := $(shell find pkgs/udev -name *.rules -type f)
 IPTABLES_SOURCES  := $(shell find pkgs/iptables/ -name *.rules -type f)
+SYSTEMD_SOURCES   := $(shell find pkgs/systemd/ -type f)
 
 ALACRITTY_TARGETS := $(XDG_CONFIG_HOME)/alacritty/alacritty.yml
 FISH_TARGETS      := $(patsubst pkgs/fish/%,$(XDG_CONFIG_HOME)/fish/%,$(FISH_SOURCES))
@@ -23,6 +24,7 @@ GPG_TARGETS       := $(patsubst pkgs/gpg/%,$(HOME)/.gnupg/%,$(GPG_SOURCES))
 
 UDEV_TARGETS      := $(patsubst pkgs/udev/%,/etc/udev/rules.d/%,$(UDEV_SOURCES))
 IPTABLES_TARGETS  := $(patsubst pkgs/iptables/%,/etc/iptables/%,$(IPTABLES_SOURCES))
+SYSTEMD_TARGETS   := $(patsubst pkgs/systemd/%,/etc/systemd/%,$(SYSTEMD_SOURCES))
 
 UTIL_SOURCES     := $(wildcard bin/*)
 UTIL_TARGETS     := $(patsubst bin/%,/usr/local/bin/%,$(UTIL_SOURCES))
@@ -40,7 +42,7 @@ install: \
 	$(GPG_TARGETS)
 
 .PHONY: install-system
-install-system: $(UDEV_TARGETS) $(IPTABLES_TARGETS) $(UTIL_TARGETS)
+install-system: $(UDEV_TARGETS) $(IPTABLES_TARGETS) $(UTIL_TARGETS) $(SYSTEMD_TARGETS)
 
 .PHONY: clean
 clean:
@@ -93,6 +95,9 @@ $(HOME)/.gnupg/%: pkgs/gpg/%
 	bash copy.sh $< $@
 
 /etc/iptables/%: pkgs/iptables/%
+	bash copy.sh $< $@
+
+/etc/systemd/%: pkgs/systemd/%
 	bash copy.sh $< $@
 
 /usr/local/bin/%: bin/%
