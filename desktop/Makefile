@@ -77,49 +77,50 @@ clean-system:
 	rm -f $(UTIL_TARGETS)
 
 $(GIT_TARGET): $(GIT_SOURCE)
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(LATEXMK_TARGET): $(LATEXMK_SOURCE)
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(TIG_TARGET): $(TIG_SOURCE)
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(SWAY_TARGET): $(SWAY_SOURCE)
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(LAZYGIT_TARGET): $(LAZYGIT_SOURCE)
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/nvim/%: pkgs/neovim/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml hooks/set_alacritty_font_size.sh
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 	bash hooks/set_alacritty_font_size.sh $@
 
 $(XDG_CONFIG_HOME)/fish/%: pkgs/fish/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(HOME)/.gnupg/%: pkgs/gpg/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 /etc/udev/rules.d/%: pkgs/udev/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 /etc/iptables/%: pkgs/iptables/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 /etc/systemd/%: pkgs/systemd/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 $(SSH_TARGET): $(SSH_SOURCE)
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
+
 $(SSHD_TARGET): $(SSHD_SOURCE)
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 /etc/NetworkManager/%: pkgs/networkmanager/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
 
 /usr/local/bin/%: bin/%
-	bash copy.sh $< $@
+	bash ../copy.sh $< $@
