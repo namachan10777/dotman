@@ -1,0 +1,12 @@
+[Unit]
+Description="Provides ssh via Cloudflare Argo Tunnel"
+After=sshd.service
+
+[Service]
+ExecStart=/usr/local/bin/cloudflared tunnel --hostname ssh.namachan10777.dev --url ssh://localhost:22
+ExecReload=/bin/kill -HUP $MAINPID
+KillMOde=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
