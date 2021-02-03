@@ -45,7 +45,8 @@ install: \
 	$(NVIM_TARGETS) \
 	$(SWAY_TARGET) \
 	$(TIG_TARGET) \
-	$(GPG_TARGETS)
+	$(GPG_TARGETS) \
+	$(SSH_TARGET)
 
 .PHONY: install-system
 
