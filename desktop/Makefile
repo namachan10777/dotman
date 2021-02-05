@@ -50,7 +50,7 @@ install: \
 
 .PHONY: install-system
 
-install-system:
+install-system: \
 	$(UDEV_TARGETS) \
 	$(IPTABLES_TARGETS) \
 	$(UTIL_TARGETS) \
@@ -60,8 +60,6 @@ install-system:
 
 .PHONY: clean
 clean:
-	@echo $(FISH_TARGETS)
-	@echo $(FISH_SOURCES)
 	rm -f $(ALACRITTY_TARGETS)
 	rm -rf $(FISH_TARGETS)
 	rm -f $(LATEXMK_TARGET)
