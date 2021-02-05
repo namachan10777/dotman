@@ -4,7 +4,8 @@
 # mount-point [map-type[,format]:]map [options]
 # For details of the format look at auto.master(5).
 #
-/misc	/etc/autofs/auto.misc
+/misc	/etc/autofs/auto.misc --timeout=5
+/mnt	/etc/autofs/auto.mnt	
 #
 # NOTE: mounts done from a hosts map will be mounted with the
 #	"nosuid" and "nodev" options unless the "suid" and "dev"

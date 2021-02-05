@@ -13,7 +13,7 @@ UDEV_SOURCES      := $(shell find pkgs/udev -name *.rules -type f)
 IPTABLES_SOURCES  := $(shell find pkgs/iptables/ -name *.rules -type f)
 SYSTEMD_SOURCES   := $(shell find pkgs/systemd/ -type f)
 SSHD_SOURCE       := pkgs/sshd/sshd_config
-AUTOFS_SOURCE     := pkgs/autofs/auto.master
+AUTOFS_SOURCE     := $(shell find pkgs/autofs/ -type f)
 NETWORKMANAGER_SOURCES := $(shell find pkgs/systemd/ -type f)
 
 ALACRITTY_TARGETS := $(XDG_CONFIG_HOME)/alacritty/alacritty.yml
@@ -31,7 +31,7 @@ UDEV_TARGETS      := $(patsubst pkgs/udev/%,/etc/udev/rules.d/%,$(UDEV_SOURCES))
 IPTABLES_TARGETS  := $(patsubst pkgs/iptables/%,/etc/iptables/%,$(IPTABLES_SOURCES))
 SYSTEMD_TARGETS   := $(patsubst pkgs/systemd/%,/etc/systemd/%,$(SYSTEMD_SOURCES))
 SSHD_TARGET       := /etc/ssh/sshd_config
-AUTOFS_TARGET     := /etc/autofs/auto.master
+AUTOFS_TARGET     := $(patsubst pkgs/autofs/%,/etc/autofs/%,$(AUTOFS_SOURCE))
 NETWORKMANAGER_TARGETS := $(patsubst pkgs/systemd/%,/etc/systemd/%,$(NETWORKMANAGER_SOURCES))
 
 UTIL_SOURCES     := $(wildcard bin/*)
