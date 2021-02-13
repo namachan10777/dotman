@@ -33,7 +33,9 @@ TOOLS=(\
 	# fzf
 	skim \
 	# directory usage analyzer
-	dutree diskonaut
+	dutree diskonaut \
+	# zoxide
+	zoxide
 )
 
 cargo install ${TOOLS[@]}
