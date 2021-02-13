@@ -35,7 +35,17 @@ TOOLS=(\
 	# directory usage analyzer
 	dutree diskonaut \
 	# zoxide
-	zoxide
+	zoxide \
+	# job queue
+	pueue \
+	# ps
+	procs \
+	# source to image \
+	silicon \
+	# update system packages
+	topgrade cargo-update \
+	# extract filed likes python
+	choose
 )
 
 cargo install ${TOOLS[@]}
