@@ -6,7 +6,7 @@ source $HERE/env.fish
 set -gx PATH ~/.ghcup/bin/ ~/.npm/bin $PATH
 set -gx NPM_PACKAGES ~/.npm
 set -gx NODE_PATH ~/.npm/lib/node_modules $NODE_PATH
-set -gx GHQ_SELECTOR peco
+set -gx GHQ_SELECTOR sk
 set -gx PATH ~/.ghcup/bin/ ~/.cache/npm/bin/ $PATH
 # }}}
 

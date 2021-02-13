@@ -29,7 +29,11 @@ TOOLS=(\
 	# color
 	pastel \
 	# git tools
-	onefetch git-interactive-rebase-tool
+	onefetch git-interactive-rebase-tool \
+	# fzf
+	skim \
+	# directory usage analyzer
+	dutree diskonaut
 )
 
 cargo install ${TOOLS[@]}
