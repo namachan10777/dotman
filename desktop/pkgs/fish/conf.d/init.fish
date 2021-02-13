@@ -25,16 +25,20 @@ abbr -a lg lazygit
 # }}}
 
 # alias {{{
+function dif
+	delta --side-by-side --line-numbers $argv
+end
+
 function ls
-	exa $argv
+	lsd $argv
 end
 
 function ll
-	exa -l $argv
+	lsd -l $argv
 end
 
 function lt
-	exa -T $argv
+	lsd --tree $argv
 end
 
 function clipb
