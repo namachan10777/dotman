@@ -28,6 +28,7 @@ local load_core = function()
 		{ 'cespare/vim-toml' },
 		{ 'qnighy/lalrpop.vim' },
 		{ 'namachan10777/tml.vim' },
+		{ 'ron-rs/ron.vim' },
 		-- utilities
 		{ 't9md/vim-quickhl' },
 
