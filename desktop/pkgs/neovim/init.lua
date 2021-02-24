@@ -78,6 +78,12 @@ set_indent({
 	{ filetypes= {'plaintex', 'satysfi', 'tml'}, w=2, expand=true },
 })
 
+-- quickhl
+vim.api.nvim_set_keymap('n', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
+vim.api.nvim_set_keymap('x', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
+vim.api.nvim_set_keymap('n', '<Space>M', '<Plug>(quickhl-manual-reset)', { noremap = false})
+vim.api.nvim_set_keymap('x', '<Space>M', '<Plug>(quickhl-manual-reset)', { noremap = false})
+
 -- fern
 setvar('fern#renderer', 'nerdfont')
 kmap('n', '<space>f', ':Fern . -drawer<CR>', { noremap = true })
