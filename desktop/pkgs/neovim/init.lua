@@ -6,6 +6,7 @@ local kmap = vim.api.nvim_set_keymap
 local setvar = vim.api.nvim_set_var
 local execute = vim.api.nvim_command
 local fn = vim.fn
+local install_path = fn.stdpath('data')..'/site/pack/packer/opt/'
 local function augroup(name, inner)
 	execute('augroup SaveEditPos')
 	execute('autocmd!')
@@ -35,18 +36,40 @@ local function set_indent(configs)
 end
 -- }}}
 
+-- ad-hoc
+-- installing nlua.nvim by packer, cannot load nlua.lsp.nvim. (bug?)
+fn['plug#begin']('~/.vim/plugged')
+execute('Plug \'tjdevries/nlua.nvim\'')
+fn['plug#end']()
+
 require('packer').startup(function()
+	-- package mananger
 	use {'wbthomason/packer.nvim', opt = true}
+
+	-- colorscheme
 	use 'otyn0308/otynium'
+
+	-- filer
 	use 'lambdalisue/fern.vim'
 	use 'lambdalisue/nerdfont.vim'
 	use 'lambdalisue/fern-renderer-nerdfont.vim'
 	use 'lambdalisue/fern-git-status.vim'
 	use 'lambdalisue/fern-mapping-git.vim'
 	use 'lambdalisue/fern-hijack.vim'
+
+	-- status line
 	use 'vim-airline/vim-airline'
-	-- Syntax highlights
+
+	-- completion and lsp
+	use 'neovim/nvim-lspconfig'
+	use 'nvim-lua/completion-nvim'
+
+	-- language specific support
 	-- use { 'JuliaEditorSupport/julia-vim', ft='julia' } bug?
+	use { 'nvim-lua/plenary.nvim', ft='lua' }
+	-- use { 'tjdevries/nlua.nvim', ft='lua' }
+	use { 'tjdevries/manillua.nvim', ft='lua' }
+	use { 'euclidianAce/BetterLua.vim', ft='lua' }
 	use { 'pest-parser/pest.vim', ft='pest' }
 	use { 'ElmCast/elm-vim', ft='elm'}
 	use { 'prettier/vim-prettier', ft={'typescript', 'typescriptreact', 'javascript'}}
@@ -67,15 +90,26 @@ kmap('n', 'j', 'gj', { noremap = true })
 kmap('n', 'k', 'gk', { noremap = true })
 kmap('t', '<C-j>', '<C-\\><C-n>', { noremap = true })
 
+-- save edit pos
 augroup('SaveEditPos', {
 	'autocmd BufReadPost * if line(\"\'\\\"\") > 1 && line(\"\'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif'
 })
 
+-- config indent
 set_indent({
 	{ filetypes= {'python', 'haskell'}, w=4, expand=true },
 	{ filetypes= {'javascript', 'typescript', 'typescriptreact', 'json'}, w=2, expand=true },
 	{ filetypes= {'yaml'}, w=2, expand=true },
 	{ filetypes= {'plaintex', 'satysfi', 'tml'}, w=2, expand=true },
+})
+
+-- To get builtin LSP running, do something like:
+require('nlua.lsp.nvim').setup(require('lspconfig'), {
+  -- Include globals you want to tell the LSP are real :)
+  globals = {
+    -- Colorbuddy
+    "Color", "c", "Group", "g", "s",
+  }
 })
 
 -- quickhl
