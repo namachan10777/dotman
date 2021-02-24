@@ -41,9 +41,6 @@ require('packer').startup(function()
 	-- package mananger
 	use {'wbthomason/packer.nvim', opt = true}
 
-	-- colorscheme
-	use 'otyn0308/otynium'
-
 	-- filer
 	use 'lambdalisue/fern.vim'
 	use 'lambdalisue/nerdfont.vim'
@@ -60,7 +57,7 @@ require('packer').startup(function()
 	use 'nvim-lua/completion-nvim'
 	use 'steelsojka/completion-buffers'
 	use 'nvim-lua/lsp-status.nvim'
-	use 'Iron-E/nvim-highlite'
+	use 'namachan10777/nvim-highlite-otynium'
 
 	-- language specific support
 	-- use { 'JuliaEditorSupport/julia-vim', ft='julia' } bug?
@@ -170,7 +167,7 @@ vim.bo.shiftwidth = 4
 vim.bo.expandtab  = false
 -- looks settings
 vim.o.termguicolors   = true
-execute('colorscheme highlite')
+execute('colorscheme otynium')
 vim.wo.number         = true
 vim.wo.relativenumber = true
 vim.o.cmdheight       = 2    -- the height of cmd space
