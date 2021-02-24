@@ -35,6 +35,32 @@ local function set_indent(configs)
 end
 -- }}}
 
+require('packer').startup(function()
+	use {'wbthomason/packer.nvim', opt = true}
+	use 'otyn0308/otynium'
+	use 'lambdalisue/fern.vim'
+	use 'lambdalisue/nerdfont.vim'
+	use 'lambdalisue/fern-renderer-nerdfont.vim'
+	use 'lambdalisue/fern-git-status.vim'
+	use 'lambdalisue/fern-mapping-git.vim'
+	use 'lambdalisue/fern-hijack.vim'
+	use 'vim-airline/vim-airline'
+	-- Syntax highlights
+	use { 'JuliaEditorSupport/julia-vim', ft='julia' }
+	use { 'pest-parser/pest.vim', ft='pest' }
+	use { 'ElmCast/elm-vim', ft='elm'}
+	use { 'prettier/vim-prettier', ft={'typescript', 'typescriptreact', 'javascript'}}
+	use { 'jalvesaq/Nvim-R', ft='R' }
+	use { 'qnighy/satysfi.vim', ft='satysfi' }
+	use { 'cespare/vim-toml', ft='toml' }
+	use { 'qnighy/lalrpop.vim', ft='lalrpop' }
+	use { 'namachan10777/tml.vim', ft='tml' }
+	use { 'ron-rs/ron.vim', ft='ron' }
+	-- utilities
+	use 't9md/vim-quickhl'
+	use 'nvim-treesitter/nvim-treesitter'
+end)
+
 -- remap
 kmap('n', 'r', 'diwi', { noremap = true })
 kmap('n', 'j', 'gj', { noremap = true })
