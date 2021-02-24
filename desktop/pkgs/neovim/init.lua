@@ -60,6 +60,7 @@ require('packer').startup(function()
 	use 'nvim-lua/completion-nvim'
 	use 'steelsojka/completion-buffers'
 	use 'nvim-lua/lsp-status.nvim'
+	use 'Iron-E/nvim-highlite'
 
 	-- language specific support
 	-- use { 'JuliaEditorSupport/julia-vim', ft='julia' } bug?
@@ -168,7 +169,8 @@ vim.bo.tabstop    = 4
 vim.bo.shiftwidth = 4
 vim.bo.expandtab  = false
 -- looks settings
-execute('colorscheme otynium')
+vim.o.termguicolors   = true
+execute('colorscheme highlite')
 vim.wo.number         = true
 vim.wo.relativenumber = true
 vim.o.cmdheight       = 2    -- the height of cmd space
