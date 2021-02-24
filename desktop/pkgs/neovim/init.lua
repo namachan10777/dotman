@@ -1,6 +1,7 @@
 require('plugins')
 local fs = require('fs')
 local completion = require('cfg.completion')
+local statusline = require('cfg.statusline')
 
 -- helpers {{{
 local kmap = vim.api.nvim_set_keymap
@@ -44,6 +45,10 @@ require('packer').startup(function()
 	for i = 1, #comp_packages do
 		use(comp_packages[i])
 	end
+	local statusline_packages = statusline.packages
+	for i = 1, #statusline_packages do
+		use(statusline_packages[i])
+	end
 
 	-- package mananger
 	use {'wbthomason/packer.nvim', opt = true}
@@ -56,8 +61,6 @@ require('packer').startup(function()
 	use 'lambdalisue/fern-mapping-git.vim'
 	use 'lambdalisue/fern-hijack.vim'
 
-	-- status line
-	use 'vim-airline/vim-airline'
 	use 'namachan10777/nvim-highlite-otynium'
 
 	-- language specific support
@@ -100,6 +103,7 @@ set_indent({
 })
 
 completion.configure()
+statusline.configure()
 
 -- quickhl
 vim.api.nvim_set_keymap('n', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})

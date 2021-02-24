@@ -9,6 +9,20 @@ completion.packages = {
 	'nvim-lua/lsp-status.nvim',
 }
 
+function LspStatus()
+	if #vim.lsp.buf_get_clients() > 0 then
+		local max_length = 50
+		local status = require('lsp-status').status()
+		if #status < max_length then
+			for i = 0, #status - max_length do
+				status = status .. ' '
+			end
+			return status
+		end
+		return status
+	end
+end
+
 function completion.configure()
 	local lsp_status = require('lsp-status')
 	local lspconfig = require('lspconfig')
@@ -30,6 +44,11 @@ function completion.configure()
 	lspconfig.texlab.setup{
 		on_attach = lsp_status.on_attach;
 		capabilities = lsp_status.capabilities;
+	}
+	lspconfig.clangd.setup{
+		on_attach = lsp_status.on_attach;
+		capabilities = lsp_status.capabilities;
+		handlers = lsp_status.extensions.clangd.setup();
 	}
 
 	vim.cmd('autocmd BufEnter * lua require\'completion\'.on_attach()')
@@ -55,6 +74,16 @@ function completion.configure()
 			{ mode = { '<c-n>' } }
 		},
 		rust = {
+			{ complete_items = { 'lsp' } },
+			{ mode = { '<c-p>' } },
+			{ mode = { '<c-n>' } }
+		},
+		c = {
+			{ complete_items = { 'lsp' } },
+			{ mode = { '<c-p>' } },
+			{ mode = { '<c-n>' } }
+		},
+		cpp = {
 			{ complete_items = { 'lsp' } },
 			{ mode = { '<c-p>' } },
 			{ mode = { '<c-n>' } }
