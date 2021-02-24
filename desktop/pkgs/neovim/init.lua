@@ -56,6 +56,7 @@ require('packer').startup(function()
 	use 'neovim/nvim-lspconfig'
 	use 'nvim-lua/completion-nvim'
 	use 'steelsojka/completion-buffers'
+	use { 'aca/completion-tabnine', run = './install.sh' }
 	use 'nvim-lua/lsp-status.nvim'
 	use 'namachan10777/nvim-highlite-otynium'
 
@@ -123,7 +124,27 @@ lspconfig.texlab.setup{
 execute('autocmd BufEnter * lua require\'completion\'.on_attach()')
 vim.g.completion_chain_complete_list = {
 	default = {
-		{ complete_items = { 'lsp', 'buffer', 'snippet' } },
+		{ complete_items = { 'tabnine', 'buffers' } },
+		{ mode = { '<c-p>' } },
+		{ mode = { '<c-n>' } }
+	},
+	python = {
+		{ complete_items = { 'lsp' } },
+		{ mode = { '<c-p>' } },
+		{ mode = { '<c-n>' } }
+	},
+	ocaml = {
+		{ complete_items = { 'lsp' } },
+		{ mode = { '<c-p>' } },
+		{ mode = { '<c-n>' } }
+	},
+	plaintex = {
+		{ complete_items = { 'lsp' } },
+		{ mode = { '<c-p>' } },
+		{ mode = { '<c-n>' } }
+	},
+	rust = {
+		{ complete_items = { 'lsp' } },
 		{ mode = { '<c-p>' } },
 		{ mode = { '<c-n>' } }
 	},
