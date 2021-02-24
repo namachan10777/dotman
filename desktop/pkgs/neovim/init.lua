@@ -46,7 +46,7 @@ require('packer').startup(function()
 	use 'lambdalisue/fern-hijack.vim'
 	use 'vim-airline/vim-airline'
 	-- Syntax highlights
-	use { 'JuliaEditorSupport/julia-vim', ft='julia' }
+	-- use { 'JuliaEditorSupport/julia-vim', ft='julia' } bug?
 	use { 'pest-parser/pest.vim', ft='pest' }
 	use { 'ElmCast/elm-vim', ft='elm'}
 	use { 'prettier/vim-prettier', ft={'typescript', 'typescriptreact', 'javascript'}}
