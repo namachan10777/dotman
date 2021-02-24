@@ -37,11 +37,6 @@ end
 -- }}}
 
 -- ad-hoc
--- installing nlua.nvim by packer, cannot load nlua.lsp.nvim. (bug?)
-fn['plug#begin']('~/.vim/plugged')
-execute('Plug \'tjdevries/nlua.nvim\'')
-fn['plug#end']()
-
 require('packer').startup(function()
 	-- package mananger
 	use {'wbthomason/packer.nvim', opt = true}
@@ -63,11 +58,11 @@ require('packer').startup(function()
 	-- completion and lsp
 	use 'neovim/nvim-lspconfig'
 	use 'nvim-lua/completion-nvim'
+	use 'steelsojka/completion-buffers'
 
 	-- language specific support
 	-- use { 'JuliaEditorSupport/julia-vim', ft='julia' } bug?
 	use { 'nvim-lua/plenary.nvim', ft='lua' }
-	-- use { 'tjdevries/nlua.nvim', ft='lua' }
 	use { 'tjdevries/manillua.nvim', ft='lua' }
 	use { 'euclidianAce/BetterLua.vim', ft='lua' }
 	use { 'pest-parser/pest.vim', ft='pest' }
@@ -82,6 +77,7 @@ require('packer').startup(function()
 	-- utilities
 	use 't9md/vim-quickhl'
 	use 'nvim-treesitter/nvim-treesitter'
+	use 'nvim-treesitter/completion-treesitter'
 end)
 
 -- remap
@@ -103,15 +99,23 @@ set_indent({
 	{ filetypes= {'plaintex', 'satysfi', 'tml'}, w=2, expand=true },
 })
 
--- To get builtin LSP running, do something like:
--- SEGVしてる
-require('nlua.lsp.nvim').setup(require('lspconfig'), {
-  -- Include globals you want to tell the LSP are real :)
-  globals = {
-    -- Colorbuddy
-    "Color", "c", "Group", "g", "s",
-  }
-})
+require'lspconfig'.pyright.setup{}
+
+execute('autocmd BufEnter * lua require\'completion\'.on_attach()')
+vim.g.completion_chain_complete_list = {
+	default = {
+		{ complete_items = { 'lsp', 'buffer', 'snippet' } },
+		{ mode = { '<c-p>' } },
+		{ mode = { '<c-n>' } }
+	},
+}
+-- Use <Tab> and <S-Tab> to navigate through popup menu
+execute('inoremap <expr> <Tab>   pumvisible() ? "\\<C-n>" : "\\<Tab>"')
+execute('inoremap <expr> <S-Tab> pumvisible() ? "\\<C-p>" : "\\<S-Tab>"')
+-- Set completeopt to have a better completion experience
+vim.o.completeopt='menuone,noinsert,noselect'
+-- Avoid showing message extra message when using completion
+vim.o.shortmess=vim.o.shortmess..'c'
 
 -- quickhl
 vim.api.nvim_set_keymap('n', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
