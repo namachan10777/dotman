@@ -59,6 +59,7 @@ require('packer').startup(function()
 	use 'neovim/nvim-lspconfig'
 	use 'nvim-lua/completion-nvim'
 	use 'steelsojka/completion-buffers'
+	use 'nvim-lua/lsp-status.nvim'
 
 	-- language specific support
 	-- use { 'JuliaEditorSupport/julia-vim', ft='julia' } bug?
@@ -80,6 +81,9 @@ require('packer').startup(function()
 	use 'nvim-treesitter/completion-treesitter'
 end)
 
+local lsp_status = require('lsp-status')
+local lspconfig = require('lspconfig')
+
 -- remap
 kmap('n', 'r', 'diwi', { noremap = true })
 kmap('n', 'j', 'gj', { noremap = true })
@@ -99,7 +103,24 @@ set_indent({
 	{ filetypes= {'plaintex', 'satysfi', 'tml'}, w=2, expand=true },
 })
 
-require'lspconfig'.pyright.setup{}
+lsp_status.register_progress()
+
+lspconfig.pyright.setup{
+	on_attach = lsp_status.on_attach;
+	capabilities = lsp_status.capabilities;
+}
+lspconfig.ocamllsp.setup{
+	on_attach = lsp_status.on_attach;
+	capabilities = lsp_status.capabilities;
+}
+lspconfig.rust_analyzer.setup{
+	on_attach = lsp_status.on_attach;
+	capabilities = lsp_status.capabilities;
+}
+lspconfig.texlab.setup{
+	on_attach = lsp_status.on_attach;
+	capabilities = lsp_status.capabilities;
+}
 
 execute('autocmd BufEnter * lua require\'completion\'.on_attach()')
 vim.g.completion_chain_complete_list = {
