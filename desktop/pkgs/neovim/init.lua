@@ -104,6 +104,7 @@ set_indent({
 })
 
 -- To get builtin LSP running, do something like:
+-- SEGVしてる
 require('nlua.lsp.nvim').setup(require('lspconfig'), {
   -- Include globals you want to tell the LSP are real :)
   globals = {
