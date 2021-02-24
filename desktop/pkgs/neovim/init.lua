@@ -1,5 +1,6 @@
 require('plugins')
 local fs = require('fs')
+local completion = require('cfg.completion')
 
 -- helpers {{{
 local kmap = vim.api.nvim_set_keymap
@@ -38,6 +39,12 @@ end
 
 -- ad-hoc
 require('packer').startup(function()
+
+	local comp_packages = completion.packages
+	for i = 1, #comp_packages do
+		use(comp_packages[i])
+	end
+
 	-- package mananger
 	use {'wbthomason/packer.nvim', opt = true}
 
@@ -51,13 +58,6 @@ require('packer').startup(function()
 
 	-- status line
 	use 'vim-airline/vim-airline'
-
-	-- completion and lsp
-	use 'neovim/nvim-lspconfig'
-	use 'nvim-lua/completion-nvim'
-	use 'steelsojka/completion-buffers'
-	use { 'aca/completion-tabnine', run = './install.sh' }
-	use 'nvim-lua/lsp-status.nvim'
 	use 'namachan10777/nvim-highlite-otynium'
 
 	-- language specific support
@@ -80,9 +80,6 @@ require('packer').startup(function()
 	use 'nvim-treesitter/completion-treesitter'
 end)
 
-local lsp_status = require('lsp-status')
-local lspconfig = require('lspconfig')
-
 -- remap
 kmap('n', 'r', 'diwi', { noremap = true })
 kmap('n', 'j', 'gj', { noremap = true })
@@ -102,60 +99,7 @@ set_indent({
 	{ filetypes= {'plaintex', 'satysfi', 'tml'}, w=2, expand=true },
 })
 
-lsp_status.register_progress()
-
-lspconfig.pyright.setup{
-	on_attach = lsp_status.on_attach;
-	capabilities = lsp_status.capabilities;
-}
-lspconfig.ocamllsp.setup{
-	on_attach = lsp_status.on_attach;
-	capabilities = lsp_status.capabilities;
-}
-lspconfig.rust_analyzer.setup{
-	on_attach = lsp_status.on_attach;
-	capabilities = lsp_status.capabilities;
-}
-lspconfig.texlab.setup{
-	on_attach = lsp_status.on_attach;
-	capabilities = lsp_status.capabilities;
-}
-
-execute('autocmd BufEnter * lua require\'completion\'.on_attach()')
-vim.g.completion_chain_complete_list = {
-	default = {
-		{ complete_items = { 'tabnine', 'buffers' } },
-		{ mode = { '<c-p>' } },
-		{ mode = { '<c-n>' } }
-	},
-	python = {
-		{ complete_items = { 'lsp' } },
-		{ mode = { '<c-p>' } },
-		{ mode = { '<c-n>' } }
-	},
-	ocaml = {
-		{ complete_items = { 'lsp' } },
-		{ mode = { '<c-p>' } },
-		{ mode = { '<c-n>' } }
-	},
-	plaintex = {
-		{ complete_items = { 'lsp' } },
-		{ mode = { '<c-p>' } },
-		{ mode = { '<c-n>' } }
-	},
-	rust = {
-		{ complete_items = { 'lsp' } },
-		{ mode = { '<c-p>' } },
-		{ mode = { '<c-n>' } }
-	},
-}
--- Use <Tab> and <S-Tab> to navigate through popup menu
-execute('inoremap <expr> <Tab>   pumvisible() ? "\\<C-n>" : "\\<Tab>"')
-execute('inoremap <expr> <S-Tab> pumvisible() ? "\\<C-p>" : "\\<S-Tab>"')
--- Set completeopt to have a better completion experience
-vim.o.completeopt='menuone,noinsert,noselect'
--- Avoid showing message extra message when using completion
-vim.o.shortmess=vim.o.shortmess..'c'
+completion.configure()
 
 -- quickhl
 vim.api.nvim_set_keymap('n', '<Space>m', '<Plug>(quickhl-manual-this)' , { noremap = false})
