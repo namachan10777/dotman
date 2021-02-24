@@ -113,3 +113,11 @@ vim.o.listchars       = 'tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%'
 vim.o.hidden = true
 -- update file's timestamp automatically per 300 ms
 vim.o.updatetime=300
+
+require('nvim-treesitter.configs').setup {
+	ensure_installed = 'maintained',
+	highlight = {
+		enable = true,
+		disable = {},
+	}
+}
