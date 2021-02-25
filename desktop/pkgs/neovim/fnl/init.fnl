@@ -1,8 +1,49 @@
-(module nvim-config
+(module nvim-packages
   {require {a aniseed.core
             s aniseed.string
+            completion_cfg cfg.completion
+            statusline_cfg cfg.statusline
             nvim aniseed.nvim
-            treesitter nvim-treesitter.configs}})
+            packer packer}})
+
+(packer.startup (lambda []
+                  (do
+                    (each [_ pkg (pairs completion_cfg.packages)]
+                      (use pkg))
+                    (each [_ pkg (pairs statusline_cfg.packages)]
+                      (use pkg))
+                    (use "bakpakin/fennel.vim")
+                    (use { 1 "Olical/aniseed" :opt true } )
+                    (use { 1 "wbthomason/packer.nvim" :opt true } )
+                    (use "lambdalisue/fern.vim")
+                    (use "lambdalisue/nerdfont.vim")
+                    (use "lambdalisue/fern-renderer-nerdfont.vim")
+                    (use "lambdalisue/fern-git-status.vim")
+                    (use "lambdalisue/fern-mapping-git.vim")
+                    (use "lambdalisue/fern-hijack.vim")
+                    (use "namachan10777/nvim-highlite-otynium")
+                    ; (use { 1 'JuliaEditorSupport/julia-vim'  :ft='julia' }) bug?
+                    (use { 1 "nvim-lua/plenary.nvim" :ft "lua" })
+                    (use { 1 "tjdevries/manillua.nvim" :ft "lua" })
+                    (use { 1 "euclidianAce/BetterLua.vim" :ft "lua" })
+                    (use { 1 "pest-parser/pest.vim" :ft "pest" })
+                    (use { 1 "ElmCast/elm-vim" :ft "elm"})
+                    (use { 1 "prettier/vim-prettier" :ft ["typescript" "typescriptreact" "javascript"]})
+                    (use { 1 "jalvesaq/Nvim-R" :ft "R" })
+                    (use { 1 "qnighy/satysfi.vim" :ft "satysfi" })
+                    (use { 1 "cespare/vim-toml" :ft "toml" })
+                    (use { 1 "qnighy/lalrpop.vim" :ft "lalrpop" })
+                    (use { 1 "namachan10777/tml.vim" :ft "tml" })
+                    (use { 1 "ron-rs/ron.vim" :ft "ron" })
+                    (use "t9md/vim-quickhl")
+                    (use "nvim-treesitter/nvim-treesitter")
+                    (use "nvim-treesitter/completion-treesitter"))))
+
+(def treesitter (require "nvim-treesitter.configs"))
+
+(completion_cfg.configure)
+(statusline_cfg.configure)
+
 (fn colorscheme [name]
   (nvim.ex.colorscheme name))
 
@@ -21,8 +62,6 @@
                        (.. "shiftwidth" (. conf :w))
                        (if (. conf :expand) :expandtab :noexpandtab)))
     (nvim.ex.augroup :END)))
-
-; main configuration
 
 (do
   (nvim.ex.augroup :SaveEditPos)
