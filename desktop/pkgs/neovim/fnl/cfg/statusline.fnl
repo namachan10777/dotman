@@ -1,6 +1,7 @@
 (module cfg.statusline
   {require {a aniseed.core
             s aniseed.string
+            lsp vim.lsp
             nvim aniseed.nvim}})
 
 (def packages [{1 "glepnir/galaxyline.nvim"
@@ -11,6 +12,11 @@
  (~= (nvim.fn.empty (nvim.fn.expand "%:t")) 1))
 (fn checkwidth []
  (> (nvim.fn.winwidth 0) 80))
+(fn lspStatus []
+  (let [lsp_status (require "lsp-status")]
+    (if (> (length (vim.lsp.buf_get_clients)) 0)
+      (lsp_status.status)
+      "no")))
 
 (def aliases {"n" "NORMAL" "i" "INSERT" "c" "COMMAND" "V" "VISUAL" "^V" "VISUAL"})
 
@@ -77,7 +83,7 @@
                      {:DiagnosticWarn {:provider "DiagnosticWarn"
                                        :separator "  "
                                        :highlight [colors.blue colors.bg]}}
-                     {:LspStatus {:provider (lambda [] LspStatus)}}])
+                     {:LspStatus {:provider lspStatus}}])
       (set gls.right [{:FileFormat {:provider "FileFormat"
                                     :separator ""
                                     :separator_highlight [colors.bg colors.purple]

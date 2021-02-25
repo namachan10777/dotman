@@ -59,6 +59,3 @@
       (set nvim.o.completeopt "menuone,noinsert,noselect")
       (set nvim.o.shortmess (.. nvim.o.shortmess "c")))))
 
-(defn LspStatus []
-  (if (> (length (lsp.buf_get_clients)) 0)
-    status ((require "lsp-status").status)))
