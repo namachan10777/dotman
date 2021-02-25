@@ -77,7 +77,7 @@
                      {:DiagnosticWarn {:provider "DiagnosticWarn"
                                        :separator "  "
                                        :highlight [colors.blue colors.bg]}}
-                     {:LspStatus {:provider LspStatus}}])
+                     {:LspStatus {:provider (lambda [] LspStatus)}}])
       (set gls.right [{:FileFormat {:provider "FileFormat"
                                     :separator ""
                                     :separator_highlight [colors.bg colors.purple]
