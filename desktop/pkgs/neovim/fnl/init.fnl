@@ -56,11 +56,11 @@
     (nvim.ex.autocmd_)
     (each [_ conf (pairs confs)]
       (nvim.ex.autocmd "FileType"
-                       (s.join "" (. conf :ft))
+                       (s.join "," conf.ft)
                        "setlocal"
-                       (.. "tabstop=" (. conf :w))
-                       (.. "shiftwidth" (. conf :w))
-                       (if (. conf :expand) :expandtab :noexpandtab)))
+                       (.. "tabstop=" conf.w)
+                       (.. "shiftwidth=" conf.w)
+                       (if conf.expand :expandtab :noexpandtab)))
     (nvim.ex.augroup :END)))
 
 (do
