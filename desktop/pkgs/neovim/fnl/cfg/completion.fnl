@@ -6,6 +6,15 @@
 
 (def packages ["neoclide/coc.nvim"])
 
+(global check_back_space 
+  (fn []
+    (let [col (- (vim.fn.col ".") 1)]
+      (do
+        (or
+          (= col 0)
+          (= (string.match (string.sub (vim.fn.getline ".") col col) "%s") nil))))))
+
+; check_back_spaceの関数定義は正しいと思うけどうまく動かない
 (defn configure []
   (do
     (nvim.ex.inoremap
