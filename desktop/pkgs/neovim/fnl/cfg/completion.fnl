@@ -24,7 +24,7 @@
         (nvim.command (.. "!" nvim.bo.keywordprg " " (nvim.fn.expand "<cword>")))))))
 
 
-; check_back_spaceの関数定義は正しいと思うけどうまく動かない
+; 多分remapの条件式で直接luaの関数を呼べない
 (defn configure []
   (do
     (nvim.ex.inoremap
