@@ -22,6 +22,7 @@ abbr -a btop battop
 abbr -a tk tokei
 abbr -a gpo git push origin
 abbr -a lg lazygit
+abbr -a jigai sudo shutdown -h now
 # }}}
 
 # alias {{{
@@ -57,6 +58,6 @@ end
 
 # starship {{{
 starship init fish | source
+zoxide init fish | source
 # }}}
 
-zoxide init fish | source
