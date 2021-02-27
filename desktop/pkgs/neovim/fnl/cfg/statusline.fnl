@@ -15,6 +15,12 @@
 
 (def aliases {"n" "NORMAL" "i" "INSERT" "c" "COMMAND" "V" "VISUAL" "^V" "VISUAL"})
 
+(fn coc_status []
+  (nvim.call_function "coc#status" {}))
+
+(fn coc_current_function []
+  (or nvim.b.coc_current_function ""))
+
 (defn configure []
   (let
     [gl (require "galaxyline")
@@ -77,7 +83,9 @@
                      {:Space {:provider (lambda [] " ")}}
                      {:DiagnosticWarn {:provider "DiagnosticWarn"
                                        :separator "  "
-                                       :highlight [colors.blue colors.bg]}}])
+                                       :highlight [colors.blue colors.bg]}}
+                     {:LspStatus {:provider coc_status}}
+                     {:LspFunction {:provider coc_current_function}}])
       (set gls.right [{:FileFormat {:provider "FileFormat"
                                     :separator ""
                                     :separator_highlight [colors.bg colors.purple]
