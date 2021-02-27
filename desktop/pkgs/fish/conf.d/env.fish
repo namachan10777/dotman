@@ -20,7 +20,7 @@ set -gx DOCKER_BUILDKIT 1
 set PATH_LOCAL ~/.cargo/bin
 set PATH_LOCAL ~/.gem/ruby/2.6.0/bin $PATH_LOCAL
 set PATH_LOCAL ~/anaconda3/bin $PATH_LOCAL
-set PATH_LOCAL $GOPATH_LOCAL/bin $PATH_LOCAL
+set PATH_LOCAL $GOPATH/bin $PATH_LOCAL
 set PATH_LOCAL ~/.cabal/bin $PATH_LOCAL
 set PATH_LOCAL ~/.local/bin/ $PATH_LOCAL
 set PATH_LOCAL ~/.ghcup/bin/ $PATH_LOCAL
@@ -31,4 +31,5 @@ set -gx LS_COLORS (dircolors | head -n1 | sed -e "s/^.*'\(.*\)'.*/\1/")
 
 if type opam > /dev/null 2>&1
 	eval (opam env)
+
 end
