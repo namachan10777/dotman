@@ -12,11 +12,6 @@
  (~= (nvim.fn.empty (nvim.fn.expand "%:t")) 1))
 (fn checkwidth []
  (> (nvim.fn.winwidth 0) 80))
-(fn lspStatus []
-  (let [lsp_status (require "lsp-status")]
-    (if (> (length (vim.lsp.buf_get_clients)) 0)
-      (lsp_status.status)
-      "no")))
 
 (def aliases {"n" "NORMAL" "i" "INSERT" "c" "COMMAND" "V" "VISUAL" "^V" "VISUAL"})
 
@@ -82,8 +77,7 @@
                      {:Space {:provider (lambda [] " ")}}
                      {:DiagnosticWarn {:provider "DiagnosticWarn"
                                        :separator "  "
-                                       :highlight [colors.blue colors.bg]}}
-                     {:LspStatus {:provider lspStatus}}])
+                                       :highlight [colors.blue colors.bg]}}])
       (set gls.right [{:FileFormat {:provider "FileFormat"
                                     :separator ""
                                     :separator_highlight [colors.bg colors.purple]
