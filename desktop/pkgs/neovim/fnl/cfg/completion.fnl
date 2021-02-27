@@ -43,4 +43,5 @@
     (nvim.ex.nmap "<silent> gy" "<Plug>(coc-type-definition)")
     (nvim.ex.nmap "<silent> gi" "<Plug>(coc-implementation)")
     (nvim.ex.nmap "<silent> gr" "<Plug>(coc-references)")
-    (nvim.ex.nnoremap "<silent> K" ":lua show_documentation()<CR>")))
+    (nvim.ex.nnoremap "<silent> K" ":lua show_documentation()<CR>")
+    (nvim.ex.autocmd "CursorHold" "*" "silent" "call" "CocAction('highlight')")))
