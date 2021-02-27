@@ -3,6 +3,7 @@ FISH_SOURCES      := $(shell find pkgs/fish -type f)
 GIT_SOURCE        := pkgs/git/gitconfig
 LATEXMK_SOURCE    := pkgs/latexmk/latexmkrc
 LAZYGIT_SOURCE    := pkgs/lazygit/config.yml
+NPM_SOURCE        := pkgs/npm/npmrc
 NVIM_SOURCES      := $(shell find pkgs/neovim -type f)
 SWAY_SOURCE       := pkgs/sway/config
 TIG_SOURCE        := pkgs/tig/tigrc
@@ -21,6 +22,7 @@ FISH_TARGETS      := $(patsubst pkgs/fish/%,$(XDG_CONFIG_HOME)/fish/%,$(FISH_SOU
 GIT_TARGET        := $(HOME)/.gitconfig
 LATEXMK_TARGET    := $(HOME)/.latexmkrc
 LAZYGIT_TARGET    := $(XDG_CONFIG_HOME)/jessedufield/config.yml
+NPM_TARGET        := $(HOME)/.npmrc
 NVIM_TARGETS      := $(patsubst pkgs/neovim/%,$(XDG_CONFIG_HOME)/nvim/%,$(NVIM_SOURCES))
 SWAY_TARGET       := $(XDG_CONFIG_HOME)/sway/config
 TIG_TARGET        := $(HOME)/.tigrc
@@ -44,6 +46,7 @@ install: \
 	$(GIT_TARGET) \
 	$(LATEXMK_TARGET) \
 	$(LAZYGIT_TARGET) \
+	$(NPM_TARGET) \
 	$(NVIM_TARGETS) \
 	$(SWAY_TARGET) \
 	$(TIG_TARGET) \
@@ -91,6 +94,9 @@ $(SWAY_TARGET): $(SWAY_SOURCE)
 	bash ../copy.sh $< $@
 
 $(LAZYGIT_TARGET): $(LAZYGIT_SOURCE)
+	bash ../copy.sh $< $@
+
+$(NPM_TARGET): $(NPM_SOURCE)
 	bash ../copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/nvim/%: pkgs/neovim/%

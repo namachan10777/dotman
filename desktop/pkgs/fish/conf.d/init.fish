@@ -2,14 +2,6 @@
 set HERE (dirname (status -f))
 source $HERE/env.fish
 
-# envs {{{
-set -gx PATH ~/.ghcup/bin/ ~/.npm/bin $PATH
-set -gx NPM_PACKAGES ~/.npm
-set -gx NODE_PATH ~/.npm/lib/node_modules $NODE_PATH
-set -gx GHQ_SELECTOR sk
-set -gx PATH ~/.ghcup/bin/ ~/.cache/npm/bin/ $PATH
-# }}}
-
 # abbr {{{
 abbr -a py ipython
 abbr -a ..  "cd ../"
