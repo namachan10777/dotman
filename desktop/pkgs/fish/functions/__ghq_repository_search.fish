@@ -35,7 +35,7 @@ function __ghq_repository_search -d 'Repository search'
     [ -n "$query" ]; and set flags --query="$query"; or set flags
     switch "$selector"
         case fzf fzf-tmux peco percol fzy sk
-            ghq list --full-path | sed -e "1i/home/namachan/Downloads" | eval "$selector" $selector_options $flags | read select
+            ghq list --full-path | sed -e "1i"$HOME"/Downloads\n"$HOME"/tmp" | eval "$selector" $selector_options $flags | read select
         case \*
             printf "\nERROR: plugin-ghq is not support '$selector'.\n"
     end
