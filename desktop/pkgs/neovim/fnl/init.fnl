@@ -85,10 +85,9 @@
 (nvim.set_keymap "n" "k" "gk" { :noremap true })
 (nvim.set_keymap "t" "<C-j>" "<C-\\><C-n>" { :noremap true })
 
-; Fern
-(nvim.set_var "fern#renderer" "nerdfont")
-(nvim.set_keymap "n" "<space>f" ":NvimTreeToggle<CR>" { :noremap true })
-(nvim.set_keymap "x" "<space>f" ":NvimTreeToggle<CR>" { :noremap true })
+; NvimTree
+(nvim.set_keymap "n" "<space>t" ":NvimTreeToggle<CR>" { :noremap true })
+(nvim.set_keymap "x" "<space>t" ":NvimTreeToggle<CR>" { :noremap true })
 
 ; Quickhl
 (nvim.set_keymap "n" "<Space>m" "<Plug>(quickhl-manual-this)"  { :noremap false })
