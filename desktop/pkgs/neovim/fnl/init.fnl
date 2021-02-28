@@ -64,6 +64,13 @@
   (nvim.ex.autocmd_)
   (nvim.ex.autocmd :BufReadPost "*" "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
   (nvim.ex.augroup :END))
+(do
+  (nvim.ex.augroup :ScrollBarInit)
+  (nvim.ex.autocmd_)
+  (nvim.ex.autocmd "CursorMoved,VimResized,QuitPre" "*" "silent! lua require('scrollbar').show()")
+  (nvim.ex.autocmd "WinEnter,FocusGained" "*" "silent! lua require('scrollbar').show()")
+  (nvim.ex.autocmd "WinLeave,FocusLost" "*" "silent! lua require('scrollbar').clear()")
+  (nvim.ex.augroup :END))
 
 (set_indent (list
               {:ft (list :typescript :typescriptreact :javascript)
