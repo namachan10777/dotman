@@ -39,9 +39,12 @@
       "\"\\<C-g>u\\<CR>\\<c-r>=coc#on_enter()\\<CR>\"")
     (nvim.ex.nmap "<silent> [g" "<Plug>(coc-diagonostics-prev)")
     (nvim.ex.nmap "<silent> ]g" "<Plug>(coc-diagonostics-next)")
+    ; 定義へ行く系
     (nvim.ex.nmap "<silent> gd" "<Plug>(coc-definition)")
     (nvim.ex.nmap "<silent> gy" "<Plug>(coc-type-definition)")
     (nvim.ex.nmap "<silent> gi" "<Plug>(coc-implementation)")
     (nvim.ex.nmap "<silent> gr" "<Plug>(coc-references)")
+    ; 型等ドキュメントをHoverで表示。便利
     (nvim.ex.nnoremap "<silent> K" ":lua show_documentation()<CR>")
+    ; カーソルを置きっぱなしでハイライト。地味なのでコマンド欄に型表示とかにしたい……
     (nvim.ex.autocmd "CursorHold" "*" "silent" "call" "CocAction('highlight')")))

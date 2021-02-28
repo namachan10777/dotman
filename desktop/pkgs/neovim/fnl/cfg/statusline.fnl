@@ -19,6 +19,7 @@
 (fn coc_current_function []
   (or nvim.b.coc_current_function ""))
 
+; TODO otyniumに合わせる
 (defn configure []
   (let
     [gl (require "galaxyline")
