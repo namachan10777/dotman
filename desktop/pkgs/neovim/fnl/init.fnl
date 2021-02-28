@@ -33,7 +33,8 @@
                     (use { 1 "qnighy/lalrpop.vim" :ft "lalrpop" }) (use { 1 "namachan10777/tml.vim" :ft "tml" })
                     (use { 1 "ron-rs/ron.vim" :ft "ron" })
                     (use "t9md/vim-quickhl")
-                    (use "nvim-treesitter/nvim-treesitter"))))
+                    (use "nvim-treesitter/nvim-treesitter")
+                    (use "romgrk/nvim-treesitter-context"))))
 
 (def treesitter (require "nvim-treesitter.configs"))
 
