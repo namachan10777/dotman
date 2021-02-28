@@ -15,13 +15,13 @@
                     (use "bakpakin/fennel.vim")
                     (use { 1 "Olical/aniseed" :opt true } )
                     (use { 1 "wbthomason/packer.nvim" :opt true } )
+                    (use { 1 "nvim-telescope/telescope.nvim" :requires ["nvim-lua/popup.nvim" "nvim-lua/plenary.nvim"] })
                     (use "Xuyuanp/scrollbar.nvim")
                     (use "kyazdani42/nvim-web-devicons")
                     (use "kyazdani42/nvim-tree.lua")
                     (use "lambdalisue/nerdfont.vim")
                     (use "namachan10777/nvim-highlite-otynium")
                     ; (use { 1 'JuliaEditorSupport/julia-vim'  :ft='julia' }) bug?
-                    (use { 1 "nvim-lua/plenary.nvim" :ft "lua" })
                     (use { 1 "tjdevries/manillua.nvim" :ft "lua" })
                     (use { 1 "euclidianAce/BetterLua.vim" :ft "lua" })
                     (use { 1 "pest-parser/pest.vim" :ft "pest" })
@@ -88,6 +88,13 @@
 ; NvimTree
 (nvim.set_keymap "n" "<space>t" ":NvimTreeToggle<CR>" { :noremap true })
 (nvim.set_keymap "x" "<space>t" ":NvimTreeToggle<CR>" { :noremap true })
+
+; Telescope
+(nvim.set_keymap "n" "<Space>ff" "<cmd>lua require('telescope.builtin').find_files()<CR>" { :noremap true })
+(nvim.set_keymap "n" "<Space>fg" "<cmd>lua require('telescope.builtin').live_grep()<CR>" { :noremap true })
+(nvim.set_keymap "n" "<Space>fb" "<cmd>lua require('telescope.builtin').buffers()<CR>" { :noremap true })
+(nvim.set_keymap "n" "<Space>ft" "<cmd>lua require('telescope.builtin').treesitter()<CR>" { :noremap true })
+(nvim.set_keymap "n" "<Space>fh" "<cmd>lua require('telescope.builtin').help_tags()<CR>" { :noremap true })
 
 ; Quickhl
 (nvim.set_keymap "n" "<Space>m" "<Plug>(quickhl-manual-this)"  { :noremap false })
