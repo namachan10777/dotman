@@ -15,12 +15,10 @@
                     (use "bakpakin/fennel.vim")
                     (use { 1 "Olical/aniseed" :opt true } )
                     (use { 1 "wbthomason/packer.nvim" :opt true } )
-                    (use "lambdalisue/fern.vim")
+                    (use "Xuyuanp/scrollbar.nvim")
+                    (use "kyazdani42/nvim-web-devicons")
+                    (use "kyazdani42/nvim-tree.lua")
                     (use "lambdalisue/nerdfont.vim")
-                    (use "lambdalisue/fern-renderer-nerdfont.vim")
-                    (use "lambdalisue/fern-git-status.vim")
-                    (use "lambdalisue/fern-mapping-git.vim")
-                    (use "lambdalisue/fern-hijack.vim")
                     (use "namachan10777/nvim-highlite-otynium")
                     ; (use { 1 'JuliaEditorSupport/julia-vim'  :ft='julia' }) bug?
                     (use { 1 "nvim-lua/plenary.nvim" :ft "lua" })
@@ -83,8 +81,8 @@
 
 ; Fern
 (nvim.set_var "fern#renderer" "nerdfont")
-(nvim.set_keymap "n" "<space>f" ":Fern . -drawer<CR>" { :noremap true })
-(nvim.set_keymap "x" "<space>f" ":Fern . -drawer<CR>" { :noremap true })
+(nvim.set_keymap "n" "<space>f" ":NvimTreeToggle<CR>" { :noremap true })
+(nvim.set_keymap "x" "<space>f" ":NvimTreeToggle<CR>" { :noremap true })
 
 ; Quickhl
 (nvim.set_keymap "n" "<Space>m" "<Plug>(quickhl-manual-this)"  { :noremap false })

@@ -4,9 +4,7 @@
             lsp vim.lsp
             nvim aniseed.nvim}})
 
-(def packages [{1 "glepnir/galaxyline.nvim"
-                :branch "main"
-                :requires {1 "kyazdani42/nvim-web-devicons" :opt true}}])
+(def packages [{1 "glepnir/galaxyline.nvim" :branch "main"}])
 
 (fn buffer_not_empty []
  (~= (nvim.fn.empty (nvim.fn.expand "%:t")) 1))
