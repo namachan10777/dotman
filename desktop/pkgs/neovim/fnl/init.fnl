@@ -45,8 +45,8 @@
                     ; Lsp等のシンタックスハイライトを可能にする。
                     ; nvim-highliteをforkしてotyniumっぽい色にした
                     (use "namachan10777/nvim-highlite-otynium")
-                    ; Luaのシンタックスハイライトの改善
                     (use "bakpakin/fennel.vim" :ft "fennel")
+                    ; Luaのシンタックスハイライトの改善
                     (use { 1 "euclidianAce/BetterLua.vim" :ft "lua" })
                     (use { 1 "pest-parser/pest.vim" :ft "pest" })
                     (use { 1 "ElmCast/elm-vim" :ft "elm"})
@@ -56,6 +56,7 @@
                     (use { 1 "cespare/vim-toml" :ft "toml" })
                     (use { 1 "qnighy/lalrpop.vim" :ft "lalrpop" }) (use { 1 "namachan10777/tml.vim" :ft "tml" })
                     (use { 1 "ron-rs/ron.vim" :ft "ron" })
+                    (use "markonm/traces.vim")
                     ; <C-m>でカーソルがある位置の単語にハイライト<C-M>でクリア
                     (use "t9md/vim-quickhl")
                     ; TreeSitter系を有効にする
