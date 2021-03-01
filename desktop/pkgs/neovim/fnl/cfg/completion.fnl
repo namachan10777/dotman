@@ -4,7 +4,8 @@
             lsp vim.lsp
             nvim aniseed.nvim}})
 
-(def packages ["neoclide/coc.nvim"])
+(def packages ["neoclide/coc.nvim"
+                "rafcamlet/coc-nvim-lua"])
 
 (global check_back_space 
   (fn []
