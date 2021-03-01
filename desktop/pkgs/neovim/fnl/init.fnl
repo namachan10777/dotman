@@ -56,9 +56,12 @@
                     (use { 1 "cespare/vim-toml" :ft "toml" })
                     (use { 1 "qnighy/lalrpop.vim" :ft "lalrpop" }) (use { 1 "namachan10777/tml.vim" :ft "tml" })
                     (use { 1 "ron-rs/ron.vim" :ft "ron" })
+                    (use { 1 "npxbr/glow.nvim" :ft "markdown" })
                     (use "markonm/traces.vim")
                     ; <C-m>でカーソルがある位置の単語にハイライト<C-M>でクリア
                     (use "t9md/vim-quickhl")
+                    ; easymotion
+                    (use "phaazon/hop.nvim")
                     ; TreeSitter系を有効にする
                     (use "nvim-treesitter/nvim-treesitter")
                     ; 今居る関数の宣言が見える
@@ -115,6 +118,10 @@
 (nvim.set_keymap "x" "<Space>m" "<Plug>(quickhl-manual-this)"  { :noremap false })
 (nvim.set_keymap "n" "<Space>M" "<Plug>(quickhl-manual-reset)" { :noremap false })
 (nvim.set_keymap "x" "<Space>M" "<Plug>(quickhl-manual-reset)" { :noremap false })
+
+; Glow
+(nvim.set_keymap "n" "<Space>p" ":Glow<CR>" { :noremap true })
+(nvim.set_keymap "x" "<Space>p" ":Glow<CR>" { :noremap true })
 
 ; undoファイルを用意
 (set nvim.bo.undofile true)
