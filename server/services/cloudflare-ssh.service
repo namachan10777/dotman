@@ -3,7 +3,7 @@ Description="Provides ssh via Cloudflare Argo Tunnel"
 After=sshd.service
 
 [Service]
-ExecStart=docker run -v --mount type=bind,src=/opt/cloudflared-secret,dst=/etc/cloudflared/ cloudflare/cloudflared tunnel --hostname ssh.namachan10777.dev --url ssh://localhost:22
+ExecStart=docker run -p 22:22 --mount type=bind,src=/opt/cloudflared-secret,dst=/etc/cloudflared/ cloudflare/cloudflared tunnel --hostname ssh.namachan10777.dev --url ssh://localhost:22
 ExecReload=/bin/kill -HUP $MAINPID
 KillMOde=process
 Restart=always
