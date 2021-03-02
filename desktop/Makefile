@@ -99,9 +99,13 @@ $(LAZYGIT_TARGET): $(LAZYGIT_SOURCE)
 $(NPM_TARGET): $(NPM_SOURCE)
 	bash ../copy.sh $< $@
 
+.PHONY: nvim
+nvim: $(NVIM_TARGETS)
 $(XDG_CONFIG_HOME)/nvim/%: pkgs/neovim/%
 	bash ../copy.sh $< $@
 
+.PHONY: alacritty
+alacritty: $(ALACRITTY_TARGETS)
 $(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml hooks/set_alacritty_font_size.sh
 	bash ../copy.sh $< $@
 	bash hooks/set_alacritty_font_size.sh $@
