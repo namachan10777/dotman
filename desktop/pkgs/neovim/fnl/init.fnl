@@ -78,7 +78,7 @@
 (do
   (nvim.ex.augroup :SaveEditPos)
   (nvim.ex.autocmd_)
-  (nvim.ex.autocmd :BufReadPost "*" "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
+  (nvim.ex.autocmd "BufReadPost" "*" "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
   (nvim.ex.augroup :END))
 ; スクロールバーの設定 TODO: NvimTreeを開いた際の挙動を修正
 (do
@@ -88,6 +88,13 @@
   (nvim.ex.autocmd "WinEnter,FocusGained" "*" "silent! lua require('scrollbar').show()")
   (nvim.ex.autocmd "WinLeave,FocusLost" "*" "silent! lua require('scrollbar').clear()")
   (nvim.ex.augroup :END))
+
+; コマンドラインウィンドウ
+(do
+  (nvim.ex.autocmd "CmdwinEnter" "[:\\/\\?=]" "setlocal" "nonumber")
+  (nvim.ex.autocmd "CmdwinEnter" "[:\\/\\?=]" "setlocal" "signcolumn=no")
+  ; 2字以下のコマンドをコマンドウィンドウから削除
+  (nvim.ex.autocmd "CmdwinEnter" ":" "g/^..\\?$/d"))
 
 (set_indent (list
               {:ft (list :typescript :typescriptreact :javascript)
