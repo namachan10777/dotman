@@ -1,0 +1,12 @@
+[Unit]
+Description="Provides grafana via Cloudflare Argo Tunnel"
+After=grafana.service
+
+[Service]
+ExecStart=docker run -v --mount type=bind,src=/opt/cloudflared-secret,dst=/etc/cloudflared/ cloudflare/cloudflared tunnel --hostname metrics.namachan10777.dev --url http://localhost:3000
+ExecReload=/bin/kill -HUP $MAINPID
+KillMOde=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
