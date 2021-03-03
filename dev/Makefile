@@ -18,7 +18,7 @@ AUTOFS_SOURCE     := $(shell find pkgs/autofs/ -type f)
 NETWORKMANAGER_SOURCES := $(shell find pkgs/systemd/ -type f)
 
 ALACRITTY_TARGETS := $(XDG_CONFIG_HOME)/alacritty/alacritty.yml
-FISH_TARGETS      := $(patsubst pkgs/fish/%,$(XDG_CONFIG_HOME)/fish/%,$(FISH_SOURCES))
+FISH_TARGETS      := $(patsubst pkgs/fish/%,$(XDG_CONFIG_HOME)/fish/%,$(FISH_SOURCES)) $(XDG_CONFIG_HOME)/fish/completions/kubectl.fish
 GIT_TARGET        := $(HOME)/.gitconfig
 LATEXMK_TARGET    := $(HOME)/.latexmkrc
 LAZYGIT_TARGET    := $(XDG_CONFIG_HOME)/jessedufield/config.yml
@@ -109,6 +109,9 @@ alacritty: $(ALACRITTY_TARGETS)
 $(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml hooks/set_alacritty_font_size.sh
 	bash ../copy.sh $< $@
 	bash hooks/set_alacritty_font_size.sh $@
+
+$(XDG_CONFIG_HOME)/fish/completions/kubectl.fish: ../fish-kubectl-completions/completions/kubectl.fish
+	bash ../copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/fish/%: pkgs/fish/%
 	bash ../copy.sh $< $@
