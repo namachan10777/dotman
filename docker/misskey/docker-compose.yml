@@ -1,0 +1,53 @@
+version: '3.2'
+
+services:
+  web:
+    build: docker/
+    restart: always
+    links:
+      - db
+      - redis
+      - es
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - internal_network
+      - external_network
+    env_file:
+      - .config/docker.env
+    volumes:
+      - ./files:/misskey/files
+  db:
+    image: postgres:13.2-alpine
+    restart: always
+    networks:
+      - internal_network
+    env_file:
+      - .config/docker.env
+    volumes:
+      - ./db:/var/lib/postgresql/data
+  redis:
+    image: redis:6.2-rc3
+    restart: always
+    networks:
+      - internal_network
+    volumes:
+      - ./redis:/data
+  es:
+    restart: always
+    image: elasticsearch:7.10.1
+    networks:
+      - internal_network
+    env_file:
+      - .config/docker.env
+    environment:
+      - "discovery.type=single-node"
+    networks:
+      - internal_network
+    volumes:
+      - ./es:/usr/share/elasticsearch/data
+
+networks:
+  internal_network:
+    internal: true
+  external_network:
