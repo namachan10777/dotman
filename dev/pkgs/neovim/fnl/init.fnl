@@ -145,6 +145,7 @@
 (set nvim.bo.tabstop 4)
 (set nvim.bo.shiftwidth 4)
 (set nvim.bo.expandtab false)
+(set nvim.bo.autoindent true)
 ; guiと同じく2^24色使えるように(一応)
 (set nvim.o.termguicolors true)
 ; 行番号をrelativenumberで表示
