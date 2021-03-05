@@ -57,6 +57,7 @@
                     (use { 1 "qnighy/lalrpop.vim" :ft "lalrpop" }) (use { 1 "namachan10777/tml.vim" :ft "tml" })
                     (use { 1 "ron-rs/ron.vim" :ft "ron" })
                     (use { 1 "npxbr/glow.nvim" :ft "markdown" })
+                    (use { 1 "dag/vim-fish" :ft "fish" })
                     (use "markonm/traces.vim")
                     ; <C-m>でカーソルがある位置の単語にハイライト<C-M>でクリア
                     (use "t9md/vim-quickhl")
