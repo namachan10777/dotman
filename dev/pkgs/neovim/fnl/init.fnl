@@ -133,6 +133,8 @@
 (nvim.set_keymap "n" "<Space>p" ":Glow<CR>" { :noremap true })
 (nvim.set_keymap "x" "<Space>p" ":Glow<CR>" { :noremap true })
 
+; シンタックスハイライトの有効化
+; Neovimはデフォルトで有効化されるはずだがそうならないファイルがある？
 (nvim.ex.syntax "on")
 ; undoファイルを用意
 (set nvim.bo.undofile true)
