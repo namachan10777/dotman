@@ -38,7 +38,6 @@
                     ; fuzzy finder（見た目が豪華で外部依存が無く速い）
                     (use { 1 "nvim-telescope/telescope.nvim" :requires ["nvim-lua/popup.nvim" "nvim-lua/plenary.nvim"] })
                     ; スクロールバーを表示（かっこいいね）
-                    (use "Xuyuanp/scrollbar.nvim")
                     ; Tree表示プラグイン fzf-vimと同じようなキーバインド
                     (use "kyazdani42/nvim-web-devicons")
                     (use "kyazdani42/nvim-tree.lua")
@@ -82,14 +81,6 @@
   (nvim.ex.augroup :SaveEditPos)
   (nvim.ex.autocmd_)
   (nvim.ex.autocmd "BufReadPost" "*" "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
-  (nvim.ex.augroup :END))
-; スクロールバーの設定 TODO: NvimTreeを開いた際の挙動を修正
-(do
-  (nvim.ex.augroup :ScrollBarInit)
-  (nvim.ex.autocmd_)
-  (nvim.ex.autocmd "CursorMoved,VimResized,QuitPre" "*" "silent! lua require('scrollbar').show()")
-  (nvim.ex.autocmd "WinEnter,FocusGained" "*" "silent! lua require('scrollbar').show()")
-  (nvim.ex.autocmd "WinLeave,FocusLost" "*" "silent! lua require('scrollbar').clear()")
   (nvim.ex.augroup :END))
 
 ; コマンドラインウィンドウ
