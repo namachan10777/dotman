@@ -59,6 +59,8 @@
                     (use { 1 "npxbr/glow.nvim" :ft "markdown" })
                     (use { 1 "dag/vim-fish" :ft "fish" })
                     (use "markonm/traces.vim")
+                    ; Git操作
+                    (use "lambdalisue/gina.vim")
                     ; <C-m>でカーソルがある位置の単語にハイライト<C-M>でクリア
                     (use "t9md/vim-quickhl")
                     ; easymotion
