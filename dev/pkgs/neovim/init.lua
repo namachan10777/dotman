@@ -26,6 +26,7 @@ packer.startup(function()
     use 't9md/vim-quickhl'
     use 'phaazon/hop.nvim'
     use 'nvim-treesitter/nvim-treesitter'
+    use 'p00f/nvim-ts-rainbow'
     use 'romgrk/nvim-treesitter-context'
     use 'markonm/traces.vim'
     use 'neoclide/coc.nvim'
@@ -415,5 +416,8 @@ treesitter.setup {
         enable = true,
     },
     ensure_installed = 'all',
+    rainbow = {
+        enable = true,
+    },
 }
 -- }}}
