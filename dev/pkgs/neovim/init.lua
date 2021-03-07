@@ -1,5 +1,5 @@
 -- Bootstrap {{{
-function exists(file)
+local function exists(file)
     local ok, err, code = os.rename(file, file)
     if not ok then if code == 13 then return true end end
     return ok, err
@@ -56,19 +56,19 @@ local treesitter = require('nvim-treesitter.configs')
 -- }}}
 
 -- utilities {{{
-function augroup(name, hook)
+local function augroup(name, hook)
 	nvim.ex.augroup(name)
 	nvim.ex.autocmd_()
 	hook()
 	nvim.ex.augroup("END")
 end
 
-function set_indents(configs)
+local function set_indents(configs)
 	augroup("ExtIndent", function ()
 		nvim.ex.autocmd_()
 		for i = 1, #configs do
 			local config = configs[i]
-			exts = ""
+			local exts = ""
 			for j = 1, #config["exts"] do
 				exts = exts .. "*." .. config["exts"][j]
 			end
