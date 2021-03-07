@@ -54,6 +54,34 @@ end)
 local nvim = require('nvim')
 local treesitter = require('nvim-treesitter.configs')
 -- }}}
+
+-- utilities {{{
+function augroup(name, hook)
+	nvim.ex.augroup(name)
+	nvim.ex.autocmd_()
+	hook()
+	nvim.ex.augroup("END")
+end
+
+function set_indents(configs)
+	augroup("ExtIndent", function ()
+		nvim.ex.autocmd_()
+		for i = 1, #configs do
+			local config = configs[i]
+			exts = ""
+			for j = 1, #config["exts"] do
+				exts = exts .. "*." .. config["exts"][j]
+			end
+			if config["expand"] then
+				nvim.ex.autocmd("BufRead,BufNewFile", exts, "setlocal", ("shiftwidth=" .. tostring(config["w"])), ("tabstop=" .. tostring(config["w"])), "expandtab")
+			else
+				nvim.ex.autocmd("BufRead,BufNewFile", exts, "setlocal", ("shiftwidth="..tostring(config["w"])), ("tabstop="..tostring(config["w"])), "noexpandtab")
+			end
+		end
+	end)
+end
+-- }}}
+
 -- coc {{{
 function CheckBackSpace()
     local col = nvim.fn.col(".") - 1
@@ -88,6 +116,7 @@ nvim.ex.nnoremap("<silent> K", ":lua ShowDocumentation()<CR>")
 nvim.ex.autocmd("CursorHold", "*", "silent call CocAction('highlight')")
 
 -- }}}
+
 -- galaxyline {{{
 local gl = require('galaxyline')
 local gls = gl.section
@@ -280,6 +309,7 @@ gls.short_line_right[1] = {
     }
 }
 -- }}}
+
 -- keymaps {{{
 nvim.set_keymap("n", "r", "diwi", {noremap = true})
 nvim.set_keymap("n", "j", "gj", {noremap = true})
@@ -325,6 +355,18 @@ nvim.set_keymap("x", "<Space>M", "<Plug>(quickhl-manual-reset)",
 nvim.set_keymap("n", "<Space>p", ":Glow<CR>", {noremap = true})
 nvim.set_keymap("x", "<Space>p", ":Glow<CR>", {noremap = true})
 -- }}}
+
+-- autocmds {{{
+
+augroup("SaveEditPos", function ()
+	nvim.ex.autocmd("BufReadPost", "*", "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
+end)
+
+set_indents({
+	{ exts={"lua"}, w = 4, expand = true }
+})
+-- }}}
+
 -- options {{{
 -- シンタックスハイライトの有効化
 -- Neovimはデフォルトで有効化されるはずだがそうならないファイルがある？
