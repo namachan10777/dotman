@@ -230,7 +230,7 @@ gls.left[13] = {
         highlight = {colors.blue, colors.bg}
     }
 }
-gls.left[14] = {CocStatus = {provider = function() nvim.fn["coc#status"]() end}}
+gls.left[14] = {CocStatus = {provider = nvim.fn["coc#status"] }}
 gls.right[1] = {
     FileFormat = {
         provider = 'FileFormat',
