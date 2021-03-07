@@ -14,23 +14,37 @@ vim.api.nvim_command('packadd ' .. 'packer.nvim')
 
 local packer = require('packer')
 packer.startup(function()
+    -- a package manager
     use {'wbthomason/packer.nvim', opt = true}
+    -- lua utility library
     use 'nvim-lua/plenary.nvim'
+    -- useful mapping for neovim api
     use 'norcalli/nvim.lua'
+    -- popup_menu
     use 'nvim-lua/popup.nvim'
+    -- fuzzy-finder
     use 'nvim-telescope/telescope.nvim'
+    -- filer
     use 'kyazdani42/nvim-tree.lua'
+    -- cli icons
     use 'kyazdani42/nvim-web-devicons'
+    -- colorscheme
     use 'namachan10777/nvim-highlite-otynium'
+    -- git plugin
     use 'lambdalisue/gina.vim'
+    -- quickhl
     use 't9md/vim-quickhl'
+    -- easymotion
     use 'phaazon/hop.nvim'
+    -- treesitter
     use 'nvim-treesitter/nvim-treesitter'
-    use 'p00f/nvim-ts-rainbow'
-    use 'romgrk/nvim-treesitter-context'
+    -- coloring parentesis with nest level by treesitter
+    use 'p00f/nvim-ts-rainbow' use 'romgrk/nvim-treesitter-context'
+    -- realtime replacing preview
     use 'markonm/traces.vim'
+    -- coc
     use 'neoclide/coc.nvim'
-    use 'rafcamlet/coc-nvim-lua'
+    -- statusline
     use 'glepnir/galaxyline.nvim'
 
     -- language specific
