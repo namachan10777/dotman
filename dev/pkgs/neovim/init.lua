@@ -405,3 +405,15 @@ nvim.o.updatetime = 300
 -- カラースキーム
 nvim.ex.colorscheme('otynium')
 -- }}}
+
+-- treesitter {{{
+treesitter.setup {
+    highlight = {
+        enable = true,
+    },
+    indent = {
+        enable = true,
+    },
+    ensure_installed = 'all',
+}
+-- }}}
