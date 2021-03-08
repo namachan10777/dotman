@@ -44,6 +44,8 @@ packer.startup(function()
     use 'p00f/nvim-ts-rainbow' use 'romgrk/nvim-treesitter-context'
     -- realtime replacing preview
     use 'markonm/traces.vim'
+    -- hls utility
+    use 'kevinhwang91/nvim-hlslens'
     if UseBuiltinLSP then
         -- lsp configuration
         use 'nvim-lua/completion-nvim'
