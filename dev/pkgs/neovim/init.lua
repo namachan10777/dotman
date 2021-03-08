@@ -377,6 +377,13 @@ augroup("SaveEditPos", function ()
 	nvim.ex.autocmd("BufReadPost", "*", "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
 end)
 
+augroup("OptimizeCmdWindow", function ()
+    nvim.ex.autocmd("CmdwinEnter", "[:\\/\\?=]", "setlocal", "nonumber")
+    nvim.ex.autocmd("CmdwinEnter", "[:\\/\\?=]", "setlocal", "signcolumn=no")
+    -- 2字以下のコマンドをコマンドウィンドウから削除
+    nvim.ex.autocmd("CmdwinEnter", ":", "g/^..\\?$/d")
+end)
+
 set_indents({
 	{ exts={"lua"}, w = 4, expand = true }
 })
