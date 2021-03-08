@@ -12,6 +12,8 @@ end
 vim.api.nvim_command('packadd ' .. 'packer.nvim')
 -- }}}
 
+UseBuiltinLSP = false
+
 local packer = require('packer')
 packer.startup(function()
     -- a package manager
@@ -42,13 +44,19 @@ packer.startup(function()
     use 'p00f/nvim-ts-rainbow' use 'romgrk/nvim-treesitter-context'
     -- realtime replacing preview
     use 'markonm/traces.vim'
-    -- coc
-    use 'neoclide/coc.nvim'
+    if UseBuiltinLSP then
+        -- lsp configuration
+        use 'nvim-lua/completion-nvim'
+        use 'neovim/nvim-lspconfig'
+        use 'nvim-lua/lsp-status.nvim'
+    else
+        -- coc
+        use 'neoclide/coc.nvim'
+    end
     -- statusline
     use 'glepnir/galaxyline.nvim'
 
     -- language specific
-    use {'bakpakin/fennel.vim', ft = 'fennel'}
     use {'euclidianAce/BetterLua.vim', ft = 'lua'}
     use {'pest-parser/pest.vim', ft = 'pest'}
     use {'ElmCast/elm-vim', ft = 'elm'}
@@ -115,21 +123,59 @@ function ShowDocumentation()
     end
 end
 
-nvim.ex.inoremap("<silent><expr> <cr> pumvisible() ?",
-                 "coc#_select_confirm() :",
-                 "\"\\<C-g>u\\<CR>\\<c-r>=coc#on_enter()\\<CR>\"")
-nvim.ex.nmap("<silent>", "[g", "<Plug>(coc-diagonostics-prev)")
-nvim.ex.nmap("<silent>", "]g", "<Plug>(coc-diagonostics-next)")
--- 定義へ行く系
-nvim.ex.nmap("<silent>", "gd", "<Plug>(coc-definition)")
-nvim.ex.nmap("<silent>", "gy", "<Plug>(coc-type-definition)")
-nvim.ex.nmap("<silent>", "gi", "<Plug>(coc-implementation)")
-nvim.ex.nmap("<silent>", "gr", "<Plug>(coc-references)")
--- 型等ドキュメントをHoverで表示。便利
-nvim.ex.nnoremap("<silent> K", ":lua ShowDocumentation()<CR>")
--- カーソルを置きっぱなしでハイライト。地味なのでコマンド欄に型表示とかにしたい……
-nvim.ex.autocmd("CursorHold", "*", "silent call CocAction('highlight')")
+if not UseBuiltinLSP then
+    nvim.ex.inoremap("<silent><expr> <cr> pumvisible() ?",
+                     "coc#_select_confirm() :",
+                     "\"\\<C-g>u\\<CR>\\<c-r>=coc#on_enter()\\<CR>\"")
+    nvim.ex.nmap("<silent>", "[g", "<Plug>(coc-diagonostics-prev)")
+    nvim.ex.nmap("<silent>", "]g", "<Plug>(coc-diagonostics-next)")
+    -- 定義へ行く系
+    nvim.ex.nmap("<silent>", "gd", "<Plug>(coc-definition)")
+    nvim.ex.nmap("<silent>", "gy", "<Plug>(coc-type-definition)")
+    nvim.ex.nmap("<silent>", "gi", "<Plug>(coc-implementation)")
+    nvim.ex.nmap("<silent>", "gr", "<Plug>(coc-references)")
+    -- 型等ドキュメントをHoverで表示。便利
+    nvim.ex.nnoremap("<silent> K", ":lua ShowDocumentation()<CR>")
+    -- カーソルを置きっぱなしでハイライト。地味なのでコマンド欄に型表示とかにしたい……
+    nvim.ex.autocmd("CursorHold", "*", "silent call CocAction('highlight')")
+end
 
+-- }}}
+
+-- nvim-lsp {{{
+-- TODO completion.nvimが暴走する
+if UseBuiltinLSP then
+    -- Lsp
+    local lsp_config = require('lspconfig')
+    local sumneko_root_path = vim.fn.stdpath('cache')..'/lspconfig/sumneko_lua/lua-language-server'
+    local sumneko_binary = sumneko_root_path.."/bin/Linux/lua-language-server"
+    lsp_config.sumneko_lua.setup {
+        cmd = {sumneko_binary, "-E", sumneko_root_path .. "/main.lua"};
+        settings = {
+            Lua = {
+                runtime = {
+                    version = 'LuaJIT',
+                    path = vim.split(package.path, ';'),
+                },
+                diagnostics = {
+                    globals = {'vim', 'use'},
+                },
+                workspace = {
+                    -- Make the server aware of Neovim runtime files
+                    library = {
+                          [vim.fn.expand('$VIMRUNTIME/lua')] = true,
+                          [vim.fn.expand('$VIMRUNTIME/lua/vim/lsp')] = true,
+                    },
+                },
+            },
+        },
+    }
+    lsp_config.rust_analyzer.setup{}
+
+    augroup("CompletionConfig", function()
+        nvim.ex.autocmd("BufEnter", "*", "lua require'completion'.on_attach()")
+    end)
+end
 -- }}}
 
 -- galaxyline {{{
@@ -274,7 +320,11 @@ gls.left[13] = {
         highlight = {colors.blue, colors.bg}
     }
 }
-gls.left[14] = {CocStatus = {provider = nvim.fn["coc#status"] }}
+if UseBuiltinLSP then
+    gls.left[14] = {CocStatus = {provider = require('lsp-status').status }}
+else
+    gls.left[14] = {CocStatus = {provider = nvim.fn["coc#status"] }}
+end
 gls.right[1] = {
     FileFormat = {
         provider = 'FileFormat',
@@ -330,10 +380,9 @@ nvim.set_keymap("n", "r", "diwi", {noremap = true})
 nvim.set_keymap("n", "j", "gj", {noremap = true})
 nvim.set_keymap("n", "k", "gk", {noremap = true})
 nvim.set_keymap("t", "<C-j>", "<C-\\><C-n>", {noremap = true})
-nvim.ex.inoremap("<silent><expr>", "<TAB>",
-                 "pumvisible() ? \"\\<C-n>\" : \"\\<TAB>\"")
-nvim.ex.inoremap("<silent><expr>", "<S-TAB>",
-                 "pumvisible() ? \"\\<C-n>\" : \"\\<S-TAB>\"")
+nvim.ex.inoremap("<silent><expr>", "<TAB>", "pumvisible() ? \"\\<C-n>\" : \"\\<TAB>\"")
+nvim.ex.inoremap([[<silent><expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"]])
+nvim.ex.inoremap([[<silent><expr> <S-Tab> pumvisible() ? "\<C-n>" : "\<S-Tab>"]])
 
 -- NvimTree <Space>t でトグル
 nvim.set_keymap("n", "<space>t", ":NvimTreeToggle<CR>", {noremap = true})
