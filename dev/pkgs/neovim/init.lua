@@ -363,7 +363,8 @@ augroup("SaveEditPos", function ()
 end)
 
 set_indents({
-	{ exts={"lua"}, w = 4, expand = true }
+	{ exts={"lua"}, w = 4, expand = true },
+	{ exts={"yml", "yaml"}, w = 2, expand = true },
 })
 -- }}}
 
