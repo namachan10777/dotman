@@ -4,11 +4,9 @@
 自力で入れなさい。archlinux以下にパッケージインストールスクリプトがあります。
 
 # server
- * docker
- * grafana
- * prometheus
- * vim
- * cloudflared
+```
+ansible-playbook server/docker-node.yaml -K
+```
 
 # kanimogura
 計算サーバ。dockerを動かすのが得意
