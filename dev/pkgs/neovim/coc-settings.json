@@ -20,12 +20,7 @@
 			"command": "gopls",
 			"rootPatterns": ["go.mod", ".vim/", ".git/", ".hg/"],
 			"filetypes": ["go"]
-		},
-		"lua-language-server": {
-			"cwd": "/home/namachan/Project/github.com/sumneko/lua-language-server",
-			"command": "bin/Linux/lua-language-server",
-			"args": ["-E", "-e", "LANG=\"zh-cn\"", "/home/namachan/Project/github.com/sumneko/lua-language-server/main.lua"],
-			"filetypes": ["lua"]
 		}
-	}
+	},
+	"Lua.diagnostics.globals": ["vim", "use"]
 }

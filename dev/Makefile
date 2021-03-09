@@ -5,6 +5,7 @@ LATEXMK_SOURCE    := pkgs/latexmk/latexmkrc
 LAZYGIT_SOURCE    := pkgs/lazygit/config.yml
 NPM_SOURCE        := pkgs/npm/npmrc
 NVIM_SOURCES      := $(shell find pkgs/neovim -type f)
+FCITX5_SOURCES    := $(shell find pkgs/fcitx5 -type f)
 SWAY_SOURCE       := pkgs/sway/config
 TIG_SOURCE        := pkgs/tig/tigrc
 GPG_SOURCES       := $(wildcard pkgs/gpg/*)
@@ -24,6 +25,7 @@ LATEXMK_TARGET    := $(HOME)/.latexmkrc
 LAZYGIT_TARGET    := $(XDG_CONFIG_HOME)/jessedufield/config.yml
 NPM_TARGET        := $(HOME)/.npmrc
 NVIM_TARGETS      := $(patsubst pkgs/neovim/%,$(XDG_CONFIG_HOME)/nvim/%,$(NVIM_SOURCES))
+FCITX5_TARGETS    := $(patsubst pkgs/fcitx5/%,/usr/share/fcitx5/%,$(FCITX5_SOURCES))
 SWAY_TARGET       := $(XDG_CONFIG_HOME)/sway/config
 TIG_TARGET        := $(HOME)/.tigrc
 GPG_TARGETS       := $(patsubst pkgs/gpg/%,$(HOME)/.gnupg/%,$(GPG_SOURCES))
@@ -59,6 +61,7 @@ install-system: \
 	$(UDEV_TARGETS) \
 	$(IPTABLES_TARGETS) \
 	$(UTIL_TARGETS) \
+	$(FCITX5_TARGETS) \
 	$(SYSTEMD_TARGETS) \
 	$(SSHD_TARGET) \
 	$(NETWORKMANAGER_TARGETS) \
@@ -138,6 +141,9 @@ $(SSHD_TARGET): $(SSHD_SOURCE)
 	bash ../copy.sh $< $@
 
 /etc/autofs/%: pkgs/autofs/%
+	bash ../copy.sh $< $@
+
+/usr/share/fcitx5/%: pkgs/fcitx5/%
 	bash ../copy.sh $< $@
 
 /usr/local/bin/%: bin/%
