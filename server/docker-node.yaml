@@ -1,14 +1,68 @@
 - hosts: docker-nodes
-  become: yes
-  become_method: sudo
-
   tasks:
+
   - name: install apt packages
+    become: yes
     apt:
       name:
         - vim
         - docker
+
   - name: install snap packages
+    become: yes
     snap:
       name:
         - microk8s
+
+  - name: copy vimrc
+    copy:
+      src: ./pkgs/vim/init.vim
+      dest: ~/.vimrc
+
+  - name: create fish config directory
+    file:
+      path: ~/.config/fish/conf.d
+      state: directory
+      owner: "namachan"
+      mode: "777"
+
+  - name: copy fish files
+    copy:
+      src: ./pkgs/fish/conf.d/init.fish
+      dest: ~/.config/fish/conf.d/init.fish
+
+  - name: copy resolved
+    become: yes
+    copy:
+      src: ./pkgs/systemd/resolved.conf
+      dest: /etc/systemd/resolved.conf
+
+  - name: copy cloudflare-ssh.service
+    become: yes
+    copy:
+      src: ./services/cloudflare-ssh.service
+      dest: /lib/systemd/system/cloudflare-ssh.service
+
+  - name: enable cloudflare-ssh.service
+    become: yes
+    systemd:
+      daemon_reload: yes
+      state: started
+      name: cloudflare-ssh
+      enabled: yes
+      masked: no
+
+  - name: copy cloudflare-grafana.service
+    become: yes
+    copy:
+      src: ./services/cloudflare-grafana.service
+      dest: /lib/systemd/system/cloudflare-grafana.service
+
+  - name: enable cloudflare-grafana.service
+    become: yes
+    systemd:
+      daemon_reload: yes
+      state: started
+      name: cloudflare-grafana
+      enabled: yes
+      masked: no
