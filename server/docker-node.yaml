@@ -1,0 +1,14 @@
+- hosts: docker-nodes
+  become: yes
+  become_method: sudo
+
+  tasks:
+  - name: install apt packages
+    apt:
+      name:
+        - vim
+        - docker
+  - name: install snap packages
+    snap:
+      name:
+        - microk8s
