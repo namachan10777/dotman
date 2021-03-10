@@ -126,18 +126,16 @@ function ShowDocumentation()
 end
 
 if not UseBuiltinLSP then
-    nvim.ex.inoremap("<silent><expr> <cr> pumvisible() ?",
-                     "coc#_select_confirm() :",
-                     "\"\\<C-g>u\\<CR>\\<c-r>=coc#on_enter()\\<CR>\"")
-    nvim.ex.nmap("<silent>", "[g", "<Plug>(coc-diagonostics-prev)")
-    nvim.ex.nmap("<silent>", "]g", "<Plug>(coc-diagonostics-next)")
+    nvim.ex.inoremap([[<silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"]])
+    nvim.set_keymap("n", "[g", "<Plug>(coc-diagonostics-prev)", {silent = true})
+    nvim.set_keymap("n", "]g", "<Plug>(coc-diagonostics-next)", {silent = true})
     -- 定義へ行く系
-    nvim.ex.nmap("<silent>", "gd", "<Plug>(coc-definition)")
-    nvim.ex.nmap("<silent>", "gy", "<Plug>(coc-type-definition)")
-    nvim.ex.nmap("<silent>", "gi", "<Plug>(coc-implementation)")
-    nvim.ex.nmap("<silent>", "gr", "<Plug>(coc-references)")
+    nvim.set_keymap("n", "gd", "<Plug>(coc-definition)", {silent = true})
+    nvim.set_keymap("n", "gy", "<Plug>(coc-type-definition)", {silent = true})
+    nvim.set_keymap("n", "gi", "<Plug>(coc-implementation)", {silent = true})
+    nvim.set_keymap("n", "gr", "<Plug>(coc-references)", {silent = true})
     -- 型等ドキュメントをHoverで表示。便利
-    nvim.ex.nnoremap("<silent> K", ":lua ShowDocumentation()<CR>")
+    nvim.set_keymap("n", "K", ":lua ShowDocumentation()<CR>", {silent = true})
     -- カーソルを置きっぱなしでハイライト。地味なのでコマンド欄に型表示とかにしたい……
     nvim.ex.autocmd("CursorHold", "*", "silent call CocAction('highlight')")
 end
@@ -382,13 +380,12 @@ nvim.set_keymap("n", "r", "diwi", {noremap = true})
 nvim.set_keymap("n", "j", "gj", {noremap = true})
 nvim.set_keymap("n", "k", "gk", {noremap = true})
 nvim.set_keymap("t", "<C-j>", "<C-\\><C-n>", {noremap = true})
-nvim.ex.inoremap("<silent><expr>", "<TAB>", "pumvisible() ? \"\\<C-n>\" : \"\\<TAB>\"")
-nvim.ex.inoremap([[<silent><expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"]])
+nvim.ex.inoremap([[<silent><expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"  ]])
 nvim.ex.inoremap([[<silent><expr> <S-Tab> pumvisible() ? "\<C-n>" : "\<S-Tab>"]])
 
 -- NvimTree <Space>t でトグル
-nvim.set_keymap("n", "<space>t", ":NvimTreeToggle<CR>", {noremap = true})
-nvim.set_keymap("x", "<space>t", ":NvimTreeToggle<CR>", {noremap = true})
+nvim.set_keymap("n", "<space>t", ":NvimTreeToggle<CR>", {noremap = true, silent = true})
+nvim.set_keymap("x", "<space>t", ":NvimTreeToggle<CR>", {noremap = true, silent = true})
 
 -- Telescope <Space>f* で開く
 nvim.set_keymap("n", "<Space>ff",
