@@ -82,28 +82,28 @@ local treesitter = require('nvim-treesitter.configs')
 
 -- utilities {{{
 local function augroup(name, hook)
-	nvim.ex.augroup(name)
-	nvim.ex.autocmd_()
-	hook()
-	nvim.ex.augroup("END")
+    nvim.ex.augroup(name)
+    nvim.ex.autocmd_()
+    hook()
+    nvim.ex.augroup("END")
 end
 
 local function set_indents(configs)
-	augroup("ExtIndent", function ()
-		nvim.ex.autocmd_()
-		for i = 1, #configs do
-			local config = configs[i]
-			end
-			if config["expand"] then
-				nvim.ex.autocmd("BufRead,BufNewFile", exts, "setlocal", ("shiftwidth=" .. tostring(config["w"])), ("tabstop=" .. tostring(config["w"])), "expandtab")
-			else
-				nvim.ex.autocmd("BufRead,BufNewFile", exts, "setlocal", ("shiftwidth="..tostring(config["w"])), ("tabstop="..tostring(config["w"])), "noexpandtab")
-			end
-		end
-	end)
+    augroup("ExtIndent", function ()
+        nvim.ex.autocmd_()
+        for i = 1, #configs do
+            local config = configs[i]
             local exts = "*." .. config.exts[1]
             for j = 2, #config.exts do
                 exts = exts .. ",*." .. config["exts"][j]
+            end
+            if config["expand"] then
+                nvim.ex.autocmd("BufRead,BufNewFile", exts, "setlocal", ("shiftwidth=" .. tostring(config["w"])), ("tabstop=" .. tostring(config["w"])), "expandtab")
+            else
+                nvim.ex.autocmd("BufRead,BufNewFile", exts, "setlocal", ("shiftwidth="..tostring(config["w"])), ("tabstop="..tostring(config["w"])), "noexpandtab")
+            end
+        end
+    end)
 end
 -- }}}
 
@@ -425,7 +425,7 @@ nvim.set_keymap("x", "<Space>p", ":Glow<CR>", {noremap = true})
 -- autocmds {{{
 
 augroup("SaveEditPos", function ()
-	nvim.ex.autocmd("BufReadPost", "*", "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
+    nvim.ex.autocmd("BufReadPost", "*", "if line(\"'\\\"\") > 1 && line(\"'\\\"\") <= line(\"$\") | exe \"normal! g`\\\"\" | endif")
 end)
 
 augroup("OptimizeCmdWindow", function ()
