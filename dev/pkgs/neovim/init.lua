@@ -93,9 +93,6 @@ local function set_indents(configs)
 		nvim.ex.autocmd_()
 		for i = 1, #configs do
 			local config = configs[i]
-			local exts = ""
-			for j = 1, #config["exts"] do
-				exts = exts .. "*." .. config["exts"][j]
 			end
 			if config["expand"] then
 				nvim.ex.autocmd("BufRead,BufNewFile", exts, "setlocal", ("shiftwidth=" .. tostring(config["w"])), ("tabstop=" .. tostring(config["w"])), "expandtab")
@@ -104,6 +101,9 @@ local function set_indents(configs)
 			end
 		end
 	end)
+            local exts = "*." .. config.exts[1]
+            for j = 2, #config.exts do
+                exts = exts .. ",*." .. config["exts"][j]
 end
 -- }}}
 
