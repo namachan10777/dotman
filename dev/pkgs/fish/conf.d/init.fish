@@ -14,7 +14,7 @@ abbr -a btop battop
 abbr -a tk tokei
 abbr -a gpo git push origin
 abbr -a lg lazygit
-abbr -a jigai sudo shutdown -h now
+abbr -a jisatu sudo shutdown -h now
 # }}}
 
 # alias {{{
