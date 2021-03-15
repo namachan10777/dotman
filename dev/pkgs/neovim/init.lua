@@ -41,7 +41,8 @@ packer.startup(function()
     -- treesitter
     use 'nvim-treesitter/nvim-treesitter'
     -- coloring parentesis with nest level by treesitter
-    use 'p00f/nvim-ts-rainbow' use 'romgrk/nvim-treesitter-context'
+    use 'p00f/nvim-ts-rainbow'
+    -- use 'romgrk/nvim-treesitter-context'
     -- realtime replacing preview
     use 'markonm/traces.vim'
     -- hls utility
