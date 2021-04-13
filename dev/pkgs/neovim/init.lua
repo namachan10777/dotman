@@ -63,6 +63,8 @@ packer.startup(function()
     use {'euclidianAce/BetterLua.vim', ft = 'lua'}
     use {'pest-parser/pest.vim', ft = 'pest'}
     use {'ElmCast/elm-vim', ft = 'elm'}
+    use {'namachan10777/tml.vim', ft = 'tml' }
+    use {'gutenye/json5.vim', ft = 'json5' }
     use {
         'prettier/vim-prettier',
         ft = {'typescript', 'javascript', 'typescriptreact'}
@@ -433,9 +435,12 @@ augroup("OptimizeCmdWindow", function ()
     nvim.ex.autocmd("CmdwinEnter", ":", "g/^..\\?$/d")
 end)
 
+nvim.ex.autocmd("BufRead,BufNewFile", "tsconfig.json", "setlocal filetype=json5")
+
 set_indents({
 	{ exts={"lua"}, w = 4, expand = true },
 	{ exts={"yml", "yaml"}, w = 2, expand = true },
+    { exts={"tml"}, w = 2, expand = true},
     { exts={"js", "ts", "mjs", "tsx", "jsx", "json"}, w = 2, expand = true },
 })
 -- }}}
