@@ -441,6 +441,7 @@ set_indents({
 	{ exts={"lua"}, w = 4, expand = true },
 	{ exts={"yml", "yaml"}, w = 2, expand = true },
     { exts={"tml"}, w = 2, expand = true},
+    { exts={"saty"}, w = 2, expand = true },
     { exts={"js", "ts", "mjs", "tsx", "jsx", "json"}, w = 2, expand = true },
 })
 -- }}}
