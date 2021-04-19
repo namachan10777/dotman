@@ -447,6 +447,7 @@ set_indents({
 -- }}}
 
 -- options {{{
+nvim.o.wildmenu = true
 -- シンタックスハイライトの有効化
 -- Neovimはデフォルトで有効化されるはずだがそうならないファイルがある？
 nvim.ex.syntax("on")
