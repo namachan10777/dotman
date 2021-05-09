@@ -15,6 +15,7 @@ set -gx OCAMLPARAM "_,bin-annot=1"
 set -gx OPAMKEEPBUILDDIR 1
 set -gx GOPATH ~/.local/share/go
 set -gx DOCKER_BUILDKIT 1
+set -gx _JAVA_AWT_WM_NONREPARENTING 1
 
 set PATH_LOCAL ~/.cargo/bin
 set PATH_LOCAL ~/.gem/ruby/2.6.0/bin $PATH_LOCAL
