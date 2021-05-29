@@ -447,43 +447,43 @@ set_indents({
 -- }}}
 
 -- options {{{
-nvim.o.wildmenu = true
+vim.opt.wildmenu = true
 -- シンタックスハイライトの有効化
 -- Neovimはデフォルトで有効化されるはずだがそうならないファイルがある？
-nvim.ex.syntax("on")
--- undoファイルを用意
-nvim.bo.undofile = true
+vim.opt.syntax = "on"
+-- udoファイルを用意
+vim.opt.undofile = true
 -- デフォルトの折りたたみ方式をmarkerに
-nvim.wo.foldmethod = "marker"
--- undoの最大値
-nvim.o.undolevels = 1024
-nvim.o.undoreload = 8192
+vim.opt.foldmethod = "marker"
+-- udoの最大値
+vim.opt.undolevels = 1024
+vim.opt.undoreload = 8192
 -- スワップファイルとバックアップファイルを消す
-nvim.o.swapfile = false
-nvim.o.backup = false
-nvim.o.writebackup = false
+vim.opt.swapfile = false
+vim.opt.backup = false
+vim.opt.writebackup = false
 -- デフォルトのインデント設定(最初のバッファに設定すると引き継がれる？)
-nvim.bo.tabstop = 4
-nvim.bo.shiftwidth = 4
-nvim.bo.expandtab = false
-nvim.bo.autoindent = true
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = false
+vim.opt.autoindent = true
 -- guiと同じく2^24色使えるように(一応)
-nvim.o.termguicolors = true
--- 行番号をrelativenumberで表示
-nvim.wo.number = true
-nvim.wo.relativenumber = true
+vim.opt.termguicolors = true
+-- 行番号をrelativeumberで表示
+vim.opt.number = true
+vim.opt.relativenumber = true
 -- コマンド欄(下の2行)を2行に設定
-nvim.o.cmdheight = 2
+vim.opt.cmdheight = 2
 -- 検索中のハイライトの有効化
-nvim.o.hls = true
+vim.opt.hls = true
 -- 不可視文字を可視化
-nvim.wo.list = true
-nvim.o.listchars = "tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%"
+vim.opt.list = true
+vim.opt.listchars = "tab:»-,trail:-,eol:↲,extends:»,precedes:«,nbsp:%"
 -- Coc推奨設定(わからん)
-nvim.o.hidden = true
-nvim.o.updatetime = 300
+vim.opt.hidden = true
+vim.opt.updatetime = 300
 -- カラースキーム
-nvim.ex.colorscheme('otynium')
+nvim.ex.colorscheme("otynium")
 -- }}}
 
 -- treesitter {{{
