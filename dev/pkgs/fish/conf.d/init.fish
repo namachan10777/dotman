@@ -37,6 +37,11 @@ end
 function clipb
 	xsel --clipboard --input
 end
+
+function tlmgr
+	/usr/share/texmf-dist/scripts/texlive/tlmgr.pl --usermode $argv
+end
+
 # }}}
 
 # ~/tmp {{{
