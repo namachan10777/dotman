@@ -1,4 +1,5 @@
 ALACRITTY_SOURCES := pkgs/alacritty/alacritty.yml
+PARU_SOURCES      := pkgs/paru/paru.conf
 FISH_SOURCES      := $(shell find pkgs/fish -type f)
 GIT_SOURCE        := pkgs/git/gitconfig
 LATEXMK_SOURCE    := pkgs/latexmk/latexmkrc
@@ -19,6 +20,7 @@ AUTOFS_SOURCE     := $(shell find pkgs/autofs/ -type f)
 NETWORKMANAGER_SOURCES := $(shell find pkgs/systemd/ -type f)
 
 ALACRITTY_TARGETS := $(XDG_CONFIG_HOME)/alacritty/alacritty.yml
+PARU_TARGETS      := $(XDG_CONFIG_HOME)/paru/paru.conf
 FISH_TARGETS      := $(patsubst pkgs/fish/%,$(XDG_CONFIG_HOME)/fish/%,$(FISH_SOURCES)) $(XDG_CONFIG_HOME)/fish/completions/kubectl.fish
 GIT_TARGET        := $(HOME)/.gitconfig
 LATEXMK_TARGET    := $(HOME)/.latexmkrc
@@ -53,7 +55,8 @@ install: \
 	$(SWAY_TARGET) \
 	$(TIG_TARGET) \
 	$(GPG_TARGETS) \
-	$(SSH_TARGET)
+	$(SSH_TARGET) \
+	$(PARU_TARGETS)
 
 .PHONY: install-system
 
@@ -70,6 +73,7 @@ install-system: \
 .PHONY: clean
 clean:
 	rm -f $(ALACRITTY_TARGETS)
+	rm -f $(PARU_TARGETS)
 	rm -rf $(FISH_TARGETS)
 	rm -f $(LATEXMK_TARGET)
 	rm -f $(LAZYGIT_TARGET)
@@ -112,6 +116,9 @@ alacritty: $(ALACRITTY_TARGETS)
 $(XDG_CONFIG_HOME)/alacritty/alacritty.yml: pkgs/alacritty/alacritty.yml hooks/set_alacritty_font_size.sh
 	bash ../copy.sh $< $@
 	bash hooks/set_alacritty_font_size.sh $@
+
+$(XDG_CONFIG_HOME)/paru/paru.conf: pkgs/paru/paru.conf
+	bash ../copy.sh $< $@
 
 $(XDG_CONFIG_HOME)/fish/completions/kubectl.fish: ../fish-kubectl-completions/completions/kubectl.fish
 	bash ../copy.sh $< $@
