@@ -42,6 +42,10 @@ function tlmgr
 	/usr/share/texmf-dist/scripts/texlive/tlmgr.pl --usermode $argv
 end
 
+function __currrent_directory --on-event fish_prompt
+	pwd > /tmp/.$USER-directory
+end
+
 # }}}
 
 # ~/tmp {{{
@@ -58,3 +62,4 @@ starship init fish | source
 zoxide init fish | source
 # }}}
 
+cd (cat /tmp/.$USER-directory | tail -n 1)
