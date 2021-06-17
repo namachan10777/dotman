@@ -1,0 +1,6 @@
+{
+    "remote.SSH.configFile": "/home/namachan/.ssh/config",
+    "editor.fontFamily": "'Hack', 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
+    "workbench.colorTheme": "Monokai",
+    "workbench.preferredDarkColorTheme": "Monokai",
+}

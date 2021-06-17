@@ -11,6 +11,7 @@ SWAY_SOURCE       := pkgs/sway/config
 TIG_SOURCE        := pkgs/tig/tigrc
 GPG_SOURCES       := $(wildcard pkgs/gpg/*)
 SSH_SOURCE        := pkgs/ssh/config
+VSCODE_SOURCES    := $(wildcard pkgs/vscode/*)
 
 UDEV_SOURCES      := $(shell find pkgs/udev -name *.rules -type f)
 IPTABLES_SOURCES  := $(shell find pkgs/iptables/ -name *.rules -type f)
@@ -32,6 +33,7 @@ SWAY_TARGET       := $(XDG_CONFIG_HOME)/sway/config
 TIG_TARGET        := $(HOME)/.tigrc
 GPG_TARGETS       := $(patsubst pkgs/gpg/%,$(HOME)/.gnupg/%,$(GPG_SOURCES))
 SSH_TARGET        := $(HOME)/.ssh/config
+VSCODE_TARGETS    := $(patsubst pkgs/vscode/%,$(XDG_CONFIG_HOME)/Code\ -\ OSS/User/%,$(VSCODE_SOURCES))
 
 UDEV_TARGETS      := $(patsubst pkgs/udev/%,/etc/udev/rules.d/%,$(UDEV_SOURCES))
 IPTABLES_TARGETS  := $(patsubst pkgs/iptables/%,/etc/iptables/%,$(IPTABLES_SOURCES))
@@ -56,7 +58,8 @@ install: \
 	$(TIG_TARGET) \
 	$(GPG_TARGETS) \
 	$(SSH_TARGET) \
-	$(PARU_TARGETS)
+	$(PARU_TARGETS) \
+	$(VSCODE_TARGETS)
 
 .PHONY: install-system
 
@@ -80,6 +83,8 @@ clean:
 	rm -rf $(NVIM_TARGETS)
 	rm -f $(SWAY_TARGET)
 	rm -f $(TIG_TARGET)
+	rm -f $(VSCODE_TARGETS)
+	rm -f $(PARU_TARGETS)
 
 .PHONY: clean-system
 clean-system:
@@ -143,6 +148,9 @@ $(SSH_TARGET): $(SSH_SOURCE)
 
 $(SSHD_TARGET): $(SSHD_SOURCE)
 	bash ../copy.sh $< $@
+
+$(XDG_CONFIG_HOME)/Code\ -\ OSS/User/%: pkgs/vscode/%
+	bash ../copy.sh $< "$@"
 
 /etc/NetworkManager/%: pkgs/networkmanager/%
 	bash ../copy.sh $< $@
