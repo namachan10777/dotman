@@ -3,4 +3,5 @@
     "editor.fontFamily": "'Hack', 'Droid Sans Mono', 'monospace', monospace, 'Droid Sans Fallback'",
     "workbench.colorTheme": "Monokai",
     "workbench.preferredDarkColorTheme": "Monokai",
+    "texlab.server.autoDownload": true,
 }
