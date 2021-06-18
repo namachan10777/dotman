@@ -4,4 +4,8 @@
     "workbench.colorTheme": "Monokai",
     "workbench.preferredDarkColorTheme": "Monokai",
     "texlab.server.autoDownload": true,
+    "git.confirmSync": false,
+    "vim.useSystemClipboard": true,
+    "editor.lineNumbers": "relative",
+    "editor.renderWhitespace": "all",
 }
