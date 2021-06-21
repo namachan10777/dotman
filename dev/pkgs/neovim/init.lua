@@ -379,7 +379,6 @@ gls.short_line_right[1] = {
 -- }}}
 
 -- keymaps {{{
-nvim.set_keymap("n", "r", "diwi", {noremap = true})
 nvim.set_keymap("n", "j", "gj", {noremap = true})
 nvim.set_keymap("n", "k", "gk", {noremap = true})
 nvim.set_keymap("t", "<C-j>", "<C-\\><C-n>", {noremap = true})
