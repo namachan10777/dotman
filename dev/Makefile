@@ -33,9 +33,7 @@ SWAY_TARGET       := $(XDG_CONFIG_HOME)/sway/config
 TIG_TARGET        := $(HOME)/.tigrc
 GPG_TARGETS       := $(patsubst pkgs/gpg/%,$(HOME)/.gnupg/%,$(GPG_SOURCES))
 SSH_TARGET        := $(HOME)/.ssh/config
-VSCODE_TARGETS    := \
-	$(patsubst pkgs/vscode/%,$(XDG_CONFIG_HOME)/Code\ -\ OSS/User/%,$(VSCODE_SOURCES)) \
-	$(patsubst pkgs/vscode/%,$(XDG_CONFIG_HOME)/Code/User/%,$(VSCODE_SOURCES))
+VSCODE_TARGETS    := $(patsubst pkgs/vscode/%,$(XDG_CONFIG_HOME)/Code/User/%,$(VSCODE_SOURCES))
 
 UDEV_TARGETS      := $(patsubst pkgs/udev/%,/etc/udev/rules.d/%,$(UDEV_SOURCES))
 IPTABLES_TARGETS  := $(patsubst pkgs/iptables/%,/etc/iptables/%,$(IPTABLES_SOURCES))
@@ -151,8 +149,9 @@ $(SSH_TARGET): $(SSH_SOURCE)
 $(SSHD_TARGET): $(SSHD_SOURCE)
 	bash ../copy.sh $< $@
 
-$(XDG_CONFIG_HOME)/Code\ -\ OSS/User/%: pkgs/vscode/%
+$(XDG_CONFIG_HOME)/Code/User/extension_list.txt: pkgs/vscode/extension_list.txt pkgs/vscode/install_extension.sh
 	bash ../copy.sh $< "$@"
+	bash pkgs/vscode/install_extension.sh
 
 $(XDG_CONFIG_HOME)/Code/User/%: pkgs/vscode/%
 	bash ../copy.sh $< "$@"
