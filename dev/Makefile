@@ -154,6 +154,9 @@ $(SSHD_TARGET): $(SSHD_SOURCE)
 $(XDG_CONFIG_HOME)/Code\ -\ OSS/User/%: pkgs/vscode/%
 	bash ../copy.sh $< "$@"
 
+$(XDG_CONFIG_HOME)/Code/User/%: pkgs/vscode/%
+	bash ../copy.sh $< "$@"
+
 /etc/NetworkManager/%: pkgs/networkmanager/%
 	bash ../copy.sh $< $@
 
