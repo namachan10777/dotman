@@ -8,4 +8,50 @@
     "vim.useSystemClipboard": true,
     "editor.lineNumbers": "relative",
     "editor.renderWhitespace": "all",
+    "latex-workshop.bibtex-fields.sort.enabled": true,
+    "latex-workshop.latex.recipes": [
+
+        {
+            "name": "latexmk 🔃",
+            "tools": [
+                "latexmk"
+            ]
+        },
+        {
+            "name": "latexmk (lualatex)",
+            "tools": [
+                "lualatexmk"
+            ]
+        },
+    ],
+    "latex-workshop.latex.tools": [
+        {
+            "name": "latexmk",
+            "command": "latexmk",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-outdir=%OUTDIR%",
+                "%DOC%"
+            ],
+            "env": {}
+        },
+        {
+            "name": "lualatexmk",
+            "command": "latexmk",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-lualatex",
+                "-outdir=%OUTDIR%",
+                "%DOC%"
+            ],
+            "env": {}
+        },
+    ],
+    "latex-workshop.latex.recipe.default": "lastUsed",
+    "security.workspace.trust.untrustedFiles": "open",
+    "latex-workshop.view.pdf.viewer": "tab",
 }
