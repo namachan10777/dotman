@@ -18,7 +18,7 @@ set $term env WINIT_UNIX_BACKEND=x11 alacritty
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
-set $menu dmenu_path | wofi --show drun -i | xargs swaymsg exec --
+set $menu dmenu_path | env PATH="$PATH":/home/namachan/.opam/4.12.0/bin wofi --show drun -i | xargs swaymsg exec --
 
 ### Output configuration
 #
