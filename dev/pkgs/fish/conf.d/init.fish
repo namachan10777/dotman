@@ -51,9 +51,9 @@ end
 # ~/tmp {{{
 set TMPDIR /tmp/.(whoami)-tmp
 
-if not test -e ~/tmp
+if not test -e $(HOME)/tmp
 	mkdir -p $TMPDIR
-	ln -s $TMPDIR ~/tmp
+	ln -s $TMPDIR $(HOME)/tmp
 end
 # }}}
 
