@@ -61,5 +61,3 @@ end
 starship init fish | source
 zoxide init fish | source
 # }}}
-
-cd (cat /tmp/.$USER-directory | tail -n 1)
