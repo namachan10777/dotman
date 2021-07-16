@@ -76,6 +76,7 @@ packer.startup(function()
     use {'ron-rs/ron.vim', ft = 'ron'}
     use {'npxbr/glow.nvim', ft = 'markdown'}
     use {'dag/vim-fish', ft = 'fish'}
+    use {'jxnblk/vim-mdx-js', ft = 'mdx'}
 end)
 
 -- require {{{
