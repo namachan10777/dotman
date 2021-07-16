@@ -1,12 +1,15 @@
 christian-kohler.path-intellisense
 CoenraadS.bracket-pair-colorizer-2
+DavidAnson.vscode-markdownlint
 donjayamanne.githistory
 eamodio.gitlens
+GitHub.copilot
 GitHub.github-vscode-theme
 golang.go
 Gruntfuggly.todo-tree
 James-Yu.latex-workshop
 jebbs.plantuml
+marp-team.marp-vscode
 matklad.rust-analyzer
 mechatroner.rainbow-csv
 mhutchie.git-graph
