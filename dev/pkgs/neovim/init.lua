@@ -31,7 +31,7 @@ packer.startup(function()
     -- cli icons
     use 'kyazdani42/nvim-web-devicons'
     -- colorscheme
-    use 'namachan10777/otynium'
+    use 'namachan10777/nvim-highlite-otynium'
     -- git plugin
     use 'lambdalisue/gina.vim'
     -- quickhl
