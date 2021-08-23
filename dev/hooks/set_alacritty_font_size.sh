@@ -1,10 +1,16 @@
 #!/bin/bash
 
-if [ $(cat /etc/hostname) = "ikuraneko" ]; then
+if [ (uname) = "Darwin" ]; then
+	HOSTNAME = (hostname)
+elif [ (uname) = "Linux" ]; then
+	HOSTNAME = $(cat /etc/hostname)
+fi
+
+if [ $HOSTNAME = "ikuraneko" ]; then
 	sed -ie 's/$ALACRITTY_FONT_SIZE/7.2/' $1
-elif [ $(cat /etc/hostname) = "sakanainu" ]; then
+elif [ $HOSTNAME = "sakanainu" ]; then
 	sed -ie 's/$ALACRITTY_FONT_SIZE/13/' $1
-elif [ $(cat /etc/hostname) = "P1724-19P15U.local" ]; then
+elif [ $HOSTNAME = "P1724-19P15U.local" ]; then
 	sed -ie 's/$ALACRITTY_FONT_SIZE/13/' $1
 else
 	sed -ie 's/$ALACRITTY_FONT_SIZE/9/' $1
