@@ -28,6 +28,7 @@ set PATH_LOCAL ~/.local/share/gem/ruby/2.7.0/bin/ $PATH_LOCAL
 set PATH_LOCAL $NPM_PACKAGES/bin/ $PATH_LOCAL
 set PATH_LOCAL /opt/spack/bin/ $PATH_LOCAL
 set PATH_LOCAL /usr/bin/core_perl/ $PATH_LOCAL
+set PATH_LOCAL /opt/brew/bin $PATH_LOCAL
 set -gx MANPATH $NPM_PACKAGES/share/man
 set -gx PATH /usr/local/bin /usr/bin /bin /usr/sbin /sbin $PATH_LOCAL
 if test (uname) = "Linux"
