@@ -29,7 +29,7 @@ set PATH_LOCAL $NPM_PACKAGES/bin/ $PATH_LOCAL
 set PATH_LOCAL /opt/spack/bin/ $PATH_LOCAL
 set PATH_LOCAL /usr/bin/core_perl/ $PATH_LOCAL
 set -gx MANPATH $NPM_PACKAGES/share/man
-set -gx PATH /usr/local/bin /usr/bin /bin $PATH_LOCAL
+set -gx PATH /usr/local/bin /usr/bin /bin /usr/sbin /sbin $PATH_LOCAL
 if test (uname) = "Linux"
 	set -gx LS_COLORS (dircolors | head -n1 | sed -e "s/^.*'\(.*\)'.*/\1/")
 end
