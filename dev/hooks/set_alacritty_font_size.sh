@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ (uname) = "Darwin" ]; then
-	HOSTNAME = (hostname)
-elif [ (uname) = "Linux" ]; then
-	HOSTNAME = $(cat /etc/hostname)
+if [ $(uname) = "Darwin" ]; then
+	HOSTNAME=$(hostname)
+elif [ $(uname) = "Linux" ]; then
+	HOSTNAME=$(cat /etc/hostname)
 fi
 
 if [ $HOSTNAME = "ikuraneko" ]; then
