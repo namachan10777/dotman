@@ -32,6 +32,7 @@ jobs:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Install dependencies
+      working-directory: newtool
       run: bundle install
     - name: Run tests
       working-directory: newtool
