@@ -110,17 +110,15 @@ filecp.each do |pkg, dest_dict|
     Dir.glob('**/*', base: src).each do |file|
       FileUtils.cp(File.expand_path("#{__dir__}/pkgs/#{pkg}/#{file}"), path_expand("#{dest_dict[os]}/#{file}"))
     end
-    puts "✅ #{pkg}"
   elsif dest_dict.key?(:choose) && dest_dict[:choose]
     src = "#{__dir__}/pkgs/#{pkg}/#{dest_dict[:choose]}"
     dest = path_expand(dest_dict[os])
     FileUtils.cp(src, dest)
-    puts "✅ #{pkg}"
   else
     src = "#{__dir__}/pkgs/#{pkg}"
     dest = path_expand(dest_dict[os])
-    FileUtils.rm_rf(dest) if File.exists?(dest)
+    FileUtils.rm_rf(dest) if File.exist?(dest)
     FileUtils.cp_r(src, dest)
-    puts "✅ #{pkg}"
   end
+  puts "✅ #{pkg}"
 end
