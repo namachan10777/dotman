@@ -28,9 +28,13 @@ class RunShellWithCond < InstallUnit
   end
 end
 
+def path_expand(path)
+  File.expand_path(`echo -n #{path}`)
+end
+
 def test(path)
   # TODO: エラー処理
-  File.exist?(`echo -n #{path}`)
+  File.exist?(path_expand(path))
 end
 
 full = [
