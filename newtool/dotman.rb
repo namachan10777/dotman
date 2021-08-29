@@ -101,7 +101,11 @@ filecp = {
 
 filecp.each do |pkg, dest_dict|
   if dest_dict.key?(:merge) && dest_dict[:merge]
-    puts "✘ skip. merge required #{pkg}"
+    src = "#{__dir__}/pkgs/#{pkg}"
+    Dir.glob('**/*', base: src).each do |file|
+      FileUtils.cp(File.expand_path("#{__dir__}/pkgs/#{pkg}/#{file}"), path_expand("#{dest_dict[os]}/#{file}"))
+    end
+    puts "✅ #{pkg}"
   elsif dest_dict.key?(:choose) && dest_dict[:choose]
     src = "#{__dir__}/pkgs/#{pkg}/#{dest_dict[:choose]}"
     dest = path_expand(dest_dict[os])
