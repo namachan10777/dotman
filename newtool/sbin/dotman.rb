@@ -1,15 +1,13 @@
 #!/usr/bin/ruby
 
-require "yaml"
-require "optparse"
+require 'yaml'
+require 'optparse'
 
-Version = "0.0.1"
+Version = '0.0.1'.freeze # rubocop:disable Naming/ConstantName
 
 config_file = nil
 opt = OptionParser.new
-opt.on('-c FILE') {|f| config_file = f}
+opt.on('-c FILE') { |f| config_file = f }
 opt.parse!(ARGV)
 
-if config_file.nil? then
-    print(opt.help)
-end
+print(opt.help) if config_file.nil?

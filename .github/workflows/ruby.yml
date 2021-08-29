@@ -37,3 +37,6 @@ jobs:
     - name: Run tests
       working-directory: newtool
       run: bundle exec rspec
+    - name: Run rubocop
+      working-directory: newtool
+      run: bundle exec rubocop
