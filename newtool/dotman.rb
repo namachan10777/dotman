@@ -103,7 +103,10 @@ filecp.each do |pkg, dest_dict|
   if dest_dict.key?(:merge) && dest_dict[:merge]
     puts "✘ skip. merge required #{pkg}"
   elsif dest_dict.key?(:choose) && dest_dict[:choose]
-    puts "✘ skip. choose required #{pkg}"
+    src = "#{__dir__}/pkgs/#{pkg}/#{dest_dict[:choose]}"
+    dest = path_expand(dest_dict[os])
+    FileUtils.cp(src, dest)
+    puts "✅ #{pkg}"
   else
     src = "#{__dir__}/pkgs/#{pkg}"
     dest = path_expand(dest_dict[os])
