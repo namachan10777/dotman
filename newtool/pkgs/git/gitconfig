@@ -1,0 +1,24 @@
+[user]
+	email = nakano.masaki.sj@alumni.tsukuba.ac.jp
+	name = Nakano Masaki
+	signingkey = 99106AAD75017BD4
+[commit]
+	gpgsign = true
+[gpg]
+	program = gpg
+[color]
+	status = auto
+	branch = auto
+	interactive = auto
+	diff = auto
+[diff]
+	indentHeuristic = true
+
+[ghq]
+	root = ~/Project
+[core]
+	pager = delta --dark
+[pull]
+	rebase = true
+[sequence]
+	editor = interactive-rebase-tool

@@ -1,4 +1,4 @@
-require_relative '../sbin/dotman'
+require_relative '../dotman'
 
 describe 'test' do
   it 'expand home' do
