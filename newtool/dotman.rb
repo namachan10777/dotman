@@ -3,6 +3,8 @@
 require 'rbconfig'
 require 'fileutils'
 
+# TODO: select task sets by option
+
 def path_expand(path)
   File.expand_path(`echo -n #{path}`)
 end
@@ -99,6 +101,9 @@ filecp = {
   }
 }
 
+# TODO: Windows-compatible
+# TODO: mkdir -p
+# TODO: remove choose
 filecp.each do |pkg, dest_dict|
   if dest_dict.key?(:merge) && dest_dict[:merge]
     src = "#{__dir__}/pkgs/#{pkg}"
