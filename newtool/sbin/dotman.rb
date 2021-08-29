@@ -1,33 +1,44 @@
 #!/usr/bin/ruby
 
-require 'yaml'
-require 'psych'
-require 'optparse'
-
-Version = '0.0.1'.freeze # rubocop:disable Naming/ConstantName
-
-config_file_name = nil
-opt = OptionParser.new
-opt.on('-c FILE') { |f| config_file_name = f }
-opt.parse!(ARGV)
-
-if config_file_name.nil?
-  warn(opt.help)
-  exit!
+module InstallType
+  RUN_SHELL_WITH_COND = 0
 end
 
-config = begin
-  config_file = File.open(config_file_name, 'r')
-  YAML.load_file(config_file)
-rescue Psych::SyntaxError => e
-  warn("SyntaxError at #{e.line}:#{e.column}.")
-  config_file.close
-  exit!
-rescue Errno::ENOENT, Errno::EPERM
-  warn("Cannot read file #{config_file_name}")
-  config_file.close
-  exit!
-end
-config_file.close
+# インストール単位
+class InstallUnit
+  def initialize(type)
+    @type = type
+  end
 
-pp config
+  def execute
+    puts 'Please implements this'
+  end
+end
+
+# インストールスクリプトの実行
+class RunShellWithCond < InstallUnit
+  def initialize(cmd, cond)
+    super(InstallType::RUN_SHELL_WITH_COND)
+    @cmd = cmd
+    @cond = cond
+  end
+
+  def execute
+    system(@cmd) if @cond.call
+  end
+end
+
+def test(path)
+  # TODO: エラー処理
+  File.exist?(`echo -n #{path}`)
+end
+
+full = [
+  RunShellWithCond.new(
+    "sh -c \"curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\"",
+    -> { !test('$HOME/.cargo/bin/rustup') }
+  )
+]
+
+# test
+full[0].execute
