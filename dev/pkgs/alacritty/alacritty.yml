@@ -42,4 +42,4 @@ font:
   bold_italic:
     family: Hack Nerd Font
 
-  size: $ALACRITTY_FONT_SIZE
+  size: <%= alacritty_font_size %>

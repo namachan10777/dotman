@@ -21,6 +21,12 @@
 # SOFTWARE.
 
 function __ghq_repository_search -d 'Repository search'
+    if test (uname) = "Linux"
+        set SED sed 
+    else
+        set SED gsed
+    end
+
     set -l selector
     [ -n "$GHQ_SELECTOR" ]; and set selector $GHQ_SELECTOR; or set selector fzf
     set -l selector_options
@@ -35,7 +41,7 @@ function __ghq_repository_search -d 'Repository search'
     [ -n "$query" ]; and set flags --query="$query"; or set flags
     switch "$selector"
         case fzf fzf-tmux peco percol fzy sk
-            ghq list --full-path | sed -e "1i"$HOME"/Downloads\n"$HOME"/tmp" | eval "$selector" $selector_options $flags | read select
+            ghq list --full-path | $SED -e "1i"$HOME"/Downloads\n"$HOME"/tmp" | eval "$selector" $selector_options $flags | read select
         case \*
             printf "\nERROR: plugin-ghq is not support '$selector'.\n"
     end

@@ -65,6 +65,7 @@ packer.startup(function()
     use {'ElmCast/elm-vim', ft = 'elm'}
     use {'namachan10777/tml.vim', ft = 'tml' }
     use {'gutenye/json5.vim', ft = 'json5' }
+    use {'google/vim-jsonnet', ft = 'jsonnet'}
     use {
         'prettier/vim-prettier',
         ft = {'typescript', 'javascript', 'typescriptreact'}
