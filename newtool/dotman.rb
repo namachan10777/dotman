@@ -24,10 +24,22 @@ def test(path)
   File.exist?(path_expand(path))
 end
 
+def enumerate_dirs_likes_grow_up(path)
+  enumerated = [path]
+  until path == '/'
+    path = File.dirname(path)
+    enumerated.push(path)
+  end
+  enumerated.reverse
+end
+
 # パスは正規化すること！
 def cp_rec(src, dest)
-  # FIXME: ad-hoc
-  system("mkdir -p #{File.dirname(dest)}")
+  enumerate_dirs_likes_grow_up(File.dirname(dest)).each do |dir|
+    break if Dir.exist?(dir)
+
+    Dir.mkdir(dir)
+  end
   FileUtils.cp_r(src, dest)
 end
 
@@ -188,7 +200,7 @@ if $PROGRAM_NAME == __FILE__
       macos: '$HOME/.ssh',
       linux: '$HOME/.ssh',
       merge: true
-    },
+    }
   }
 
   filecp_ckpd_gitconfig = {
@@ -206,7 +218,7 @@ if $PROGRAM_NAME == __FILE__
       macos: '$HOME/.ssh/config.priv',
       linux: '$HOME/.ssh/config.priv',
       choose: 'config'
-    },
+    }
   }
 
   case target
