@@ -85,22 +85,35 @@ def file_post_erb(erb_target_file_name, erb_hash)
   File.write(erb_target_file_name, template.result_with_hash(erb_hash))
 end
 
-def filecp_install(cfg)
+def filecp_install(pkg, cfg)
   # TODO: Windows-compatible
-  cfg.each do |pkg, dest_dict|
-    if dest_dict.key?(:merge) && dest_dict[:merge]
-      filecp_merge(pkg, dest_dict[@os])
-    elsif dest_dict.key?(:choose) && dest_dict[:choose]
-      filecp_choose(pkg, dest_dict[:choose], dest_dict[@os])
-    else
-      filecp_clean(pkg, dest_dict[@os])
-    end
-    if dest_dict.key?(:erb)
-      erb_target_file_name = "#{dest_dict[@os]}/#{dest_dict[:erb]}"
-      file_post_erb(erb_target_file_name, dest_dict[:erb_hash])
-    end
-    puts "✅ #{pkg}"
+  if cfg.key?(:merge) && cfg[:merge]
+    filecp_merge(pkg, cfg[@os])
+  elsif cfg.key?(:choose) && cfg[:choose]
+    filecp_choose(pkg, cfg[:choose], cfg[@os])
+  else
+    filecp_clean(pkg, cfg[@os])
   end
+  if cfg.key?(:erb)
+    erb_target_file_name = "#{cfg[@os]}/#{cfg[:erb]}"
+    file_post_erb(erb_target_file_name, cfg[:erb_hash])
+  end
+  puts "✅ #{pkg}"
+end
+
+def filecp_to_install_task(pkg, cfg)
+  {
+    cond: lambda do
+      src = cfg.key?(:choose) && cfg[:choose] ? "#{__dir__}/pkgs/#{pkg}/#{cfg[:choose]}" : "#{__dir__}/pkgs/#{pkg}"
+      dest = path_expand(cfg[@os])
+      src_stat = File::Stat.new(src)
+      dest_stat = File::Stat.new(dest)
+      return src_stat.mtime > dest_stat.mtime
+    end,
+    hook: lambda do
+      filecp_install(pkg, cfg)
+    end
+  }
 end
 
 if $PROGRAM_NAME == __FILE__
@@ -122,16 +135,22 @@ if $PROGRAM_NAME == __FILE__
     exit!
   end
 
-  set_xdg_config_home = lambda do
-    ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config')
-  end
-
-  rustup_install = lambda do
-    unless test('$HOME/.cargo/bin/rustup')
-      system("sh -c \"curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\"")
+  set_xdg_config_home = {
+    cond: -> do return true end,
+    hook: lambda do
+      ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config')
     end
-    puts '✅ rustup'
-  end
+  }
+
+  rustup_install = {
+    cond: lambda do
+      return !test('$HOME/.cargo/bin/rustup')
+    end,
+    hook: lambda do
+      system("sh -c \"curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\"")
+      puts '✅ rustup'
+    end
+  }
 
   # TODO: root required installation
   filecp_common = {
@@ -222,16 +241,23 @@ if $PROGRAM_NAME == __FILE__
     }
   }
 
+  tasks = []
   case target
   when :priv
+    tasks = [set_xdg_config_home, rustup_install]
     filecp = filecp_common.merge(filecp_priv_gitconfig)
-    set_xdg_config_home.call
-    rustup_install.call
-    filecp_install(filecp)
+    tasks += filecp.map do |pkg, cfg|
+      filecp_to_install_task(pkg, cfg)
+    end
   when :ckpd
+    tasks = [set_xdg_config_home, rustup_install]
     filecp = filecp_common.merge(filecp_ckpd_gitconfig)
-    set_xdg_config_home.call
-    rustup_install.call
-    filecp_install(filecp)
+    tasks += filecp.map do |pkg, cfg|
+      filecp_to_install_task(pkg, cfg)
+    end
+  end
+
+  tasks.each do |task|
+    task[:hook].call if task[:cond].call
   end
 end
