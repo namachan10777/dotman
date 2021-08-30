@@ -60,10 +60,16 @@ end
   end
 end
 
-def filecp_merge(pkg, dest_dir)
+def enumerate_cp_pairs(pkg, dest_dir)
   src = "#{__dir__}/pkgs/#{pkg}"
-  Dir.glob('**/*', base: src).each do |file|
-    cp_rec(File.expand_path("#{__dir__}/pkgs/#{pkg}/#{file}"), path_expand("#{dest_dir}/#{file}"))
+  Dir.glob('**/*', base: src).map do |file|
+    { src: File.expand_path("#{__dir__}/pkgs/#{pkg}/#{file}"), dest: path_expand("#{dest_dir}/#{file}") }
+  end
+end
+
+def filecp_merge(pkg, dest_dir)
+  enumerate_cp_pairs(pkg, dest_dir).each do |pair|
+    cp_rec(pair[:src], pair[:dest])
   end
 end
 
@@ -106,9 +112,18 @@ def filecp_to_install_task(pkg, cfg)
     cond: lambda do
       src = cfg.key?(:choose) && cfg[:choose] ? "#{__dir__}/pkgs/#{pkg}/#{cfg[:choose]}" : "#{__dir__}/pkgs/#{pkg}"
       dest = path_expand(cfg[@os])
-      src_stat = File::Stat.new(src)
-      dest_stat = File::Stat.new(dest)
-      return src_stat.mtime > dest_stat.mtime
+      if cfg.key?(:choose)
+        src_stat = File::Stat.new(src)
+        dest_stat = File.file?(dest) ? File::Stat.new(dest) : File::Stat.new("#{dest}/#{cfg[:choose]}")
+        return src_stat.mtime > dest_stat.mtime
+      end
+
+      enumerate_cp_pairs(pkg, dest).each do |pair|
+        src_mtime = File::Stat.new(pair[:src])
+        dest_mtime = File::Stat.new(pair[:dest])
+        return true if src_mtime > dest_mtime
+      end
+      return false
     end,
     hook: lambda do
       filecp_install(pkg, cfg)
@@ -137,7 +152,7 @@ if $PROGRAM_NAME == __FILE__
 
   set_xdg_config_home = {
     name: 'set $XDG_CONFIG_HOME',
-    cond: -> do return true end,
+    cond: -> do ENV['XDG_CONFIG_HOME'].nil? end,
     hook: lambda do
       ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config')
     end
