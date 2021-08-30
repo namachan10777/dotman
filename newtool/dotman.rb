@@ -194,7 +194,7 @@ if $PROGRAM_NAME == __FILE__
       macos: '$HOME/.gitconfig',
       linux: '$HOME/.gitconfig',
       choose: 'gitconfig'
-    },
+    }
   }
 
   filecp_ckpd_gitconfig = {
@@ -207,7 +207,7 @@ if $PROGRAM_NAME == __FILE__
       macos: '$HOME/.gitconfig.ckpd',
       linux: '$HOME/.gitconfig.ckpd',
       choose: 'gitconfig'
-    },
+    }
   }
 
   case target
