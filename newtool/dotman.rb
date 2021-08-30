@@ -191,21 +191,21 @@ if $PROGRAM_NAME == __FILE__
 
   filecp_priv_gitconfig = {
     'git' => {
-      macos: '$HOME/.config/.gitconfig',
-      linux: '$HOME/.config/.gitconfig',
+      macos: '$HOME/.gitconfig',
+      linux: '$HOME/.gitconfig',
       choose: 'gitconfig'
     },
   }
 
   filecp_ckpd_gitconfig = {
     'git.priv' => {
-      macos: '$HOME/.config/.gitconfig.priv',
-      linux: '$HOME/.config/.gitconfig.priv',
+      macos: '$HOME/.gitconfig.priv',
+      linux: '$HOME/.gitconfig.priv',
       choose: 'gitconfig'
     },
     'git.ckpd' => {
-      macos: '$HOME/.config/.gitconfig.ckpd',
-      linux: '$HOME/.config/.gitconfig.ckpd',
+      macos: '$HOME/.gitconfig.ckpd',
+      linux: '$HOME/.gitconfig.ckpd',
       choose: 'gitconfig'
     },
   }
