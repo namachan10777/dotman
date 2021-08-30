@@ -135,7 +135,7 @@ if $PROGRAM_NAME == __FILE__
 
   opt = OptionParser.new
   target = nil
-  opt.on('--target TARGET') do |t|
+  opt.on('-t TARGET', '--target TARGET') do |t|
     case t
     when /cookpad|ckpd/
       target = :ckpd
@@ -143,6 +143,8 @@ if $PROGRAM_NAME == __FILE__
       target = :priv
     end
   end
+  @verbose = false
+  opt.on('-v', '--verbose') { @verbose = true }
   opt.parse(ARGV)
 
   if target.nil?
@@ -278,6 +280,8 @@ if $PROGRAM_NAME == __FILE__
     if task[:cond].call
       puts "✅ #{task[:name]}"
       task[:hook].call
+    elsif @verbose
+      puts "➡ #{task[:name]}"
     end
   end
 end
