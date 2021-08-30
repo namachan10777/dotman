@@ -94,15 +94,15 @@ def filecp_install(pkg, cfg)
   else
     filecp_clean(pkg, cfg[@os])
   end
-  if cfg.key?(:erb)
-    erb_target_file_name = "#{cfg[@os]}/#{cfg[:erb]}"
-    file_post_erb(erb_target_file_name, cfg[:erb_hash])
-  end
-  puts "✅ #{pkg}"
+  return unless cfg.key?(:erb)
+
+  erb_target_file_name = "#{cfg[@os]}/#{cfg[:erb]}"
+  file_post_erb(erb_target_file_name, cfg[:erb_hash])
 end
 
 def filecp_to_install_task(pkg, cfg)
   {
+    name: pkg,
     cond: lambda do
       src = cfg.key?(:choose) && cfg[:choose] ? "#{__dir__}/pkgs/#{pkg}/#{cfg[:choose]}" : "#{__dir__}/pkgs/#{pkg}"
       dest = path_expand(cfg[@os])
@@ -136,6 +136,7 @@ if $PROGRAM_NAME == __FILE__
   end
 
   set_xdg_config_home = {
+    name: 'set $XDG_CONFIG_HOME',
     cond: -> do return true end,
     hook: lambda do
       ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config')
@@ -143,6 +144,7 @@ if $PROGRAM_NAME == __FILE__
   }
 
   rustup_install = {
+    name: 'rustup install',
     cond: lambda do
       return !test('$HOME/.cargo/bin/rustup')
     end,
@@ -258,6 +260,9 @@ if $PROGRAM_NAME == __FILE__
   end
 
   tasks.each do |task|
-    task[:hook].call if task[:cond].call
+    if task[:cond].call
+      puts "✅ #{task[:name]}"
+      task[:hook].call
+    end
   end
 end
