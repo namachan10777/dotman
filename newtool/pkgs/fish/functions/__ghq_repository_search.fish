@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 function __ghq_repository_search -d 'Repository search'
-    if test uname = "Linux"
+    if test (uname) = "Linux"
         set SED sed 
     else
         set SED gsed
