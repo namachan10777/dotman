@@ -168,11 +168,6 @@ if $PROGRAM_NAME == __FILE__
       macos: '$HOME/.config/paru',
       linux: '$HOME/.config/paru'
     },
-    'ssh' => {
-      macos: '$HOME/.ssh',
-      linux: '$HOME/.ssh',
-      merge: true
-    },
     'sway' => {
       macos: '$HOME/.config/sway',
       linux: '$XDG_CONFIG_HOME/sway'
@@ -194,7 +189,12 @@ if $PROGRAM_NAME == __FILE__
       macos: '$HOME/.gitconfig',
       linux: '$HOME/.gitconfig',
       choose: 'gitconfig'
-    }
+    },
+    'ssh' => {
+      macos: '$HOME/.ssh',
+      linux: '$HOME/.ssh',
+      merge: true
+    },
   }
 
   filecp_ckpd_gitconfig = {
@@ -207,7 +207,12 @@ if $PROGRAM_NAME == __FILE__
       macos: '$HOME/.gitconfig.ckpd',
       linux: '$HOME/.gitconfig.ckpd',
       choose: 'gitconfig'
-    }
+    },
+    'ssh' => {
+      macos: '$HOME/.ssh/config.priv',
+      linux: '$HOME/.ssh/config.priv',
+      choose: 'config'
+    },
   }
 
   case target
