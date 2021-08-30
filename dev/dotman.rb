@@ -187,7 +187,7 @@ if $PROGRAM_NAME == __FILE__
       return !test('$HOME/.cargo/bin/rustup')
     end,
     hook: lambda do
-      system("sh -c \"curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\"")
+      system("curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh")
       puts '✅ rustup'
     end
   }
