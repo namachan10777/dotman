@@ -156,8 +156,8 @@ if $PROGRAM_NAME == __FILE__
       linux: '$HOME/.config/jesseduffield/lazygit'
     },
     'neovim' => {
-      macos: '$HOME/.config/neovim',
-      linux: '$HOME/.config/neovim'
+      macos: '$HOME/.config/nvim',
+      linux: '$HOME/.config/nvim'
     },
     'npm' => {
       macos: '$HOME/.npmrc',
