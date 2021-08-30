@@ -145,7 +145,8 @@ if $PROGRAM_NAME == __FILE__
     },
     'fish' => {
       macos: '$HOME/.config/fish',
-      linux: '$XDG_CONFIG_HOME/fish'
+      linux: '$XDG_CONFIG_HOME/fish',
+      merge: true
     },
     'gpg' => {
       macos: '$HOME/.gnupg/gpg.conf',
