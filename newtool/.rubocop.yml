@@ -8,3 +8,7 @@ Style/BlockComments:
   Enabled: false
 Style/AsciiComments:
   Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false

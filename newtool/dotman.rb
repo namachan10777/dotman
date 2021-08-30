@@ -2,6 +2,8 @@
 
 require 'rbconfig'
 require 'fileutils'
+require 'optparse'
+require 'erb'
 
 # TODO: select task sets by option
 
@@ -32,7 +34,7 @@ def cp_rec(src, dest)
 end
 
 # OS判別
-os = begin
+@os = begin
   host_os = RbConfig::CONFIG['host_os']
   case host_os
   when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
@@ -48,21 +50,92 @@ os = begin
   end
 end
 
+def filecp_merge(pkg, dest_dir)
+  src = "#{__dir__}/pkgs/#{pkg}"
+  Dir.glob('**/*', base: src).each do |file|
+    cp_rec(File.expand_path("#{__dir__}/pkgs/#{pkg}/#{file}"), path_expand("#{dest_dir}/#{file}"))
+  end
+end
+
+def filecp_choose(pkg, choose, dest_dir)
+  src = "#{__dir__}/pkgs/#{pkg}/#{choose}"
+  dest = path_expand(dest_dir)
+  cp_rec(src, dest)
+end
+
+def filecp_clean(pkg, dest_dir)
+  src = "#{__dir__}/pkgs/#{pkg}"
+  dest = path_expand(dest_dir)
+  FileUtils.rm_rf(dest) if File.exist?(dest)
+  cp_rec(src, dest)
+end
+
+def file_post_erb(erb_target_file_name, erb_hash)
+  template = ERB.new(File.read(erb_target_file_name))
+  File.write(erb_target_file_name, template.result_with_hash(erb_hash))
+end
+
+# TODO: Rubocop
+def filecp_install(cfg)
+  # TODO: Windows-compatible
+  # TODO: mkdir -p
+  # TODO: remove choose
+  cfg.each do |pkg, dest_dict|
+    if dest_dict.key?(:merge) && dest_dict[:merge]
+      filecp_merge(pkg, dest_dict[@os])
+    elsif dest_dict.key?(:choose) && dest_dict[:choose]
+      filecp_choose(pkg, dest_dict[:choose], dest_dict[@os])
+    else
+      filecp_clean(pkg, dest_dict[@os])
+    end
+    if dest_dict.key?(:erb)
+      erb_target_file_name = "#{dest_dict[@os]}/#{dest_dict[:erb]}"
+      file_post_erb(erb_target_file_name, dest_dict[:erb_hash])
+    end
+    puts "✅ #{pkg}"
+  end
+end
+
 if $PROGRAM_NAME == __FILE__
 
-  unless test('$HOME/.cargo/bin/rustup')
-    system("sh -c \"curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\"")
+  opt = OptionParser.new
+  target = nil
+  opt.on('--target TARGET') do |t|
+    case t
+    when /cookpad|ckpd/
+      target = :ckpd
+    when /private|priv/
+      target = :priv
+    end
   end
-  puts '✅ rustup'
+  opt.parse(ARGV)
 
-  ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config')
+  if target.nil?
+    warn(opt.help)
+    exit!
+  end
+
+  set_xdg_config_home = lambda do
+    ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config')
+  end
+
+  rustup_install = lambda do
+    unless test('$HOME/.cargo/bin/rustup')
+      system("sh -c \"curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\"")
+    end
+    puts '✅ rustup'
+  end
 
   # TODO: root required installation
   # TODO: hooks for alacritty
   filecp = {
     'alacritty' => {
       macos: '$HOME/.config/alacritty',
-      linux: '$XDG_CONFIG_HOME/alacritty'
+      linux: '$XDG_CONFIG_HOME/alacritty',
+      erb: 'alacritty.yml',
+      erb_hash: {
+        alacritty_font_size: 13
+      }
     },
     'fish' => {
       macos: '$HOME/.config/fish',
@@ -121,25 +194,9 @@ if $PROGRAM_NAME == __FILE__
     }
   }
 
-  # TODO: Windows-compatible
-  # TODO: mkdir -p
-  # TODO: remove choose
-  filecp.each do |pkg, dest_dict|
-    if dest_dict.key?(:merge) && dest_dict[:merge]
-      src = "#{__dir__}/pkgs/#{pkg}"
-      Dir.glob('**/*', base: src).each do |file|
-        cp_rec(File.expand_path("#{__dir__}/pkgs/#{pkg}/#{file}"), path_expand("#{dest_dict[os]}/#{file}"))
-      end
-    elsif dest_dict.key?(:choose) && dest_dict[:choose]
-      src = "#{__dir__}/pkgs/#{pkg}/#{dest_dict[:choose]}"
-      dest = path_expand(dest_dict[os])
-      cp_rec(src, dest)
-    else
-      src = "#{__dir__}/pkgs/#{pkg}"
-      dest = path_expand(dest_dict[os])
-      FileUtils.rm_rf(dest) if File.exist?(dest)
-      cp_rec(src, dest)
-    end
-    puts "✅ #{pkg}"
-  end
+  @alacritty_font_size = 13
+
+  set_xdg_config_home.call
+  rustup_install.call
+  filecp_install(filecp)
 end
