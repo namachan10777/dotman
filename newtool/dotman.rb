@@ -133,24 +133,33 @@ end
 
 if $PROGRAM_NAME == __FILE__
 
+  # ~/.dotfileにデフォルトのターゲットを保存しておく
+  dotfile_path = path_expand('$HOME/.dotfile')
+
+  target = File.readable?(dotfile_path) && File.open(dotfile_path).read if target.nil?
+
   opt = OptionParser.new
   target = nil
   opt.on('-t TARGET', '--target TARGET') do |t|
-    case t
-    when /cookpad|ckpd/
-      target = :ckpd
-    when /private|priv/
-      target = :priv
-    end
+    target = t
   end
   @verbose = false
   opt.on('-v', '--verbose') { @verbose = true }
   opt.parse(ARGV)
 
+  case target
+  when /cookpad|ckpd/
+    target = :ckpd
+  when /private|priv/
+    target = :priv
+  end
+
   if target.nil?
     warn(opt.help)
     exit!
   end
+
+  File.open(dotfile_path, 'w+').write(target) if File.world_writable?(dotfile_path) || !File.exist?(dotfile_path)
 
   set_xdg_config_home = {
     name: 'set $XDG_CONFIG_HOME',
