@@ -5,8 +5,6 @@ require 'fileutils'
 require 'optparse'
 require 'erb'
 
-# TODO: select task sets by option
-
 def replace_env_vars(path, dict)
   base = path
   m = path.match(/\$[a-zA-Z0-9_]+/)
@@ -75,11 +73,8 @@ def file_post_erb(erb_target_file_name, erb_hash)
   File.write(erb_target_file_name, template.result_with_hash(erb_hash))
 end
 
-# TODO: Rubocop
 def filecp_install(cfg)
   # TODO: Windows-compatible
-  # TODO: mkdir -p
-  # TODO: remove choose
   cfg.each do |pkg, dest_dict|
     if dest_dict.key?(:merge) && dest_dict[:merge]
       filecp_merge(pkg, dest_dict[@os])
@@ -127,7 +122,6 @@ if $PROGRAM_NAME == __FILE__
   end
 
   # TODO: root required installation
-  # TODO: hooks for alacritty
   filecp_common = {
     'alacritty' => {
       macos: '$HOME/.config/alacritty',
