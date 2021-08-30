@@ -1,3 +1,0 @@
-[submodule "fish-kubectl-completions"]
-	path = fish-kubectl-completions
-	url = https://github.com/evanlucas/fish-kubectl-completions
