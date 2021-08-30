@@ -1,0 +1,23 @@
+[user]
+	email = masaki-nakano@cookpad.com
+	name = Masaki
+[commit]
+	gpgsign = false
+[gpg]
+	program = gpg
+[color]
+	status = auto
+	branch = auto
+	interactive = auto
+	diff = auto
+[diff]
+	indentHeuristic = true
+
+[ghq]
+	root = ~/Project
+[core]
+	pager = delta --dark
+[pull]
+	rebase = true
+[sequence]
+	editor = interactive-rebase-tool

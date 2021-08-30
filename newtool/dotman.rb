@@ -128,7 +128,7 @@ if $PROGRAM_NAME == __FILE__
 
   # TODO: root required installation
   # TODO: hooks for alacritty
-  filecp = {
+  filecp_common = {
     'alacritty' => {
       macos: '$HOME/.config/alacritty',
       linux: '$XDG_CONFIG_HOME/alacritty',
@@ -140,11 +140,6 @@ if $PROGRAM_NAME == __FILE__
     'fish' => {
       macos: '$HOME/.config/fish',
       linux: '$XDG_CONFIG_HOME/fish'
-    },
-    'git' => {
-      macos: '$HOME/.config/.gitconfig',
-      linux: '$HOME/.config/.gitconfig',
-      choose: 'gitconfig'
     },
     'gpg' => {
       macos: '$HOME/.gnupg/gpg.conf',
@@ -194,9 +189,37 @@ if $PROGRAM_NAME == __FILE__
     }
   }
 
-  @alacritty_font_size = 13
+  filecp_priv_gitconfig = {
+    'git' => {
+      macos: '$HOME/.config/.gitconfig',
+      linux: '$HOME/.config/.gitconfig',
+      choose: 'gitconfig'
+    },
+  }
 
-  set_xdg_config_home.call
-  rustup_install.call
-  filecp_install(filecp)
+  filecp_ckpd_gitconfig = {
+    'git.priv' => {
+      macos: '$HOME/.config/.gitconfig.priv',
+      linux: '$HOME/.config/.gitconfig.priv',
+      choose: 'gitconfig'
+    },
+    'git.ckpd' => {
+      macos: '$HOME/.config/.gitconfig.ckpd',
+      linux: '$HOME/.config/.gitconfig.ckpd',
+      choose: 'gitconfig'
+    },
+  }
+
+  case target
+  when :priv
+    filecp = filecp_common.merge(filecp_priv_gitconfig)
+    set_xdg_config_home.call
+    rustup_install.call
+    filecp_install(filecp)
+  when :ckpd
+    filecp = filecp_common.merge(filecp_ckpd_gitconfig)
+    set_xdg_config_home.call
+    rustup_install.call
+    filecp_install(filecp)
+  end
 end
