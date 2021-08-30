@@ -106,26 +106,37 @@ def filecp_install(pkg, cfg)
   file_post_erb(erb_target_file_name, cfg[:erb_hash])
 end
 
+def src_has_new_file?(pkg, dest)
+  enumerate_cp_pairs(pkg, dest).each do |pair|
+    src_mtime = File::Stat.new(pair[:src])
+    dest_mtime = File::Stat.new(pair[:dest])
+    return true if src_mtime > dest_mtime
+  end
+  false
+end
+
+def make_filecp_cond(pkg, cfg)
+  lambda do
+    return false if cfg[@os].nil?
+
+    src = cfg.key?(:choose) && cfg[:choose] ? "#{__dir__}/pkgs/#{pkg}/#{cfg[:choose]}" : "#{__dir__}/pkgs/#{pkg}"
+    dest = path_expand(cfg[@os])
+    if cfg.key?(:choose)
+      src_stat = File::Stat.new(src)
+      dest_stat = File.file?(dest) ? File::Stat.new(dest) : File::Stat.new("#{dest}/#{cfg[:choose]}")
+      return src_stat.mtime > dest_stat.mtime
+    end
+    return src_has_new_file?(pkg, dest)
+  end
+end
+
 def filecp_to_install_task(pkg, cfg)
   {
     name: pkg,
-    cond: lambda do
-      src = cfg.key?(:choose) && cfg[:choose] ? "#{__dir__}/pkgs/#{pkg}/#{cfg[:choose]}" : "#{__dir__}/pkgs/#{pkg}"
-      dest = path_expand(cfg[@os])
-      if cfg.key?(:choose)
-        src_stat = File::Stat.new(src)
-        dest_stat = File.file?(dest) ? File::Stat.new(dest) : File::Stat.new("#{dest}/#{cfg[:choose]}")
-        return src_stat.mtime > dest_stat.mtime
-      end
-
-      enumerate_cp_pairs(pkg, dest).each do |pair|
-        src_mtime = File::Stat.new(pair[:src])
-        dest_mtime = File::Stat.new(pair[:dest])
-        return true if src_mtime > dest_mtime
-      end
-      return false
-    end,
+    cond: make_filecp_cond(pkg, cfg),
     hook: lambda do
+      return false if cfg[@os].nil?
+
       filecp_install(pkg, cfg)
     end
   }
@@ -133,26 +144,27 @@ end
 
 if $PROGRAM_NAME == __FILE__
 
+  @is_root = Process.euid.zero? and Process.uid.zero?
+
   # ~/.dotfileにデフォルトのターゲットを保存しておく
   dotfile_path = path_expand('$HOME/.dotfile')
 
-  target = File.readable?(dotfile_path) && File.open(dotfile_path).read if target.nil?
+  target_str = File.open(dotfile_path).read if File.readable?(dotfile_path)
 
   opt = OptionParser.new
-  target = nil
   opt.on('-t TARGET', '--target TARGET') do |t|
-    target = t
+    target_str = t
   end
   @verbose = false
   opt.on('-v', '--verbose') { @verbose = true }
   opt.parse(ARGV)
 
-  case target
-  when /cookpad|ckpd/
-    target = :ckpd
-  when /private|priv/
-    target = :priv
-  end
+  target = case target_str
+           when /cookpad|ckpd/
+             :ckpd
+           when /private|priv/
+             :priv
+           end
 
   if target.nil?
     warn(opt.help)
@@ -180,7 +192,6 @@ if $PROGRAM_NAME == __FILE__
     end
   }
 
-  # TODO: root required installation
   filecp_common = {
     'alacritty' => {
       macos: '$HOME/.config/alacritty',
@@ -269,19 +280,69 @@ if $PROGRAM_NAME == __FILE__
     }
   }
 
+  filecp_priv_root = {
+    'autofs' => {
+      macos: nil,
+      linux: '/etc/autofs',
+      merge: true
+    },
+    'fcitx5' => {
+      macos: nil,
+      linux: '/usr/share/fcitx5',
+      merge: true
+    },
+    'iptables' => {
+      macos: nil,
+      linux: '/etc/iptables',
+      merge: true
+    },
+    'networkmanager' => {
+      macos: nil,
+      linux: '/etc/NetworkManager',
+      merge: true
+    },
+    'sshd' => {
+      macos: nil,
+      linux: '/etc/ssh',
+      merge: true
+    },
+    'systemd' => {
+      macos: nil,
+      linux: '/etc/systemd/',
+      merge: true
+    },
+    'udev' => {
+      macos: nil,
+      linux: '/etc/udev/rules.d',
+      merge: true
+    }
+  }
+
   tasks = []
-  case target
-  when :priv
-    tasks = [set_xdg_config_home, rustup_install]
-    filecp = filecp_common.merge(filecp_priv_gitconfig)
-    tasks += filecp.map do |pkg, cfg|
-      filecp_to_install_task(pkg, cfg)
+  if @is_root
+    case target
+    when :priv
+      tasks = filecp_priv_root.map do |pkg, cfg|
+        filecp_to_install_task(pkg, cfg)
+      end
+    when :ckpd
+      tasks = []
     end
-  when :ckpd
-    tasks = [set_xdg_config_home, rustup_install]
-    filecp = filecp_common.merge(filecp_ckpd_gitconfig)
-    tasks += filecp.map do |pkg, cfg|
-      filecp_to_install_task(pkg, cfg)
+
+  else
+    case target
+    when :priv
+      tasks = [set_xdg_config_home, rustup_install]
+      filecp = filecp_common.merge(filecp_priv_gitconfig)
+      tasks += filecp.map do |pkg, cfg|
+        filecp_to_install_task(pkg, cfg)
+      end
+    when :ckpd
+      tasks = [set_xdg_config_home, rustup_install]
+      filecp = filecp_common.merge(filecp_ckpd_gitconfig)
+      tasks += filecp.map do |pkg, cfg|
+        filecp_to_install_task(pkg, cfg)
+      end
     end
   end
 
