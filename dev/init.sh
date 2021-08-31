@@ -25,7 +25,12 @@ if [ "${ENV}" != "priv" -a "${ENV}" != "ckpd" ]; then
 fi
 
 REPO=$HOME/Project/github.com/namachan10777/scripts
-git clone https://github.com/namachan10777/scripts.git $REPO
+if [ ! -e $REPO ]; then
+	git clone https://github.com/namachan10777/scripts.git $REPO
+fi
 cd $REPO
+
 ./dev/dotman.rb -v -t $ENV
 sudo ./dev/dotman.rb -v -t $ENV
+mkdir -p $HOME/.dotman/
+ln -sf $REPO/dev/dotman.rb $HOME/.dotman/dotman
