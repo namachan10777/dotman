@@ -60,6 +60,7 @@ packer.startup(function()
     use 'glepnir/galaxyline.nvim'
 
     -- language specific
+    use {'martinda/Jenkinsfile-vim-syntax', ft = 'jenkinsfile'}
     use {'euclidianAce/BetterLua.vim', ft = 'lua'}
     use {'pest-parser/pest.vim', ft = 'pest'}
     use {'ElmCast/elm-vim', ft = 'elm'}
