@@ -35,7 +35,11 @@ function lt
 end
 
 function clipb
-	xsel --clipboard --input
+	if test uname = 'Linux'
+		xsel --clipboard --input
+	else if test name = 'Darwin'
+		pbcopy
+	end
 end
 
 function tlmgr
