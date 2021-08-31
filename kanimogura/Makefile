@@ -9,4 +9,4 @@ clean:
 	rm -f $(HOST_TARGET)
 
 $(HOST_TARGET): $(HOST_SOURCE)
-	bash ../copy.sh $< $@
+	install -m 644 -D $< $@
