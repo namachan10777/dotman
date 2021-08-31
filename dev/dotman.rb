@@ -108,6 +108,8 @@ end
 
 def src_has_new_file?(pkg, dest)
   enumerate_cp_pairs(pkg, dest).each do |pair|
+    next unless File.file?(pair[:src]) || File.file?(pair[:dest])
+
     src_mtime = File::Stat.new(pair[:src])
     dest_mtime = File::Stat.new(pair[:dest])
     return true if src_mtime > dest_mtime
