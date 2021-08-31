@@ -1,7 +1,12 @@
 # DOTFILES
 
 # dev
-自力で入れなさい。archlinux以下にパッケージインストールスクリプトがあります。
+
+rubyが必要
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/namachan10777/scripts/master/dev/init.sh | sh
+```
 
 # server
 ```
