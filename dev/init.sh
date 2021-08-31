@@ -33,4 +33,6 @@ cd $REPO
 ./dev/dotman.rb -v -t $ENV
 sudo ./dev/dotman.rb -v -t $ENV
 mkdir -p $HOME/.dotman/
-ln -sf $REPO/dev/dotman.rb $HOME/.dotman/dotman
+if [ ! -e $HOME/.dotman/dotman ]; then
+	ln -sf $REPO/dev/dotman.rb $HOME/.dotman/dotman
+fi
