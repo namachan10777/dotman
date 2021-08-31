@@ -188,7 +188,16 @@ if $PROGRAM_NAME == __FILE__
     end,
     hook: lambda do
       system("curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh")
-      puts '✅ rustup'
+    end
+  }
+
+  fisher_install = {
+    name: 'fisher install',
+    cond: lambda do
+      return !test('$HOME/.config/fish/functions/fisher.fish')
+    end,
+    hook: lambda do
+      system('fish -c "curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher"')
     end
   }
 
@@ -330,20 +339,20 @@ if $PROGRAM_NAME == __FILE__
     end
 
   else
+    tasks = [set_xdg_config_home, rustup_install]
     case target
     when :priv
-      tasks = [set_xdg_config_home, rustup_install]
       filecp = filecp_common.merge(filecp_priv_gitconfig)
       tasks += filecp.map do |pkg, cfg|
         filecp_to_install_task(pkg, cfg)
       end
     when :ckpd
-      tasks = [set_xdg_config_home, rustup_install]
       filecp = filecp_common.merge(filecp_ckpd_gitconfig)
       tasks += filecp.map do |pkg, cfg|
         filecp_to_install_task(pkg, cfg)
       end
     end
+    tasks.push fisher_install
   end
 
   tasks.each do |task|
