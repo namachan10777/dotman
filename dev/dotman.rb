@@ -144,6 +144,17 @@ def filecp_to_install_task(pkg, cfg)
   }
 end
 
+def rust_tool_to_install_task(pkg_name, bin_name)
+  {
+    name: "rust #{pkg_name}",
+    cond: -> do !test("$HOME/.cargo/bin/#{bin_name}") end,
+    hook: lambda do
+      cargo = path_expand('$HOME/.cargo/bin/cargo')
+      system("#{cargo} install #{pkg_name}")
+    end
+  }
+end
+
 if $PROGRAM_NAME == __FILE__
 
   @is_root = Process.euid.zero? and Process.uid.zero?
@@ -329,6 +340,34 @@ if $PROGRAM_NAME == __FILE__
     }
   }
 
+  cargo_tools = {
+    'bandwhich' => 'bandwhich',
+    'bat' => 'bat',
+    'bingrep' => 'bingrep',
+    'cargo-edit' => 'cargo-add',
+    'cargo-fuzz' => 'cargo-fuzz',
+    'cross' => 'cross',
+    'csview' => 'csview',
+    'diskonaut' => 'diskonaut',
+    'fd-find' => 'fd',
+    'git-delta' => 'delta',
+    'git-interactive-rebase-tool' => 'interactive-rebase-tool',
+    'gping' => 'gping',
+    'ht' => 'ht',
+    'hyperfine' => 'hyperfine',
+    'lsd' => 'lsd',
+    'onefetch' => 'onefetch',
+    'paru' => 'paru',
+    'pastel' => 'pastel',
+    'procs' => 'procs',
+    'ripgrep' => 'rg',
+    'silicon' => 'silicon',
+    'skim' => 'sk',
+    'tokei' => 'tokei',
+    'topgrade' => 'topgrade',
+    'xsv' => 'xsv'
+  }
+
   tasks = []
   if @is_root
     case target
@@ -355,6 +394,9 @@ if $PROGRAM_NAME == __FILE__
       end
     end
     tasks.push fisher_install
+    tasks += cargo_tools.map do |pkg_name, bin_name|
+      rust_tool_to_install_task(pkg_name, bin_name)
+    end
   end
 
   tasks.each do |task|
