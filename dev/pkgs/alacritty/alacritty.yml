@@ -6,7 +6,7 @@ window:
     x: 8
     y: 4
 
-background_opacity: 0.7
+background_opacity: <%= alacritty_opacity %>
 
 colors:
   primary:

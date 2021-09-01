@@ -44,7 +44,7 @@ def cp_rec(src, dest)
 end
 
 # OS判別
-@os = begin
+OS = begin
   host_os = RbConfig::CONFIG['host_os']
   case host_os
   when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
@@ -59,6 +59,7 @@ end
     :unknown
   end
 end
+OS.freeze
 
 def enumerate_cp_pairs(pkg, dest_dir)
   src = "#{__dir__}/pkgs/#{pkg}"
@@ -94,15 +95,15 @@ end
 def filecp_install(pkg, cfg)
   # TODO: Windows-compatible
   if cfg.key?(:merge) && cfg[:merge]
-    filecp_merge(pkg, cfg[@os])
+    filecp_merge(pkg, cfg[OS])
   elsif cfg.key?(:choose) && cfg[:choose]
-    filecp_choose(pkg, cfg[:choose], cfg[@os])
+    filecp_choose(pkg, cfg[:choose], cfg[OS])
   else
-    filecp_clean(pkg, cfg[@os])
+    filecp_clean(pkg, cfg[OS])
   end
   return unless cfg.key?(:erb)
 
-  erb_target_file_name = "#{cfg[@os]}/#{cfg[:erb]}"
+  erb_target_file_name = "#{cfg[OS]}/#{cfg[:erb]}"
   file_post_erb(erb_target_file_name, cfg[:erb_hash])
 end
 
@@ -119,10 +120,10 @@ end
 
 def make_filecp_cond(pkg, cfg)
   lambda do
-    return false if cfg[@os].nil?
+    return false if cfg[OS].nil?
 
     src = cfg.key?(:choose) && cfg[:choose] ? "#{__dir__}/pkgs/#{pkg}/#{cfg[:choose]}" : "#{__dir__}/pkgs/#{pkg}"
-    dest = path_expand(cfg[@os])
+    dest = path_expand(cfg[OS])
     if cfg.key?(:choose)
       src_stat = File::Stat.new(src)
       dest_stat = File.file?(dest) ? File::Stat.new(dest) : File::Stat.new("#{dest}/#{cfg[:choose]}")
@@ -137,7 +138,7 @@ def filecp_to_install_task(pkg, cfg)
     name: pkg,
     cond: make_filecp_cond(pkg, cfg),
     hook: lambda do
-      return false if cfg[@os].nil?
+      return false if cfg[OS].nil?
 
       filecp_install(pkg, cfg)
     end
@@ -157,7 +158,8 @@ end
 
 if $PROGRAM_NAME == __FILE__
 
-  @is_root = Process.euid.zero? and Process.uid.zero?
+  IS_ROOT = Process.euid.zero? and Process.uid.zero?
+  IS_ROOT.freeze
 
   # ~/.dotfileにデフォルトのターゲットを保存しておく
   dotfile_path = path_expand('$HOME/.dotfile')
@@ -369,7 +371,7 @@ if $PROGRAM_NAME == __FILE__
   }
 
   tasks = []
-  if @is_root
+  if IS_ROOT
     case target
     when :priv
       tasks = filecp_priv_root.map do |pkg, cfg|
