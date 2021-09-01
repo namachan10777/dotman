@@ -5,6 +5,8 @@ require 'fileutils'
 require 'optparse'
 require 'erb'
 
+$verbose = true
+
 def replace_env_vars(path, dict)
   base = path
   m = path.match(/\$[a-zA-Z0-9_]+/)
@@ -133,27 +135,138 @@ def make_filecp_cond(pkg, cfg)
   end
 end
 
-def filecp_to_install_task(pkg, cfg)
-  {
-    name: pkg,
-    cond: make_filecp_cond(pkg, cfg),
-    hook: lambda do
+# 汎用のインストールクラス
+class InstallUnit
+  def initialize(name)
+    @name = name
+    @cond = @hook = nil
+  end
+
+  def cond(&cond_blk)
+    @cond = cond_blk
+  end
+
+  def hook(&hook_blk)
+    @hook = hook_blk
+  end
+
+  def execute
+    raise 'at least cond or hook are undefined' if @cond.nil? || @hook.nil?
+
+    if @cond.call
+      puts "✅ #{@name}"
+      @hook.call
+    elsif $verbose
+      puts "➡ #{@name}"
+    end
+  end
+end
+
+# ディレクトリコピー用
+class FileCopyUnit < InstallUnit
+  def initialize(name)
+    super(name)
+    @cfg = {}
+  end
+
+  def setup_task(pkg, cfg)
+    @cond = make_filecp_cond(pkg, cfg)
+    @hook = lambda do
       return false if cfg[OS].nil?
 
       filecp_install(pkg, cfg)
     end
-  }
+  end
+
+  def macos(path)
+    @cfg.merge!({ macos: path })
+    setup_task(@name, @cfg)
+  end
+
+  def linux(path)
+    @cfg.merge!({ linux: path })
+    setup_task(@name, @cfg)
+  end
+
+  def choose(path)
+    @cfg.merge!({ choose: path })
+    setup_task(@name, @cfg)
+  end
+
+  def merge(flag)
+    @cfg.merge!({ merge: flag })
+    setup_task(@name, @cfg)
+  end
+
+  def erb(path, hash)
+    @cfg.merge!({ erb: path, erb_hash: hash })
+    setup_task(@name, @cfg)
+  end
 end
 
-def rust_tool_to_install_task(pkg_name, bin_name)
-  {
-    name: "rust #{pkg_name}",
-    cond: -> do !test("$HOME/.cargo/bin/#{bin_name}") end,
-    hook: lambda do
+# for cargo tools
+class RustToolInstallUnit < InstallUnit
+  def initialize(name)
+    super("rust #{name}")
+  end
+
+  def bin(bin_name)
+    @cond = -> do !test("$HOME/.cargo/bin/#{bin_name}") end
+    @hook = lambda do
       cargo = path_expand('$HOME/.cargo/bin/cargo')
-      system("#{cargo} install #{pkg_name}")
+      system("#{cargo} install #{@name}")
     end
-  }
+  end
+end
+
+# インストールユニットの集合（主にDSLの都合）
+class InstallUnits
+  def initialize
+    @tasks = []
+  end
+
+  def unwrap_tasks
+    @tasks
+  end
+
+  def merge!(units)
+    @tasks += units.unwrap_tasks
+    self
+  end
+
+  def merge(units)
+    new_units = InstallUnits.new
+    new_units.merge!(self)
+    new_units.merge!(units)
+  end
+
+  def general_task(name, &blk)
+    unit = InstallUnit.new(name)
+    unit.instance_eval(&blk)
+    @tasks << unit
+  end
+
+  def file_copy(name, &blk)
+    unit = FileCopyUnit.new(name)
+    unit.instance_eval(&blk)
+    @tasks << unit
+  end
+
+  def rust_tool(name, bin)
+    unit = RustToolInstallUnit.new(name)
+    unit.bin(bin)
+    @tasks << unit
+  end
+
+  def install
+    @tasks.each(&:execute)
+  end
+end
+
+def tasks(_name, &blk)
+  units = InstallUnits.new
+  units.instance_eval(&blk)
+  units
 end
 
 if $PROGRAM_NAME == __FILE__
@@ -170,8 +283,8 @@ if $PROGRAM_NAME == __FILE__
   opt.on('-t TARGET', '--target TARGET') do |t|
     target_str = t
   end
-  @verbose = false
-  opt.on('-v', '--verbose') { @verbose = true }
+  $verbose = false
+  opt.on('-v', '--verbose') { $verbose = true }
   opt.parse(ARGV)
 
   target = case target_str
@@ -187,226 +300,198 @@ if $PROGRAM_NAME == __FILE__
   end
 
   File.open(dotfile_path, 'w+').write(target) if File.world_writable?(dotfile_path) || !File.exist?(dotfile_path)
-
-  set_xdg_config_home = {
-    name: 'set $XDG_CONFIG_HOME',
-    cond: -> do ENV['XDG_CONFIG_HOME'].nil? end,
-    hook: lambda do
-      ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config')
+  pre_file_copy_tasks = tasks 'pre file copy' do
+    general_task 'set XDG_CONFIG_HOME' do
+      cond { ENV['XDG_CONFIG_HOME'].nil? }
+      hook { ENV['XDG_CONFIG_HOME'] = path_expand('$HOME/.config') }
     end
-  }
 
-  rustup_install = {
-    name: 'rustup install',
-    cond: lambda do
-      return !test('$HOME/.cargo/bin/rustup')
-    end,
-    hook: lambda do
-      system("curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh")
+    general_task 'rustup' do
+      cond { !test('$HOME/.cargo/bin/rustup') }
+      hook { system("curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh") }
     end
-  }
+  end
 
-  fisher_install = {
-    name: 'fisher install',
-    cond: lambda do
-      return !test('$HOME/.config/fish/functions/fisher.fish')
-    end,
-    hook: lambda do
-      system('fish -c "curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher"')
+  post_file_copy_tasks = tasks 'post file copy' do
+    general_task 'fisher' do
+      cond { !test('$HOME/.config/fish/functions/fisher.fish') }
+      hook { system('fish -c "curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher"') }
     end
-  }
+  end
 
-  filecp_common = {
-    'alacritty' => {
-      macos: '$HOME/.config/alacritty',
-      linux: '$XDG_CONFIG_HOME/alacritty',
-      erb: 'alacritty.yml',
-      erb_hash: {
-        alacritty_font_size: 13,
-        alacritty_opacity: OS == :macos ? 0.9 : 0.7
-      }
-    },
-    'fish' => {
-      macos: '$HOME/.config/fish',
-      linux: '$XDG_CONFIG_HOME/fish',
-      merge: true
-    },
-    'gpg' => {
-      macos: '$HOME/.gnupg/gpg.conf',
-      linux: '$HOME/.gnupg/gpg.conf',
-      choose: 'gpg.conf'
-    },
-    'latexmk' => {
-      macos: '$HOME/.latexmkrc',
-      linux: '$HOME/.latexmkrc',
-      choose: 'latexmkrc'
-    },
-    'lazygit' => {
-      macos: '$HOME/.config/jesseduffield/lazygit',
-      linux: '$HOME/.config/jesseduffield/lazygit'
-    },
-    'neovim' => {
-      macos: '$HOME/.config/nvim',
-      linux: '$HOME/.config/nvim'
-    },
-    'npm' => {
-      macos: '$HOME/.npmrc',
-      linux: '$HOME/.npmrc',
-      choose: 'npmrc'
-    },
-    'paru' => {
-      macos: '$HOME/.config/paru',
-      linux: '$HOME/.config/paru'
-    },
-    'sway' => {
-      macos: '$HOME/.config/sway',
-      linux: '$XDG_CONFIG_HOME/sway'
-    },
-    'tig' => {
-      macos: '$HOME/.tigrc',
-      linux: '$HOME/.tigrc',
-      choose: 'tigrc'
-    },
-    'vscode' => {
-      macos: '$HOME/.config/Code/User',
-      linux: '$XDG_CONFIG_HOME/Code/User',
-      merge: true
-    }
-  }
+  file_copy_tasks_common = tasks 'file copy common' do
+    file_copy 'alacritty' do
+      macos '$HOME/.config/alacritty'
+      linux '$XDG_CONFIG_HOME/alacritty'
+      erb('alacritty.yml', {
+            alacritty_font_size: 13,
+            alacritty_opacity: OS == :macos ? 0.9 : 0.7
+          })
+    end
+    file_copy 'fish' do
+      macos '$HOME/.config/fish'
+      linux '$XDG_CONFIG_HOME/fish'
+      merge true
+    end
+    file_copy 'gpg' do
+      macos '$HOME/.gnupg/gpg.conf'
+      linux '$HOME/.gnupg/gpg.conf'
+      choose 'gpg.conf'
+    end
+    file_copy 'latexmk' do
+      macos '$HOME/.latexmkrc'
+      linux '$HOME/.latexmkrc'
+      choose 'latexmkrc'
+    end
+    file_copy 'lazygit' do
+      macos '$HOME/.config/jesseduffield/lazygit'
+      linux '$HOME/.config/jesseduffield/lazygit'
+    end
+    file_copy 'neovim' do
+      macos '$HOME/.config/nvim'
+      linux '$HOME/.config/nvim'
+    end
+    file_copy 'npm' do
+      macos '$HOME/.npmrc'
+      linux '$HOME/.npmrc'
+      choose 'npmrc'
+    end
+    file_copy 'paru' do
+      macos '$HOME/.config/paru'
+      linux '$HOME/.config/paru'
+    end
+    file_copy 'sway' do
+      macos '$HOME/.config/sway'
+      linux '$XDG_CONFIG_HOME/sway'
+    end
+    file_copy 'tig' do
+      macos '$HOME/.tigrc'
+      linux '$HOME/.tigrc'
+      choose 'tigrc'
+    end
+    file_copy 'vscode' do
+      macos '$HOME/.config/Code/User'
+      linux '$XDG_CONFIG_HOME/Code/User'
+      merge true
+    end
+  end
 
-  filecp_priv_gitconfig = {
-    'git' => {
-      macos: '$HOME/.gitconfig',
-      linux: '$HOME/.gitconfig',
-      choose: 'gitconfig'
-    },
-    'ssh' => {
-      macos: '$HOME/.ssh',
-      linux: '$HOME/.ssh',
-      merge: true
-    }
-  }
+  file_copy_tasks_priv_gitconfig = tasks 'file copy private gitconfig' do
+    file_copy 'git' do
+      macos '$HOME/.gitconfig'
+      linux '$HOME/.gitconfig'
+      choose 'gitconfig'
+    end
+    file_copy 'ssh' do
+      macos '$HOME/.ssh'
+      linux '$HOME/.ssh'
+      merge true
+    end
+  end
 
-  filecp_ckpd_gitconfig = {
-    'git.priv' => {
-      macos: '$HOME/.gitconfig.priv',
-      linux: '$HOME/.gitconfig.priv',
-      choose: 'gitconfig'
-    },
-    'git.ckpd' => {
-      macos: '$HOME/.gitconfig.ckpd',
-      linux: '$HOME/.gitconfig.ckpd',
-      choose: 'gitconfig'
-    },
-    'ssh' => {
-      macos: '$HOME/.ssh/config.priv',
-      linux: '$HOME/.ssh/config.priv',
-      choose: 'config'
-    }
-  }
+  file_copy_tasks_ckpd_gitconfig = tasks 'file copy cookpad gitconfig' do
+    file_copy 'git.priv' do
+      macos '$HOME/.gitconfig.priv'
+      linux '$HOME/.gitconfig.priv'
+      choose 'gitconfig'
+    end
+    file_copy 'git.ckpd' do
+      macos '$HOME/.gitconfig.ckpd'
+      linux '$HOME/.gitconfig.ckpd'
+      choose 'gitconfig'
+    end
+    file_copy 'ssh' do
+      macos '$HOME/.ssh/config.priv'
+      linux '$HOME/.ssh/config.priv'
+      choose 'config'
+    end
+  end
 
-  filecp_priv_root = {
-    'autofs' => {
-      macos: nil,
-      linux: '/etc/autofs',
-      merge: true
-    },
-    'fcitx5' => {
-      macos: nil,
-      linux: '/usr/share/fcitx5',
-      merge: true
-    },
-    'iptables' => {
-      macos: nil,
-      linux: '/etc/iptables',
-      merge: true
-    },
-    'networkmanager' => {
-      macos: nil,
-      linux: '/etc/NetworkManager',
-      merge: true
-    },
-    'sshd' => {
-      macos: nil,
-      linux: '/etc/ssh',
-      merge: true
-    },
-    'systemd' => {
-      macos: nil,
-      linux: '/etc/systemd/',
-      merge: true
-    },
-    'udev' => {
-      macos: nil,
-      linux: '/etc/udev/rules.d',
-      merge: true
-    }
-  }
+  file_copy_tasks_priv_root = tasks 'file copy private in root' do
+    file_copy 'autofs' do
+      macos nil
+      linux '/etc/autofs'
+      merge true
+    end
+    file_copy 'fcitx5' do
+      macos nil
+      linux '/usr/share/fcitx5'
+      merge true
+    end
+    file_copy 'iptables' do
+      macos nil
+      linux '/etc/iptables'
+      merge true
+    end
+    file_copy 'networkmanager' do
+      macos nil
+      linux '/etc/NetworkManager'
+      merge true
+    end
+    file_copy 'sshd' do
+      macos nil
+      linux '/etc/ssh'
+      merge true
+    end
+    file_copy 'systemd' do
+      macos nil
+      linux '/etc/systemd/'
+      merge true
+    end
+    file_copy 'udev' do
+      macos nil
+      linux '/etc/udev/rules.d'
+      merge true
+    end
+  end
 
-  cargo_tools = {
-    'bandwhich' => 'bandwhich',
-    'bat' => 'bat',
-    'bingrep' => 'bingrep',
-    'cargo-edit' => 'cargo-add',
-    'cargo-fuzz' => 'cargo-fuzz',
-    'cross' => 'cross',
-    'csview' => 'csview',
-    'diskonaut' => 'diskonaut',
-    'fd-find' => 'fd',
-    'git-delta' => 'delta',
-    'git-interactive-rebase-tool' => 'interactive-rebase-tool',
-    'gping' => 'gping',
-    'ht' => 'ht',
-    'hyperfine' => 'hyperfine',
-    'lsd' => 'lsd',
-    'onefetch' => 'onefetch',
-    'pastel' => 'pastel',
-    'procs' => 'procs',
-    'ripgrep' => 'rg',
-    'silicon' => 'silicon',
-    'skim' => 'sk',
-    'tokei' => 'tokei',
-    'topgrade' => 'topgrade',
-    'xsv' => 'xsv'
-  }
+  cargo_tools = tasks 'install tools by cargo' do
+    rust_tool('bandwhich', 'bandwhich')
+    rust_tool('bat', 'bat')
+    rust_tool('bingrep', 'bingrep')
+    rust_tool('cargo-edit', 'cargo-add')
+    rust_tool('cargo-fuzz', 'cargo-fuzz')
+    rust_tool('cross', 'cross')
+    rust_tool('csview', 'csview')
+    rust_tool('diskonaut', 'diskonaut')
+    rust_tool('fd-find', 'fd')
+    rust_tool('git-delta', 'delta')
+    rust_tool('git-interactive-rebase-tool', 'interactive-rebase-tool')
+    rust_tool('gping', 'gping')
+    rust_tool('ht', 'ht')
+    rust_tool('hyperfine', 'hyperfine')
+    rust_tool('lsd', 'lsd')
+    rust_tool('onefetch', 'onefetch')
+    rust_tool('pastel', 'pastel')
+    rust_tool('procs', 'procs')
+    rust_tool('ripgrep', 'rg')
+    rust_tool('silicon', 'silicon')
+    rust_tool('skim', 'sk')
+    rust_tool('tokei', 'tokei')
+    rust_tool('topgrade', 'topgrade')
+    rust_tool('xsv', 'xsv')
+  end
 
-  tasks = []
+  targets = []
   if IS_ROOT
     case target
     when :priv
-      tasks = filecp_priv_root.map do |pkg, cfg|
-        filecp_to_install_task(pkg, cfg)
-      end
+      targets = file_copy_tasks_priv_root
     when :ckpd
-      tasks = []
+      return
     end
 
   else
-    tasks = [set_xdg_config_home, rustup_install]
+    targets = pre_file_copy_tasks.merge(cargo_tools)
     case target
     when :priv
-      filecp = filecp_common.merge(filecp_priv_gitconfig)
-      tasks += filecp.map do |pkg, cfg|
-        filecp_to_install_task(pkg, cfg)
-      end
+      targets = targets.merge(file_copy_tasks_common).merge(file_copy_tasks_priv_gitconfig)
+
     when :ckpd
-      filecp = filecp_common.merge(filecp_ckpd_gitconfig)
-      tasks += filecp.map do |pkg, cfg|
-        filecp_to_install_task(pkg, cfg)
-      end
+      targets = targets.merge(file_copy_tasks_common).merge(file_copy_tasks_ckpd_gitconfig)
     end
-    tasks.push fisher_install
-    tasks += cargo_tools.map do |pkg_name, bin_name|
-      rust_tool_to_install_task(pkg_name, bin_name)
-    end
+    targets.merge(post_file_copy_tasks)
   end
 
-  tasks.each do |task|
-    if task[:cond].call
-      puts "✅ #{task[:name]}"
-      task[:hook].call
-    elsif @verbose
-      puts "➡ #{task[:name]}"
-    end
-  end
+  targets.install
 end

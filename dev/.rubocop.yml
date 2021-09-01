@@ -12,3 +12,7 @@ Metrics/AbcSize:
   Enabled: false
 Metrics/MethodLength:
   Enabled: false
+Metrics/BlockLength:
+  Enabled: false
+Style/GlobalVars:
+  Enabled: false
