@@ -220,7 +220,8 @@ if $PROGRAM_NAME == __FILE__
       linux: '$XDG_CONFIG_HOME/alacritty',
       erb: 'alacritty.yml',
       erb_hash: {
-        alacritty_font_size: 13
+        alacritty_font_size: 13,
+        alacritty_opacity: OS == :macos ? 0.9 : 0.7
       }
     },
     'fish' => {
