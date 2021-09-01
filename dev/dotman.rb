@@ -357,7 +357,6 @@ if $PROGRAM_NAME == __FILE__
     'hyperfine' => 'hyperfine',
     'lsd' => 'lsd',
     'onefetch' => 'onefetch',
-    'paru' => 'paru',
     'pastel' => 'pastel',
     'procs' => 'procs',
     'ripgrep' => 'rg',
