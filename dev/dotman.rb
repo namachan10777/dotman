@@ -300,6 +300,11 @@ if $PROGRAM_NAME == __FILE__
   end
 
   File.open(dotfile_path, 'w+').write(target) if File.world_writable?(dotfile_path) || !File.exist?(dotfile_path)
+
+  ############################################################################
+  ######################## ↓↓↓ USER CONFIGURATION ↓↓↓ ########################
+  ############################################################################
+
   pre_file_copy_tasks = tasks 'pre file copy' do
     general_task 'set XDG_CONFIG_HOME' do
       cond { ENV['XDG_CONFIG_HOME'].nil? }
