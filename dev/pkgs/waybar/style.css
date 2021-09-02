@@ -1,8 +1,9 @@
 * {
     border: none;
     border-radius: 0;
-    font-family: Hack Nerd Font, sans-serif;
+    font-family: Sauce Code Pro Nerd Font Mono, sans-serif;
     font-size: 16px;
+    color: rgba(230, 230, 230, 0.8);
     min-height: 0;
 }
 
@@ -21,7 +22,7 @@ tooltip label {
 }
 
 #workspaces button {
-    padding: 5px 5px;
+    padding: 10px 10px;
     background: transparent;
     color: rgba(230, 230, 230, 0.7);
     border-bottom: 3px solid transparent;
@@ -33,6 +34,7 @@ tooltip label {
 }
 
 #window {
+    font-size: 14px;
     color: rgba(230, 230, 230, 0.7);
 }
 
@@ -41,9 +43,22 @@ tooltip label {
     margin: 0 2px;
 }
 
-#mode, #clock, #battery, #memory, #network, #cpu, #temprature, #pulseaudio {
+#cpu {
+    padding: 0 5px;
+    margin-left: 10px;
+    border-bottom: 2px solid rgba(230, 230, 230, 0.8);
+}
+
+#memory {
     padding: 0 10px;
-    margin: 0 5px;
+    margin-right: 10px;
+    border-bottom: 2px solid rgba(230, 230, 230, 0.8);
+}
+
+#mode, #clock, #battery, #network, #temperature, #pulseaudio {
+    padding: 0 10px;
+    margin: 0 10px;
+    border-bottom: 2px solid rgba(230, 230, 230, 0.8);
 }
 
 #mode {
