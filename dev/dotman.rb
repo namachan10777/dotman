@@ -38,9 +38,7 @@ end
 # パスは正規化すること！
 def cp_rec(src, dest)
   enumerate_dirs_likes_grow_up(File.dirname(dest)).each do |dir|
-    break if Dir.exist?(dir)
-
-    Dir.mkdir(dir)
+    Dir.mkdir(dir) unless Dir.exist?(dir)
   end
   FileUtils.cp_r(src, dest)
 end
@@ -452,6 +450,10 @@ if $PROGRAM_NAME == __FILE__
       macos nil
       linux '/etc/udev/rules.d'
       merge true
+    end
+    # TODO: generate wallpaper
+    file_copy 'wallpaper' do
+      linux '/opt/wallpaper'
     end
   end
 
