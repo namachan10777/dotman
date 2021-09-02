@@ -1,5 +1,7 @@
 # DOTFILES
 
+![Screenshot](https://imgur.com/q16mE0X)
+
 # dev
 
 rubyが必要
