@@ -245,4 +245,6 @@ bar {
     }
 }
 
+output "*" background /opt/wallpaper/wallpaper.png fill
+
 include /etc/sway/config.d/*
