@@ -9,23 +9,23 @@ function renderCircle(
   ctx: CanvasRenderingContext2D,
   r1: number,
   r2: number,
-  theta_step: number,
-  theta_diff: number,
-  theta_offset: number,
+  thetaStep: number,
+  thetaDiff: number,
+  thetaOffset: number,
   color: string
 ) {
   ctx.strokeStyle = color;
   let theta = 0;
   while (theta + 0.001 < 2 * Math.PI) {
-    const x1 = r1 * Math.cos(theta_offset + theta);
-    const y1 = r1 * Math.sin(theta_offset + theta);
-    const x2 = r2 * Math.cos(theta_offset + theta + theta_step);
-    const y2 = r2 * Math.sin(theta_offset + theta + theta_step);
+    const x1 = r1 * Math.cos(thetaOffset + theta);
+    const y1 = r1 * Math.sin(thetaOffset + theta);
+    const x2 = r2 * Math.cos(thetaOffset + theta + thetaStep);
+    const y2 = r2 * Math.sin(thetaOffset + theta + thetaStep);
     ctx.beginPath();
     ctx.moveTo(x1 + width / 2, y1 + height / 2);
     ctx.lineTo(x2 + width / 2, y2 + height / 2);
     ctx.stroke();
-    theta += theta_diff;
+    theta += thetaDiff;
   }
 }
 
