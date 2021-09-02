@@ -1,0 +1,25 @@
+{
+  "name": "wallpaper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc && node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/namachan10777/scripts"
+  },
+  "keywords": [
+    "dotfiles"
+  ],
+  "author": "Masaki Nakano",
+  "license": "MIT",
+  "dependencies": {
+    "canvas": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.7.10",
+    "typescript": "^4.4.2"
+  }
+}
