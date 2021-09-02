@@ -25,6 +25,7 @@ function render() {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
   if (ctx) {
+    ctx.fillStyle = 'rgb(35, 35, 35)';
     ctx.fillRect(0, 0, width, height);
     renderCircle(ctx, 70 * scale, 200 * scale, Math.PI / 180 * 40, Math.PI / 180 * 10, 0, 'rgb(200, 200, 200, 0.4)');
     renderCircle(ctx, 100 * scale, 230 * scale, -Math.PI / 180 * 40, Math.PI / 180 * 10, 0.5, 'rgb(200, 200, 200, 0.4)');
