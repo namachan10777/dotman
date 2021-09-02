@@ -112,6 +112,7 @@ end
 def src_has_new_file?(pkg, dest)
   enumerate_cp_pairs(pkg, dest).each do |pair|
     next unless File.file?(pair[:src]) || File.file?(pair[:dest])
+    return true unless File.exist?(pair[:dest])
 
     src_mtime = File::Stat.new(pair[:src])
     dest_mtime = File::Stat.new(pair[:dest])
@@ -378,6 +379,10 @@ if $PROGRAM_NAME == __FILE__
       macos '$HOME/.config/Code/User'
       linux '$XDG_CONFIG_HOME/Code/User'
       merge true
+    end
+
+    file_copy 'waybar' do
+      linux '$XDG_CONFIG_HOME/waybar'
     end
   end
 
