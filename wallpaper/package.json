@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "build": "tsc && node index.js"
+    "build": "tsc && node index.js",
+    "prettier": "prettier index.ts --check",
+    "eslint": "eslint index.ts"
   },
   "repository": {
     "type": "git",
