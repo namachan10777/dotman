@@ -440,7 +440,7 @@ end)
 nvim.ex.autocmd("BufRead,BufNewFile", "tsconfig.json", "setlocal filetype=json5")
 
 set_indents({
-    { exts={"lua"}, w = 4, expand = true },
+    { exts={"lua","css"}, w = 4, expand = true },
     { exts={"tml"}, w = 2, expand = true},
     { exts={"saty"}, w = 2, expand = true },
     { exts={"sh" }, w = 2, expand = true },
