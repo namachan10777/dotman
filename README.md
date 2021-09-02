@@ -1,6 +1,6 @@
 # DOTFILES
 
-![Screenshot](https://imgur.com/q16mE0X)
+![Screenshot](./screenshot.png)
 
 # dev
 
