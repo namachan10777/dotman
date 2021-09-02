@@ -36,7 +36,12 @@ tooltip label {
     color: rgba(230, 230, 230, 0.7);
 }
 
-#mode, #clock, #battery {
+#tray {
+    padding: 0 5px;
+    margin: 0 2px;
+}
+
+#mode, #clock, #battery, #memory, #network, #cpu, #temprature, #pulseaudio {
     padding: 0 10px;
     margin: 0 5px;
 }
