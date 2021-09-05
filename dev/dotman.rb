@@ -311,7 +311,7 @@ if $PROGRAM_NAME == __FILE__
     end
 
     general_task 'rustup' do
-      cond { !test('$HOME/.cargo/bin/rustup') }
+      cond { !test('$HOME/.cargo/bin/rustup') && !test('$HOME/.rustup') }
       hook { system("curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh") }
     end
   end
