@@ -1,0 +1,14 @@
+---
+taskgroups:
+  normalfile_common:
+  - name: "cp alacritty"
+    cp:
+      src: "alacritty/"
+      dest: "$XDG_CONFIG_HOME/alacritty/"
+
+targets:
+- name: "sakanainu"
+  match:
+  - hostname: "^sakanainu$"
+  tasks:
+  - normalfile_common

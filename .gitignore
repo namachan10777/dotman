@@ -4,3 +4,8 @@
 /wallpaper/index.js
 /wallpaper/*.png
 /wallpaper/node_modules
+
+
+# Added by cargo
+
+/target
