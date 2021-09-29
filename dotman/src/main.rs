@@ -6,13 +6,13 @@ use clap::{AppSettings, Clap};
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
     #[clap(subcommand)]
-    subcmd: Subcommand
+    subcmd: Subcommand,
 }
 
 #[derive(Clap)]
 enum Subcommand {
     Deploy(DeployOpts),
-    DryRun(DryRunOpts)
+    DryRun(DryRunOpts),
 }
 
 #[derive(Clap)]
@@ -32,7 +32,7 @@ enum Task {
         src: String,
         dest: String,
         merge: bool,
-    }
+    },
 }
 
 enum TargetMatcher {
@@ -52,9 +52,7 @@ struct PlayBook {
 fn main() {
     let opts: Opts = Opts::parse();
     match opts.subcmd {
-        Subcommand::Deploy(opts) => {
-        },
-        Subcommand::DryRun(opts) => {
-        }
+        Subcommand::Deploy(opts) => {}
+        Subcommand::DryRun(opts) => {}
     }
 }
