@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::{collections::HashMap, path::Path};
 use std::{fs, process};
 use yaml_rust::{Yaml, YamlLoader};
@@ -38,6 +39,18 @@ enum Task {
     },
 }
 
+impl Task {
+    fn name(&self) -> String {
+        match self {
+            Task::Cp {
+                src,
+                dest,
+                merge: _,
+            } => format!("cp {} => {}", src, dest),
+        }
+    }
+}
+
 #[derive(Debug)]
 enum TargetMatcher {
     HostName(regex::Regex),
@@ -61,6 +74,19 @@ enum Error {
     FailedToLoadPlaybook,
     TaskGroupNotFound(String),
     AnyScenarioDoesNotMatch,
+}
+
+#[derive(Debug)]
+enum TaskResult {
+    Changed,
+    Failed,
+    Success,
+}
+
+fn execute(task: &Task, dryrun: bool) -> TaskResult {
+    match task {
+        Task::Cp { src, dest, merge } => TaskResult::Failed,
+    }
 }
 
 fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
@@ -215,22 +241,35 @@ fn enlist_taskgroups<'a>(
         .collect::<Result<Vec<_>, Error>>()
 }
 
+type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
+
+fn execute_deploy(playbook: &PlayBook, dryrun: bool) -> Result<Stats, Error> {
+    let scenario = match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
+    let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice())?;
+    Ok(taskgroups
+        .iter()
+        .map(|(name, tasks)| {
+            (
+                name.to_owned().to_owned(),
+                tasks
+                    .iter()
+                    .map(|task| (task.name(), execute(task, dryrun)))
+                    .collect::<Vec<(String, TaskResult)>>(),
+            )
+        })
+        .collect::<Stats>())
+}
+
 fn run(opts: Opts) -> Result<(), Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            let scenario =
-                match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
-            let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
-            println!("{:?}", taskgroups);
+            execute_deploy(&playbook, false)?;
             Ok(())
         }
         Subcommand::DryRun(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            let scenario =
-                match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
-            let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
-            println!("{:?}", taskgroups);
+            execute_deploy(&playbook, true)?;
             Ok(())
         }
     }
