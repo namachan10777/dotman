@@ -1,5 +1,5 @@
-use std::fs;
 use std::{collections::HashMap, path::Path};
+use std::{fs, process};
 use yaml_rust::{Yaml, YamlLoader};
 
 use clap::{AppSettings, Clap};
@@ -60,6 +60,7 @@ struct PlayBook {
 enum Error {
     FailedToLoadPlaybook,
     TaskGroupNotFound(String),
+    AnyScenarioDoesNotMatch,
 }
 
 fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
@@ -214,26 +215,42 @@ fn enlist_taskgroups<'a>(
         .collect::<Result<Vec<_>, Error>>()
 }
 
-fn main() {
-    let opts: Opts = Opts::parse();
+fn run(opts: Opts) -> Result<(), Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            if let Some(scenario) = match_scenario(&playbook.scenarios) {
-                let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
-                println!("{:?}", taskgroups);
-            } else {
-                eprintln!("Any scenario doesn't match!");
-            }
+            let scenario =
+                match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
+            let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
+            println!("{:?}", taskgroups);
+            Ok(())
         }
         Subcommand::DryRun(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            if let Some(scenario) = match_scenario(&playbook.scenarios) {
-                let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
-                println!("{:?}", taskgroups);
-            } else {
-                eprintln!("Any scenario doesn't match!");
-            }
+            let scenario =
+                match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
+            let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
+            println!("{:?}", taskgroups);
+            Ok(())
+        }
+    }
+}
+
+fn main() {
+    let opts: Opts = Opts::parse();
+    match run(opts) {
+        Ok(()) => (),
+        Err(Error::AnyScenarioDoesNotMatch) => {
+            eprintln!("any scenario does not match");
+            process::exit(-1);
+        }
+        Err(Error::TaskGroupNotFound(taskgroup_name)) => {
+            eprintln!("taskgroup \"{}\" does not found", taskgroup_name);
+            process::exit(-1);
+        }
+        Err(Error::FailedToLoadPlaybook) => {
+            eprintln!("failed to load playbook");
+            process::exit(-1);
         }
     }
 }
