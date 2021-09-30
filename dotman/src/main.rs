@@ -1,7 +1,6 @@
-use std::fmt::format;
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
-use std::{fs, io, process};
+use std::{env, fs, io, path, process};
 use yaml_rust::{Yaml, YamlLoader};
 
 use clap::{AppSettings, Clap};
@@ -70,11 +69,17 @@ struct PlayBook {
     scenarios: Vec<Scenario>,
 }
 
+#[derive(Debug)]
+struct Context {
+    base: PathBuf,
+}
+
 #[derive(Debug, Clone)]
 enum Error {
     FailedToLoadPlaybook,
     TaskGroupNotFound(String),
     AnyScenarioDoesNotMatch,
+    CannotResolveVar(String),
 }
 
 #[derive(Debug)]
@@ -86,10 +91,30 @@ enum TaskResult {
 
 #[derive(Debug, Clone)]
 enum FileType {
+    #[allow(dead_code)]
     Symlink(PathBuf),
     File(PathBuf),
     Other(PathBuf),
-    Nothing,
+    Nothing(PathBuf),
+}
+
+fn resolve_desitination_path(path: &str) -> Result<PathBuf, Error> {
+    Ok(Path::new(
+        &path
+            .split(path::MAIN_SEPARATOR)
+            .map(|elem| {
+                if let Some(var_name) = elem.strip_prefix('$') {
+                    env::var(var_name).map_err(|_| Error::CannotResolveVar(elem.to_owned()))
+                } else if elem.starts_with("\\$") {
+                    Ok(elem[1..].to_owned())
+                } else {
+                    Ok(elem.to_owned())
+                }
+            })
+            .collect::<Result<Vec<_>, _>>()?
+            .join(&path::MAIN_SEPARATOR.to_string()),
+    )
+    .to_owned())
 }
 
 fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
@@ -104,9 +129,9 @@ fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
     }
 }
 
-fn file_table(src: &str, dest: &str) -> io::Result<HashMap<PathBuf, (FileType, FileType)>> {
-    let src_descendants = enlist_descendants(Path::new(src))?;
-    let dest_descendants = enlist_descendants(Path::new(dest))?;
+fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType, FileType)>> {
+    let src_descendants = enlist_descendants(src)?;
+    let dest_descendants = enlist_descendants(dest)?;
     let mut hash = HashMap::new();
     for src_descendant in src_descendants {
         let meta = fs::metadata(&src_descendant)?;
@@ -120,7 +145,10 @@ fn file_table(src: &str, dest: &str) -> io::Result<HashMap<PathBuf, (FileType, F
                 .strip_prefix(&Path::new(src))
                 .unwrap()
                 .to_owned(),
-            (src_filetype, FileType::Nothing),
+            (
+                src_filetype,
+                FileType::Nothing(dest.join(src_descendant.strip_prefix(src).unwrap())),
+            ),
         );
     }
     for dest_descendant in dest_descendants {
@@ -132,23 +160,108 @@ fn file_table(src: &str, dest: &str) -> io::Result<HashMap<PathBuf, (FileType, F
         };
         hash.entry(
             dest_descendant
-                .strip_prefix(&Path::new(src))
+                .strip_prefix(&Path::new(dest))
                 .unwrap()
                 .to_owned(),
         )
         .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
-        .or_insert((FileType::Nothing, dest_filetype));
+        .or_insert((
+            FileType::Nothing(src.join(dest_descendant.strip_prefix(dest).unwrap())),
+            dest_filetype,
+        ));
     }
     Ok(hash)
 }
 
-fn execute_cp(src: &str, dest: &str, merge: bool) -> TaskResult {
+// TODO: handle error when src directory is not found.
+fn execute_cp(ctx: &Context, src: &str, dest: &str, merge: bool, dryrun: bool) -> TaskResult {
+    let src = ctx.base.join(Path::new(src));
+    if let Ok(dest) = resolve_desitination_path(dest) {
+        if let Ok(tbl) = file_table(&src, &dest) {
+            let mut changed = false;
+            for (src, dest) in tbl.values() {
+                match (&src, &dest, merge) {
+                    (FileType::Nothing(_), FileType::Nothing(_), _) => (),
+                    (FileType::Nothing(_), _, true) => (),
+                    (FileType::Nothing(_), FileType::Other(dest), false) => {
+                        changed = true;
+                        if !dryrun && fs::remove_file(dest).is_err() {
+                            return TaskResult::Failed;
+                        }
+                    }
+                    (FileType::Nothing(_), FileType::Symlink(dest), false) => {
+                        changed = true;
+                        if !dryrun && fs::remove_file(dest).is_err() {
+                            return TaskResult::Failed;
+                        }
+                    }
+                    (FileType::Nothing(_), FileType::File(dest), false) => {
+                        changed = true;
+                        if !dryrun && fs::remove_file(dest).is_err() {
+                            return TaskResult::Failed;
+                        }
+                    }
+                    (&FileType::File(src), &FileType::File(dest), _) => {
+                        if let (Ok(src_buf), Ok(dest_buf)) = (fs::read(src), fs::read(dest)) {
+                            if src_buf != dest_buf {
+                                changed = true;
+                                if fs::copy(src, dest).is_err() {
+                                    return TaskResult::Failed;
+                                }
+                            }
+                        } else {
+                            return TaskResult::Failed;
+                        }
+                    }
+                    (&FileType::File(src), &FileType::Other(dest), _) => {
+                        changed = true;
+                        if !dryrun {
+                            if fs::remove_file(dest).is_err() {
+                                return TaskResult::Failed;
+                            }
+                            if fs::copy(src, dest).is_err() {
+                                return TaskResult::Failed;
+                            }
+                        }
+                    }
+                    (&FileType::File(src), &FileType::Nothing(dest), _) => {
+                        changed = true;
+                        if !dryrun {
+                            if fs::create_dir_all(dest.parent().unwrap()).is_err() {
+                                return TaskResult::Failed;
+                            }
+                            if fs::copy(src, dest).is_err() {
+                                return TaskResult::Failed;
+                            }
+                        }
+                    }
+                    (&FileType::File(_), &FileType::Symlink(_), _) => {
+                        changed = true;
+                        if !dryrun {
+                            return TaskResult::Failed;
+                        }
+                    }
+                    (FileType::Other(_), _, _) => {
+                        return TaskResult::Failed;
+                    }
+                    (FileType::Symlink(_), _, _) => {
+                        return TaskResult::Failed;
+                    }
+                }
+            }
+            if changed {
+                return TaskResult::Changed;
+            } else {
+                return TaskResult::Success;
+            }
+        }
+    }
     TaskResult::Failed
 }
 
-fn execute(task: &Task, dryrun: bool) -> TaskResult {
+fn execute(ctx: &Context, task: &Task, dryrun: bool) -> TaskResult {
     match task {
-        Task::Cp { src, dest, merge } => execute_cp(src, dest, *merge),
+        Task::Cp { src, dest, merge } => execute_cp(ctx, src, dest, *merge, dryrun),
     }
 }
 
@@ -246,7 +359,7 @@ fn parse_scenario(yaml: &Yaml) -> Result<Scenario, Error> {
     }
 }
 
-fn load_config(config: String) -> Result<PlayBook, Error> {
+fn load_config(config: &str) -> Result<PlayBook, Error> {
     let playbook_src =
         fs::read_to_string(Path::new(&config)).map_err(|_| Error::FailedToLoadPlaybook)?;
     let playbook_ast = YamlLoader::load_from_str(&playbook_src)
@@ -306,7 +419,7 @@ fn enlist_taskgroups<'a>(
 
 type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 
-fn execute_deploy(playbook: &PlayBook, dryrun: bool) -> Result<Stats, Error> {
+fn execute_deploy(ctx: &Context, playbook: &PlayBook, dryrun: bool) -> Result<Stats, Error> {
     let scenario = match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
     let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice())?;
     Ok(taskgroups
@@ -316,7 +429,7 @@ fn execute_deploy(playbook: &PlayBook, dryrun: bool) -> Result<Stats, Error> {
                 name.to_owned().to_owned(),
                 tasks
                     .iter()
-                    .map(|task| (task.name(), execute(task, dryrun)))
+                    .map(|task| (task.name(), execute(ctx, task, dryrun)))
                     .collect::<Vec<(String, TaskResult)>>(),
             )
         })
@@ -326,14 +439,20 @@ fn execute_deploy(playbook: &PlayBook, dryrun: bool) -> Result<Stats, Error> {
 fn run(opts: Opts) -> Result<(), Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
-            let playbook = load_config(opts.config).unwrap();
-            let result = execute_deploy(&playbook, false)?;
+            let playbook = load_config(&opts.config).unwrap();
+            let ctx = Context {
+                base: Path::new(&opts.config).parent().unwrap().to_owned(),
+            };
+            let result = execute_deploy(&ctx, &playbook, false)?;
             println!("{:#?}", result);
             Ok(())
         }
         Subcommand::DryRun(opts) => {
-            let playbook = load_config(opts.config).unwrap();
-            let result = execute_deploy(&playbook, true)?;
+            let playbook = load_config(&opts.config).unwrap();
+            let ctx = Context {
+                base: Path::new(&opts.config).parent().unwrap().to_owned(),
+            };
+            let result = execute_deploy(&ctx, &playbook, true)?;
             println!("{:#?}", result);
             Ok(())
         }
@@ -354,6 +473,10 @@ fn main() {
         }
         Err(Error::FailedToLoadPlaybook) => {
             eprintln!("failed to load playbook");
+            process::exit(-1);
+        }
+        Err(Error::CannotResolveVar(var)) => {
+            eprintln!("cannot resolve var ${}", var);
             process::exit(-1);
         }
     }
