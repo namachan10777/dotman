@@ -1,6 +1,7 @@
 use std::fmt::format;
+use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
-use std::{fs, process};
+use std::{fs, io, process};
 use yaml_rust::{Yaml, YamlLoader};
 
 use clap::{AppSettings, Clap};
@@ -83,9 +84,71 @@ enum TaskResult {
     Success,
 }
 
+#[derive(Debug, Clone)]
+enum FileType {
+    Symlink(PathBuf),
+    File(PathBuf),
+    Other(PathBuf),
+    Nothing,
+}
+
+fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
+    if fs::metadata(path)?.is_dir() {
+        Ok(fs::read_dir(path)?
+            .into_iter()
+            .map(|entry| enlist_descendants(&entry?.path()))
+            .collect::<io::Result<Vec<_>>>()?
+            .concat())
+    } else {
+        Ok(vec![path.to_owned()])
+    }
+}
+
+fn file_table(src: &str, dest: &str) -> io::Result<HashMap<PathBuf, (FileType, FileType)>> {
+    let src_descendants = enlist_descendants(Path::new(src))?;
+    let dest_descendants = enlist_descendants(Path::new(dest))?;
+    let mut hash = HashMap::new();
+    for src_descendant in src_descendants {
+        let meta = fs::metadata(&src_descendant)?;
+        let src_filetype = if meta.is_file() {
+            FileType::File(src_descendant.to_owned())
+        } else {
+            FileType::Other(src_descendant.to_owned())
+        };
+        hash.insert(
+            src_descendant
+                .strip_prefix(&Path::new(src))
+                .unwrap()
+                .to_owned(),
+            (src_filetype, FileType::Nothing),
+        );
+    }
+    for dest_descendant in dest_descendants {
+        let meta = fs::metadata(&dest_descendant)?;
+        let dest_filetype = if meta.is_file() {
+            FileType::File(dest_descendant.to_owned())
+        } else {
+            FileType::Other(dest_descendant.to_owned())
+        };
+        hash.entry(
+            dest_descendant
+                .strip_prefix(&Path::new(src))
+                .unwrap()
+                .to_owned(),
+        )
+        .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
+        .or_insert((FileType::Nothing, dest_filetype));
+    }
+    Ok(hash)
+}
+
+fn execute_cp(src: &str, dest: &str, merge: bool) -> TaskResult {
+    TaskResult::Failed
+}
+
 fn execute(task: &Task, dryrun: bool) -> TaskResult {
     match task {
-        Task::Cp { src, dest, merge } => TaskResult::Failed,
+        Task::Cp { src, dest, merge } => execute_cp(src, dest, *merge),
     }
 }
 
@@ -264,12 +327,14 @@ fn run(opts: Opts) -> Result<(), Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            execute_deploy(&playbook, false)?;
+            let result = execute_deploy(&playbook, false)?;
+            println!("{:#?}", result);
             Ok(())
         }
         Subcommand::DryRun(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            execute_deploy(&playbook, true)?;
+            let result = execute_deploy(&playbook, true)?;
+            println!("{:#?}", result);
             Ok(())
         }
     }
