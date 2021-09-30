@@ -59,6 +59,7 @@ struct PlayBook {
 #[derive(Debug, Clone)]
 enum Error {
     FailedToLoadPlaybook,
+    TaskGroupNotFound(String),
 }
 
 fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
@@ -198,19 +199,29 @@ fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
     None
 }
 
+fn enlist_taskgroups<'a>(
+    taskgroups: &'a HashMap<String, Vec<Task>>,
+    taskgroup_names: &'a [String],
+) -> Result<Vec<(&'a str, &'a [Task])>, Error> {
+    taskgroup_names
+        .iter()
+        .map(|taskgroup_name| {
+            taskgroups
+                .get(taskgroup_name)
+                .map(|task| (taskgroup_name.as_str(), task.as_slice()))
+                .ok_or_else(|| Error::TaskGroupNotFound(taskgroup_name.to_owned()))
+        })
+        .collect::<Result<Vec<_>, Error>>()
+}
+
 fn main() {
     let opts: Opts = Opts::parse();
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = load_config(opts.config).unwrap();
             if let Some(scenario) = match_scenario(&playbook.scenarios) {
-                for taskname in &scenario.tasks {
-                    if let Some(task) = playbook.taskgroups.get(taskname) {
-                        println!("{:?}", task);
-                    } else {
-                        eprintln!("taskgroup \"{}\" is not found.", taskname);
-                    }
-                }
+                let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
+                println!("{:?}", taskgroups);
             } else {
                 eprintln!("Any scenario doesn't match!");
             }
@@ -218,13 +229,8 @@ fn main() {
         Subcommand::DryRun(opts) => {
             let playbook = load_config(opts.config).unwrap();
             if let Some(scenario) = match_scenario(&playbook.scenarios) {
-                for taskname in &scenario.tasks {
-                    if let Some(task) = playbook.taskgroups.get(taskname) {
-                        println!("{:?}", task);
-                    } else {
-                        eprintln!("taskgroup \"{}\" is not found.", taskname);
-                    }
-                }
+                let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice());
+                println!("{:?}", taskgroups);
             } else {
                 eprintln!("Any scenario doesn't match!");
             }
