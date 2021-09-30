@@ -11,3 +11,8 @@ scenarios:
   - hostname: "^sakanainu$"
   tasks:
   - normalfile_common
+- name: "Cookpad MBP"
+  match:
+  - hostname: "^P1724-19P15U.local$"
+  tasks:
+  - normalfile_common

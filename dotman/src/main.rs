@@ -185,14 +185,29 @@ fn load_config(config: String) -> Result<PlayBook, Error> {
     }
 }
 
+fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
+    for scenario in scenarios {
+        if scenario.matches.iter().all(|matcher| match matcher {
+            TargetMatcher::HostName(hostname_re) => hostname::get()
+                .map(|hostname| hostname_re.is_match(&hostname.to_string_lossy()))
+                .unwrap_or(false),
+        }) {
+            return Some(scenario);
+        }
+    }
+    None
+}
+
 fn main() {
     let opts: Opts = Opts::parse();
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
-            let _playbook = load_config(opts.config);
+            let playbook = load_config(opts.config).unwrap();
+            println!("{:?}", match_scenario(&playbook.scenarios));
         }
         Subcommand::DryRun(opts) => {
-            let _playbook = load_config(opts.config);
+            let playbook = load_config(opts.config).unwrap();
+            println!("{:?}", match_scenario(&playbook.scenarios));
         }
     }
 }
