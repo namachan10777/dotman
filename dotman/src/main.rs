@@ -203,11 +203,31 @@ fn main() {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            println!("{:?}", match_scenario(&playbook.scenarios));
+            if let Some(scenario) = match_scenario(&playbook.scenarios) {
+                for taskname in &scenario.tasks {
+                    if let Some(task) = playbook.taskgroups.get(taskname) {
+                        println!("{:?}", task);
+                    } else {
+                        eprintln!("taskgroup \"{}\" is not found.", taskname);
+                    }
+                }
+            } else {
+                eprintln!("Any scenario doesn't match!");
+            }
         }
         Subcommand::DryRun(opts) => {
             let playbook = load_config(opts.config).unwrap();
-            println!("{:?}", match_scenario(&playbook.scenarios));
+            if let Some(scenario) = match_scenario(&playbook.scenarios) {
+                for taskname in &scenario.tasks {
+                    if let Some(task) = playbook.taskgroups.get(taskname) {
+                        println!("{:?}", task);
+                    } else {
+                        eprintln!("taskgroup \"{}\" is not found.", taskname);
+                    }
+                }
+            } else {
+                eprintln!("Any scenario doesn't match!");
+            }
         }
     }
 }
