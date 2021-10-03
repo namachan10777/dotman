@@ -1,5 +1,6 @@
 # Dotman
 
+[![Rust](https://github.com/namachan10777/dotman/actions/workflows/rust.yml/badge.svg)](https://github.com/namachan10777/dotman/actions/workflows/rust.yml)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
 ```yaml
