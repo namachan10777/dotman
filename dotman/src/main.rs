@@ -33,13 +33,6 @@ struct DryRunOpts {
     config: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-enum TemplateValue {
-    Int(i64),
-    Float(f64),
-    String(String),
-}
-
 #[derive(Debug)]
 enum Task {
     Cp {
@@ -235,20 +228,6 @@ fn match_template_target<'a>(
     None
 }
 
-#[derive(Error, Debug)]
-enum SyncError {
-    #[error("unhandled sync error {0}")]
-    UnhandledIoError(io::Error),
-    #[error("sync failed {0}")]
-    Failed(String),
-}
-
-impl From<io::Error> for SyncError {
-    fn from(e: io::Error) -> Self {
-        SyncError::UnhandledIoError(e)
-    }
-}
-
 enum SyncStatus {
     Changed,
     UnChanged,
@@ -281,14 +260,14 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         }
         (&FileType::File(src), &FileType::File(dest), _) => {
             let (src_buf, need_to_write) =
-                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     match liquid::ParserBuilder::with_stdlib()
                         .build()
                         .unwrap()
                         .parse(&fs::read_to_string(src)?)
                     {
                         Ok(template) => (template.render(var_set)?.as_bytes().to_vec(), true),
-                        Err(e) => {
+                        Err(_) => {
                             return Ok(SyncStatus::WellKnownError(format!(
                                 "cannot parse template {:?}",
                                 src
@@ -317,7 +296,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         (&FileType::File(src), &FileType::Dir(dest), _) => {
             if !ctx.dryrun {
                 fs::remove_dir(dest)?;
-                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
                     match liquid::ParserBuilder::with_stdlib()
                         .build()
@@ -327,7 +306,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                         Ok(template) => {
                             writer.write_all(template.render(var_set)?.as_bytes())?;
                         }
-                        Err(e) => {
+                        Err(_) => {
                             return Ok(SyncStatus::WellKnownError(format!(
                                 "cannot parse template {:?}",
                                 src
@@ -343,7 +322,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         (&FileType::File(src), &FileType::Other(dest), _) => {
             if !ctx.dryrun {
                 fs::remove_file(dest)?;
-                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
                     match liquid::ParserBuilder::with_stdlib()
                         .build()
@@ -353,7 +332,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                         Ok(template) => {
                             writer.write_all(template.render(var_set)?.as_bytes())?;
                         }
-                        Err(e) => {
+                        Err(_) => {
                             return Ok(SyncStatus::WellKnownError(format!(
                                 "cannot parse template {:?}",
                                 src
@@ -369,7 +348,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         (&FileType::File(src), &FileType::Nothing(dest), _) => {
             if !ctx.dryrun {
                 fs::create_dir_all(dest.parent().unwrap())?;
-                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
                     match liquid::ParserBuilder::with_stdlib()
                         .build()
@@ -379,7 +358,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                         Ok(template) => {
                             writer.write_all(template.render(var_set)?.as_bytes())?;
                         }
-                        Err(e) => {
+                        Err(_) => {
                             return Ok(SyncStatus::WellKnownError(format!(
                                 "cannot parse template {:?}",
                                 src
