@@ -1,7 +1,8 @@
+use kstring::KString;
 use std::io::Write;
 use std::path::PathBuf;
-use std::{any, env, fs, io, path, process};
 use std::{collections::HashMap, path::Path};
+use std::{env, fs, io, path, process};
 use yaml_rust::{Yaml, YamlLoader};
 
 use clap::{AppSettings, Clap};
@@ -86,7 +87,7 @@ struct TaskContext {
     dryrun: bool,
 }
 
-type Templates = HashMap<Vec<String>, tera::Context>;
+type Templates = HashMap<Vec<String>, liquid::Object>;
 #[derive(Debug, Clone)]
 struct CpContext {
     base: PathBuf,
@@ -222,7 +223,7 @@ fn match_template_target<'a>(
     templates: &'a Templates,
     src: &Path,
     target: &Path,
-) -> Option<&'a tera::Context> {
+) -> Option<&'a liquid::Object> {
     for (target_patterns, var_set) in templates {
         let target = target.strip_prefix(src).unwrap_or(target);
         for pattern in target_patterns {
@@ -281,8 +282,19 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         (&FileType::File(src), &FileType::File(dest), _) => {
             let (src_buf, need_to_write) =
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
-                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
-                    (tera.render(&src.to_str().unwrap(), var_set)?.as_bytes().to_vec(), true)
+                    match liquid::ParserBuilder::with_stdlib()
+                        .build()
+                        .unwrap()
+                        .parse(&fs::read_to_string(src)?)
+                    {
+                        Ok(template) => (template.render(var_set)?.as_bytes().to_vec(), true),
+                        Err(e) => {
+                            return Ok(SyncStatus::WellKnownError(format!(
+                                "cannot parse template {:?}",
+                                src
+                            )))
+                        }
+                    }
                 } else {
                     (fs::read(src)?, false)
                 };
@@ -290,11 +302,11 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
             if src_buf != dest_buf {
                 if !ctx.dryrun {
                     if need_to_write {
-                        let mut writer = io::BufWriter::new(fs::File::open(dest)?);
+                        let mut writer = io::BufWriter::new(fs::File::create(dest)?);
                         writer.write_all(&src_buf)?;
-                    }
-                    else {
-                    fs::copy(src, dest)?;
+                        writer.flush()?;
+                    } else {
+                        fs::copy(src, dest)?;
                     }
                 }
                 Ok(SyncStatus::Changed)
@@ -307,11 +319,23 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                 fs::remove_dir(dest)?;
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
-                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
-                    writer.write_all(tera.render(&src.to_str().unwrap(), var_set)?.as_bytes())?;
-                }
-                else {
-                fs::copy(src, dest)?;
+                    match liquid::ParserBuilder::with_stdlib()
+                        .build()
+                        .unwrap()
+                        .parse(&fs::read_to_string(src)?)
+                    {
+                        Ok(template) => {
+                            writer.write_all(template.render(var_set)?.as_bytes())?;
+                        }
+                        Err(e) => {
+                            return Ok(SyncStatus::WellKnownError(format!(
+                                "cannot parse template {:?}",
+                                src
+                            )))
+                        }
+                    }
+                } else {
+                    fs::copy(src, dest)?;
                 }
             }
             Ok(SyncStatus::Changed)
@@ -321,11 +345,23 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                 fs::remove_file(dest)?;
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
-                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
-                    writer.write_all(tera.render(&src.to_str().unwrap(), var_set)?.as_bytes())?;
-                }
-                else {
-                fs::copy(src, dest)?;
+                    match liquid::ParserBuilder::with_stdlib()
+                        .build()
+                        .unwrap()
+                        .parse(&fs::read_to_string(src)?)
+                    {
+                        Ok(template) => {
+                            writer.write_all(template.render(var_set)?.as_bytes())?;
+                        }
+                        Err(e) => {
+                            return Ok(SyncStatus::WellKnownError(format!(
+                                "cannot parse template {:?}",
+                                src
+                            )))
+                        }
+                    }
+                } else {
+                    fs::copy(src, dest)?;
                 }
             }
             Ok(SyncStatus::Changed)
@@ -335,11 +371,23 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                 fs::create_dir_all(dest.parent().unwrap())?;
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
-                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
-                    writer.write_all(tera.render(&src.to_str().unwrap(), var_set)?.as_bytes())?;
-                }
-                else {
-                fs::copy(src, dest)?;
+                    match liquid::ParserBuilder::with_stdlib()
+                        .build()
+                        .unwrap()
+                        .parse(&fs::read_to_string(src)?)
+                    {
+                        Ok(template) => {
+                            writer.write_all(template.render(var_set)?.as_bytes())?;
+                        }
+                        Err(e) => {
+                            return Ok(SyncStatus::WellKnownError(format!(
+                                "cannot parse template {:?}",
+                                src
+                            )))
+                        }
+                    }
+                } else {
+                    fs::copy(src, dest)?;
                 }
             }
             Ok(SyncStatus::Changed)
@@ -398,7 +446,7 @@ fn execute(ctx: &TaskContext, task: &Task) -> TaskResult {
     }
 }
 
-fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, tera::Context), Error> {
+fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), Error> {
     let hash = yaml.as_hash().ok_or(Error::FailedToLoadPlaybook)?;
     let target = match hash
         .get(&Yaml::String("target".to_owned()))
@@ -416,18 +464,24 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, tera::Context), Error
         Yaml::String(target) => Ok(vec![target.to_owned()]),
         _ => Err(Error::FailedToLoadPlaybook),
     }?;
-    let mut context = tera::Context::new();
+    let mut context = liquid::Object::new();
     hash.get(&Yaml::String("vars".to_owned()))
         .ok_or(Error::FailedToLoadPlaybook)?
         .as_hash()
         .ok_or(Error::FailedToLoadPlaybook)?
         .into_iter()
         .map(|(name, val)| {
-            let name = name.as_str().ok_or(Error::FailedToLoadPlaybook)?.to_owned();
+            let name =
+                KString::from_string(name.as_str().ok_or(Error::FailedToLoadPlaybook)?.to_owned());
             match val {
-                Yaml::String(str) => context.insert(name, str),
-                Yaml::Integer(int) => context.insert(name, int),
-                Yaml::Real(float) => context.insert(name, float),
+                Yaml::String(str) => {
+                    context.insert(name, liquid::model::Value::scalar(str.to_owned()))
+                }
+                Yaml::Integer(int) => context.insert(name, liquid::model::Value::scalar(*int)),
+                Yaml::Real(float) => {
+                    let f: f64 = float.parse().unwrap();
+                    context.insert(name, liquid::model::Value::scalar(f))
+                }
                 _ => return Err(Error::FailedToLoadPlaybook),
             };
             Ok(())

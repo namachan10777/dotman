@@ -42,4 +42,4 @@ font:
   bold_italic:
     family: Hack Nerd Font
 
-  size: {% font_size %}
+  size: {{ font_size }}
