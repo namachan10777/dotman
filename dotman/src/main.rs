@@ -96,6 +96,7 @@ enum FileType {
     File(PathBuf),
     Other(PathBuf),
     Nothing(PathBuf),
+    Dir(PathBuf),
 }
 
 fn resolve_desitination_path(path: &str) -> Result<PathBuf, Error> {
@@ -119,11 +120,13 @@ fn resolve_desitination_path(path: &str) -> Result<PathBuf, Error> {
 
 fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
     if fs::metadata(path)?.is_dir() {
-        Ok(fs::read_dir(path)?
+        let mut entries = fs::read_dir(path)?
             .into_iter()
             .map(|entry| enlist_descendants(&entry?.path()))
             .collect::<io::Result<Vec<_>>>()?
-            .concat())
+            .concat();
+        entries.push(path.to_owned());
+        Ok(entries)
     } else {
         Ok(vec![path.to_owned()])
     }
@@ -137,6 +140,8 @@ fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType,
         let meta = fs::metadata(&src_descendant)?;
         let src_filetype = if meta.is_file() {
             FileType::File(src_descendant.to_owned())
+        } else if meta.is_dir() {
+            FileType::Dir(src_descendant.to_owned())
         } else {
             FileType::Other(src_descendant.to_owned())
         };
@@ -173,6 +178,78 @@ fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType,
     Ok(hash)
 }
 
+enum SyncStatus {
+    Changed,
+    Skip,
+    Failed,
+}
+
+fn sync_file(src: &FileType, dest: &FileType, dryrun: bool, merge: bool) -> io::Result<SyncStatus> {
+    match (&src, &dest, merge) {
+        (FileType::Nothing(_), FileType::Nothing(_), _) => Ok(SyncStatus::Skip),
+        (FileType::Nothing(_), _, true) => Ok(SyncStatus::Skip),
+        (FileType::Nothing(_), FileType::Dir(dest), false) => {
+            // TODO: fix to unlink
+            if !dryrun {
+                fs::remove_dir(dest)?;
+            }
+            Ok(SyncStatus::Changed)
+        }
+        (FileType::Nothing(_), FileType::Symlink(dest), false) => {
+            // TODO: fix to unlink
+            if !dryrun {
+                fs::remove_file(dest)?;
+            }
+            Ok(SyncStatus::Changed)
+        }
+        (FileType::Nothing(_), FileType::File(dest) | FileType::Other(dest), false) => {
+            if !dryrun {
+                fs::remove_file(dest)?;
+            }
+            Ok(SyncStatus::Changed)
+        }
+        (&FileType::File(src), &FileType::File(dest), _) => {
+            if let (Ok(src_buf), Ok(dest_buf)) = (fs::read(src), fs::read(dest)) {
+                if src_buf != dest_buf {
+                    if !dryrun {
+                        fs::copy(src, dest)?;
+                    }
+                    Ok(SyncStatus::Changed)
+                } else {
+                    Ok(SyncStatus::Skip)
+                }
+            } else {
+                Ok(SyncStatus::Failed)
+            }
+        }
+        (&FileType::File(src), &FileType::Dir(dest), _) => {
+            if !dryrun {
+                fs::remove_dir(dest)?;
+                fs::copy(src, dest)?;
+            }
+            Ok(SyncStatus::Changed)
+        }
+        (&FileType::File(src), &FileType::Other(dest), _) => {
+            if !dryrun {
+                fs::remove_file(dest)?;
+                fs::copy(src, dest)?;
+            }
+            Ok(SyncStatus::Changed)
+        }
+        (&FileType::File(src), &FileType::Nothing(dest), _) => {
+            if !dryrun {
+                fs::create_dir_all(dest.parent().unwrap())?;
+                fs::copy(src, dest)?;
+            }
+            Ok(SyncStatus::Changed)
+        }
+        (&FileType::File(_), &FileType::Symlink(_), _) => Ok(SyncStatus::Failed),
+        (FileType::Dir(_), _, _) => Ok(SyncStatus::Skip),
+        (FileType::Other(_), _, _) => Ok(SyncStatus::Failed),
+        (FileType::Symlink(_), _, _) => Ok(SyncStatus::Failed),
+    }
+}
+
 // TODO: handle error when src directory is not found.
 fn execute_cp(ctx: &Context, src: &str, dest: &str, merge: bool, dryrun: bool) -> TaskResult {
     let src = ctx.base.join(Path::new(src));
@@ -180,71 +257,15 @@ fn execute_cp(ctx: &Context, src: &str, dest: &str, merge: bool, dryrun: bool) -
         if let Ok(tbl) = file_table(&src, &dest) {
             let mut changed = false;
             for (src, dest) in tbl.values() {
-                match (&src, &dest, merge) {
-                    (FileType::Nothing(_), FileType::Nothing(_), _) => (),
-                    (FileType::Nothing(_), _, true) => (),
-                    (FileType::Nothing(_), FileType::Other(dest), false) => {
-                        changed = true;
-                        if !dryrun && fs::remove_file(dest).is_err() {
-                            return TaskResult::Failed;
-                        }
+                match sync_file(src, dest, dryrun, merge) {
+                    Ok(SyncStatus::Changed) => {
+                        changed |= true;
                     }
-                    (FileType::Nothing(_), FileType::Symlink(dest), false) => {
-                        changed = true;
-                        if !dryrun && fs::remove_file(dest).is_err() {
-                            return TaskResult::Failed;
-                        }
-                    }
-                    (FileType::Nothing(_), FileType::File(dest), false) => {
-                        changed = true;
-                        if !dryrun && fs::remove_file(dest).is_err() {
-                            return TaskResult::Failed;
-                        }
-                    }
-                    (&FileType::File(src), &FileType::File(dest), _) => {
-                        if let (Ok(src_buf), Ok(dest_buf)) = (fs::read(src), fs::read(dest)) {
-                            if src_buf != dest_buf {
-                                changed = true;
-                                if fs::copy(src, dest).is_err() {
-                                    return TaskResult::Failed;
-                                }
-                            }
-                        } else {
-                            return TaskResult::Failed;
-                        }
-                    }
-                    (&FileType::File(src), &FileType::Other(dest), _) => {
-                        changed = true;
-                        if !dryrun {
-                            if fs::remove_file(dest).is_err() {
-                                return TaskResult::Failed;
-                            }
-                            if fs::copy(src, dest).is_err() {
-                                return TaskResult::Failed;
-                            }
-                        }
-                    }
-                    (&FileType::File(src), &FileType::Nothing(dest), _) => {
-                        changed = true;
-                        if !dryrun {
-                            if fs::create_dir_all(dest.parent().unwrap()).is_err() {
-                                return TaskResult::Failed;
-                            }
-                            if fs::copy(src, dest).is_err() {
-                                return TaskResult::Failed;
-                            }
-                        }
-                    }
-                    (&FileType::File(_), &FileType::Symlink(_), _) => {
-                        changed = true;
-                        if !dryrun {
-                            return TaskResult::Failed;
-                        }
-                    }
-                    (FileType::Other(_), _, _) => {
+                    Ok(SyncStatus::Skip) => {}
+                    Ok(SyncStatus::Failed) => {
                         return TaskResult::Failed;
                     }
-                    (FileType::Symlink(_), _, _) => {
+                    Err(_) => {
                         return TaskResult::Failed;
                     }
                 }
