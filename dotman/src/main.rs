@@ -208,7 +208,7 @@ fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType,
     Ok(hash)
 }
 
-fn match_template_target<'a>(
+fn _match_template_target<'a>(
     templates: &'a Templates,
     src: &Path,
     target: &Path,
