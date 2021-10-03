@@ -30,7 +30,7 @@ struct DryRunOpts {
     config: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 enum TemplateValue {
     Int(i64),
     Float(f64),
@@ -78,9 +78,30 @@ struct PlayBook {
     scenarios: Vec<Scenario>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Context {
     base: PathBuf,
+    dryrun: bool,
+}
+
+type Templates = HashMap<Vec<String>, HashMap<String, TemplateValue>>;
+#[derive(Debug, Clone)]
+struct CpContext {
+    base: PathBuf,
+    dryrun: bool,
+    merge: bool,
+    templates: Templates,
+}
+
+impl CpContext {
+    fn extend(ctx: Context, merge: bool, templates: Templates) -> Self {
+        Self {
+            merge,
+            templates,
+            base: ctx.base,
+            dryrun: ctx.dryrun,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -187,8 +208,6 @@ fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType,
     Ok(hash)
 }
 
-type Templates = HashMap<Vec<String>, HashMap<String, TemplateValue>>;
-
 fn match_template_target<'a>(
     templates: &'a Templates,
     src: &Path,
@@ -216,33 +235,26 @@ impl From<io::Error> for SyncError {
     }
 }
 
-fn sync_file(
-    src: &FileType,
-    dest: &FileType,
-    dryrun: bool,
-    merge: bool,
-    _templates: &Templates,
-    _src_base: &Path,
-) -> Result<bool, SyncError> {
-    match (&src, &dest, merge) {
+fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> Result<bool, SyncError> {
+    match (&src, &dest, ctx.merge) {
         (FileType::Nothing(_), FileType::Nothing(_), _) => Ok(false),
         (FileType::Nothing(_), _, true) => Ok(false),
         (FileType::Nothing(_), FileType::Dir(dest), false) => {
             // TODO: fix to unlink
-            if !dryrun {
+            if !ctx.dryrun {
                 fs::remove_dir(dest)?;
             }
             Ok(true)
         }
         (FileType::Nothing(_), FileType::Symlink(dest), false) => {
             // TODO: fix to unlink
-            if !dryrun {
+            if !ctx.dryrun {
                 fs::remove_file(dest)?;
             }
             Ok(true)
         }
         (FileType::Nothing(_), FileType::File(dest) | FileType::Other(dest), false) => {
-            if !dryrun {
+            if !ctx.dryrun {
                 fs::remove_file(dest)?;
             }
             Ok(true)
@@ -251,7 +263,7 @@ fn sync_file(
             let src_buf = fs::read(src)?;
             let dest_buf = fs::read(dest)?;
             if src_buf != dest_buf {
-                if !dryrun {
+                if !ctx.dryrun {
                     fs::copy(src, dest)?;
                 }
                 Ok(true)
@@ -260,21 +272,21 @@ fn sync_file(
             }
         }
         (&FileType::File(src), &FileType::Dir(dest), _) => {
-            if !dryrun {
+            if !ctx.dryrun {
                 fs::remove_dir(dest)?;
                 fs::copy(src, dest)?;
             }
             Ok(true)
         }
         (&FileType::File(src), &FileType::Other(dest), _) => {
-            if !dryrun {
+            if !ctx.dryrun {
                 fs::remove_file(dest)?;
                 fs::copy(src, dest)?;
             }
             Ok(true)
         }
         (&FileType::File(src), &FileType::Nothing(dest), _) => {
-            if !dryrun {
+            if !ctx.dryrun {
                 fs::create_dir_all(dest.parent().unwrap())?;
                 fs::copy(src, dest)?;
             }
@@ -292,20 +304,13 @@ fn sync_file(
 }
 
 // TODO: handle error when src directory is not found.
-fn execute_cp(
-    ctx: &Context,
-    src: &str,
-    dest: &str,
-    merge: bool,
-    dryrun: bool,
-    templates: &HashMap<Vec<String>, HashMap<String, TemplateValue>>,
-) -> TaskResult {
+fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> TaskResult {
     let src_base = ctx.base.join(Path::new(src));
     if let Ok(dest) = resolve_desitination_path(dest) {
         if let Ok(tbl) = file_table(&src_base, &dest) {
             let mut changed = false;
             for (src, dest) in tbl.values() {
-                match sync_file(src, dest, dryrun, merge, templates, &src_base) {
+                match sync_file(ctx, src, dest) {
                     Ok(change_flag) => {
                         changed |= change_flag;
                     }
@@ -324,14 +329,18 @@ fn execute_cp(
     TaskResult::Failed
 }
 
-fn execute(ctx: &Context, task: &Task, dryrun: bool) -> TaskResult {
+fn execute(ctx: &Context, task: &Task) -> TaskResult {
     match task {
         Task::Cp {
             src,
             dest,
             merge,
             templates,
-        } => execute_cp(ctx, src, dest, *merge, dryrun, templates),
+        } => execute_cp(
+            &CpContext::extend(ctx.clone(), *merge, templates.clone()),
+            src,
+            dest,
+        ),
     }
 }
 
@@ -538,7 +547,7 @@ fn enlist_taskgroups<'a>(
 
 type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 
-fn execute_deploy(ctx: &Context, playbook: &PlayBook, dryrun: bool) -> Result<Stats, Error> {
+fn execute_deploy(ctx: &Context, playbook: &PlayBook) -> Result<Stats, Error> {
     let scenario = match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
     let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice())?;
     Ok(taskgroups
@@ -548,7 +557,7 @@ fn execute_deploy(ctx: &Context, playbook: &PlayBook, dryrun: bool) -> Result<St
                 name.to_owned().to_owned(),
                 tasks
                     .iter()
-                    .map(|task| (task.name(), execute(ctx, task, dryrun)))
+                    .map(|task| (task.name(), execute(ctx, task)))
                     .collect::<Vec<(String, TaskResult)>>(),
             )
         })
@@ -561,8 +570,9 @@ fn run(opts: Opts) -> Result<(), Error> {
             let playbook = load_config(&opts.config).unwrap();
             let ctx = Context {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
+                dryrun: false,
             };
-            let result = execute_deploy(&ctx, &playbook, false)?;
+            let result = execute_deploy(&ctx, &playbook)?;
             println!("{:#?}", result);
             Ok(())
         }
@@ -570,8 +580,9 @@ fn run(opts: Opts) -> Result<(), Error> {
             let playbook = load_config(&opts.config).unwrap();
             let ctx = Context {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
+                dryrun: true,
             };
-            let result = execute_deploy(&ctx, &playbook, true)?;
+            let result = execute_deploy(&ctx, &playbook)?;
             println!("{:#?}", result);
             Ok(())
         }
