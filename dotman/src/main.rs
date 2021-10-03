@@ -4,6 +4,7 @@ use std::{env, fs, io, path, process};
 use yaml_rust::{Yaml, YamlLoader};
 
 use clap::{AppSettings, Clap};
+use thiserror::Error;
 
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
@@ -79,7 +80,7 @@ struct PlayBook {
 }
 
 #[derive(Debug, Clone)]
-struct Context {
+struct TaskContext {
     base: PathBuf,
     dryrun: bool,
 }
@@ -94,7 +95,7 @@ struct CpContext {
 }
 
 impl CpContext {
-    fn extend(ctx: Context, merge: bool, templates: Templates) -> Self {
+    fn extend(ctx: TaskContext, merge: bool, templates: Templates) -> Self {
         Self {
             merge,
             templates,
@@ -112,11 +113,22 @@ enum Error {
     CannotResolveVar(String),
 }
 
-#[derive(Debug)]
-enum TaskResult {
-    Changed,
-    Failed,
-    Success,
+type TaskResult = Result<bool, TaskError>;
+#[derive(Error, Debug)]
+enum TaskError {
+    #[error("wellknown {0}")]
+    WellKnown(String),
+    #[error("unknown {0}")]
+    Unknown(Box<dyn std::error::Error + Sync + Send + 'static>),
+}
+
+impl From<SyncError> for TaskError {
+    fn from(e: SyncError) -> Self {
+        match e {
+            SyncError::Failed(msg) => TaskError::WellKnown(format!("sync failed due to {}", msg)),
+            SyncError::UnhandledIoError(e) => TaskError::Unknown(Box::new(e)),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -224,8 +236,11 @@ fn _match_template_target<'a>(
     None
 }
 
+#[derive(Error, Debug)]
 enum SyncError {
+    #[error("unhandled sync error {0}")]
     UnhandledIoError(io::Error),
+    #[error("sync failed {0}")]
     Failed(String),
 }
 
@@ -310,26 +325,18 @@ fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> TaskResult {
         if let Ok(tbl) = file_table(&src_base, &dest) {
             let mut changed = false;
             for (src, dest) in tbl.values() {
-                match sync_file(ctx, src, dest) {
-                    Ok(change_flag) => {
-                        changed |= change_flag;
-                    }
-                    Err(_) => {
-                        return TaskResult::Failed;
-                    }
-                }
+                changed = sync_file(ctx, src, dest)?;
             }
-            if changed {
-                return TaskResult::Changed;
-            } else {
-                return TaskResult::Success;
-            }
+            return Ok(changed);
         }
     }
-    TaskResult::Failed
+    Err(TaskError::WellKnown(format!(
+        "cannot resolve disitination path {:?}",
+        dest
+    )))
 }
 
-fn execute(ctx: &Context, task: &Task) -> TaskResult {
+fn execute(ctx: &TaskContext, task: &Task) -> TaskResult {
     match task {
         Task::Cp {
             src,
@@ -547,7 +554,7 @@ fn enlist_taskgroups<'a>(
 
 type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 
-fn execute_deploy(ctx: &Context, playbook: &PlayBook) -> Result<Stats, Error> {
+fn execute_deploy(ctx: &TaskContext, playbook: &PlayBook) -> Result<Stats, Error> {
     let scenario = match_scenario(&playbook.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
     let taskgroups = enlist_taskgroups(&playbook.taskgroups, scenario.tasks.as_slice())?;
     Ok(taskgroups
@@ -568,7 +575,7 @@ fn run(opts: Opts) -> Result<(), Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = load_config(&opts.config).unwrap();
-            let ctx = Context {
+            let ctx = TaskContext {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
                 dryrun: false,
             };
@@ -578,7 +585,7 @@ fn run(opts: Opts) -> Result<(), Error> {
         }
         Subcommand::DryRun(opts) => {
             let playbook = load_config(&opts.config).unwrap();
-            let ctx = Context {
+            let ctx = TaskContext {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
                 dryrun: true,
             };

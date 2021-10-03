@@ -6,9 +6,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.44"
 clap = "3.0.0-beta.4"
 hostname = "0.3.1"
 regex = "1.5.4"
 sha2 = "0.9.8"
 tera = "1.12.1"
+thiserror = "1.0.29"
 yaml-rust = "0.4.5"
