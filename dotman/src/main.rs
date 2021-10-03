@@ -1,6 +1,6 @@
 use std::path::PathBuf;
+use std::{any, env, fs, io, path, process};
 use std::{collections::HashMap, path::Path};
-use std::{env, fs, io, path, process};
 use yaml_rust::{Yaml, YamlLoader};
 
 use clap::{AppSettings, Clap};
@@ -119,15 +119,12 @@ enum TaskError {
     #[error("wellknown {0}")]
     WellKnown(String),
     #[error("unknown {0}")]
-    Unknown(Box<dyn std::error::Error + Sync + Send + 'static>),
+    Unknown(anyhow::Error),
 }
 
-impl From<SyncError> for TaskError {
-    fn from(e: SyncError) -> Self {
-        match e {
-            SyncError::Failed(msg) => TaskError::WellKnown(format!("sync failed due to {}", msg)),
-            SyncError::UnhandledIoError(e) => TaskError::Unknown(Box::new(e)),
-        }
+impl From<anyhow::Error> for TaskError {
+    fn from(e: anyhow::Error) -> Self {
+        TaskError::Unknown(e)
     }
 }
 
@@ -250,29 +247,35 @@ impl From<io::Error> for SyncError {
     }
 }
 
-fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> Result<bool, SyncError> {
+enum SyncStatus {
+    Changed,
+    UnChanged,
+    WellKnownError(String),
+}
+
+fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result<SyncStatus> {
     match (&src, &dest, ctx.merge) {
-        (FileType::Nothing(_), FileType::Nothing(_), _) => Ok(false),
-        (FileType::Nothing(_), _, true) => Ok(false),
+        (FileType::Nothing(_), FileType::Nothing(_), _) => Ok(SyncStatus::UnChanged),
+        (FileType::Nothing(_), _, true) => Ok(SyncStatus::UnChanged),
         (FileType::Nothing(_), FileType::Dir(dest), false) => {
             // TODO: fix to unlink
             if !ctx.dryrun {
                 fs::remove_dir(dest)?;
             }
-            Ok(true)
+            Ok(SyncStatus::Changed)
         }
         (FileType::Nothing(_), FileType::Symlink(dest), false) => {
             // TODO: fix to unlink
             if !ctx.dryrun {
                 fs::remove_file(dest)?;
             }
-            Ok(true)
+            Ok(SyncStatus::Changed)
         }
         (FileType::Nothing(_), FileType::File(dest) | FileType::Other(dest), false) => {
             if !ctx.dryrun {
                 fs::remove_file(dest)?;
             }
-            Ok(true)
+            Ok(SyncStatus::Changed)
         }
         (&FileType::File(src), &FileType::File(dest), _) => {
             let src_buf = fs::read(src)?;
@@ -281,9 +284,9 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> Result<bool, S
                 if !ctx.dryrun {
                     fs::copy(src, dest)?;
                 }
-                Ok(true)
+                Ok(SyncStatus::Changed)
             } else {
-                Ok(false)
+                Ok(SyncStatus::UnChanged)
             }
         }
         (&FileType::File(src), &FileType::Dir(dest), _) => {
@@ -291,30 +294,32 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> Result<bool, S
                 fs::remove_dir(dest)?;
                 fs::copy(src, dest)?;
             }
-            Ok(true)
+            Ok(SyncStatus::Changed)
         }
         (&FileType::File(src), &FileType::Other(dest), _) => {
             if !ctx.dryrun {
                 fs::remove_file(dest)?;
                 fs::copy(src, dest)?;
             }
-            Ok(true)
+            Ok(SyncStatus::Changed)
         }
         (&FileType::File(src), &FileType::Nothing(dest), _) => {
             if !ctx.dryrun {
                 fs::create_dir_all(dest.parent().unwrap())?;
                 fs::copy(src, dest)?;
             }
-            Ok(true)
+            Ok(SyncStatus::Changed)
         }
-        (&FileType::File(_), &FileType::Symlink(_), _) => {
-            Err(SyncError::Failed("symlink is unsupported.".to_owned()))
+        (&FileType::File(_), &FileType::Symlink(_), _) => Ok(SyncStatus::WellKnownError(
+            "symlink is unsupported.".to_owned(),
+        )),
+        (FileType::Dir(_), _, _) => Ok(SyncStatus::UnChanged),
+        (FileType::Other(_), _, _) => {
+            Ok(SyncStatus::WellKnownError("unknown file type".to_owned()))
         }
-        (FileType::Dir(_), _, _) => Ok(false),
-        (FileType::Other(_), _, _) => Err(SyncError::Failed("unknown file type".to_owned())),
-        (FileType::Symlink(_), _, _) => {
-            Err(SyncError::Failed("symlink is unsupported.".to_owned()))
-        }
+        (FileType::Symlink(_), _, _) => Ok(SyncStatus::WellKnownError(
+            "symlink is unsupported.".to_owned(),
+        )),
     }
 }
 
@@ -325,7 +330,15 @@ fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> TaskResult {
         if let Ok(tbl) = file_table(&src_base, &dest) {
             let mut changed = false;
             for (src, dest) in tbl.values() {
-                changed = sync_file(ctx, src, dest)?;
+                match sync_file(ctx, src, dest)? {
+                    SyncStatus::Changed => {
+                        changed = true;
+                    }
+                    SyncStatus::UnChanged => (),
+                    SyncStatus::WellKnownError(msg) => {
+                        return Err(TaskError::WellKnown(msg));
+                    }
+                }
             }
             return Ok(changed);
         }
