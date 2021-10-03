@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
 use std::{env, fs, io, path, process};
@@ -31,11 +32,19 @@ struct DryRunOpts {
 }
 
 #[derive(Debug)]
+enum TemplateValue {
+    Int(i64),
+    Float(f64),
+    String(String),
+}
+
+#[derive(Debug)]
 enum Task {
     Cp {
         src: String,
         dest: String,
         merge: bool,
+        templates: HashMap<Vec<String>, HashMap<String, TemplateValue>>,
     },
 }
 
@@ -46,6 +55,7 @@ impl Task {
                 src,
                 dest,
                 merge: _,
+                templates: _,
             } => format!("cp {} => {}", src, dest),
         }
     }
@@ -184,7 +194,32 @@ enum SyncStatus {
     Failed,
 }
 
-fn sync_file(src: &FileType, dest: &FileType, dryrun: bool, merge: bool) -> io::Result<SyncStatus> {
+type Templates = HashMap<Vec<String>, HashMap<String, TemplateValue>>;
+
+fn match_template_target<'a>(
+    templates: &'a Templates,
+    src: &Path,
+    target: &Path,
+) -> Option<&'a HashMap<String, TemplateValue>> {
+    for (target_patterns, var_set) in templates {
+        let target = target.strip_prefix(src).unwrap_or(target);
+        for pattern in target_patterns {
+            if Path::new(pattern) == target {
+                return Some(var_set);
+            }
+        }
+    }
+    None
+}
+
+fn sync_file(
+    src: &FileType,
+    dest: &FileType,
+    dryrun: bool,
+    merge: bool,
+    templates: &Templates,
+    src_base: &Path,
+) -> io::Result<SyncStatus> {
     match (&src, &dest, merge) {
         (FileType::Nothing(_), FileType::Nothing(_), _) => Ok(SyncStatus::Skip),
         (FileType::Nothing(_), _, true) => Ok(SyncStatus::Skip),
@@ -251,13 +286,20 @@ fn sync_file(src: &FileType, dest: &FileType, dryrun: bool, merge: bool) -> io::
 }
 
 // TODO: handle error when src directory is not found.
-fn execute_cp(ctx: &Context, src: &str, dest: &str, merge: bool, dryrun: bool) -> TaskResult {
-    let src = ctx.base.join(Path::new(src));
+fn execute_cp(
+    ctx: &Context,
+    src: &str,
+    dest: &str,
+    merge: bool,
+    dryrun: bool,
+    templates: &HashMap<Vec<String>, HashMap<String, TemplateValue>>,
+) -> TaskResult {
+    let src_base = ctx.base.join(Path::new(src));
     if let Ok(dest) = resolve_desitination_path(dest) {
-        if let Ok(tbl) = file_table(&src, &dest) {
+        if let Ok(tbl) = file_table(&src_base, &dest) {
             let mut changed = false;
             for (src, dest) in tbl.values() {
-                match sync_file(src, dest, dryrun, merge) {
+                match sync_file(src, dest, dryrun, merge, templates, &src_base) {
                     Ok(SyncStatus::Changed) => {
                         changed |= true;
                     }
@@ -282,8 +324,51 @@ fn execute_cp(ctx: &Context, src: &str, dest: &str, merge: bool, dryrun: bool) -
 
 fn execute(ctx: &Context, task: &Task, dryrun: bool) -> TaskResult {
     match task {
-        Task::Cp { src, dest, merge } => execute_cp(ctx, src, dest, *merge, dryrun),
+        Task::Cp {
+            src,
+            dest,
+            merge,
+            templates,
+        } => execute_cp(ctx, src, dest, *merge, dryrun, templates),
     }
+    }
+
+fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, HashMap<String, TemplateValue>), Error> {
+    let hash = yaml.as_hash().ok_or(Error::FailedToLoadPlaybook)?;
+    let target = match hash
+        .get(&Yaml::String("target".to_owned()))
+        .ok_or(Error::FailedToLoadPlaybook)?
+    {
+        Yaml::Array(targets) => targets
+            .iter()
+            .map(|target| {
+                target
+                    .as_str()
+                    .map(|s| s.to_owned())
+                    .ok_or(Error::FailedToLoadPlaybook)
+            })
+            .collect::<Result<Vec<String>, Error>>(),
+        Yaml::String(target) => Ok(vec![target.to_owned()]),
+        _ => Err(Error::FailedToLoadPlaybook),
+    }?;
+    let variables = hash
+        .get(&Yaml::String("vars".to_owned()))
+        .ok_or(Error::FailedToLoadPlaybook)?
+        .as_hash()
+        .ok_or(Error::FailedToLoadPlaybook)?
+        .into_iter()
+        .map(|(name, val)| {
+            let name = name.as_str().ok_or(Error::FailedToLoadPlaybook)?.to_owned();
+            let val = match val {
+                Yaml::String(str) => TemplateValue::String(str.to_owned()),
+                Yaml::Integer(int) => TemplateValue::Int(*int),
+                Yaml::Real(float) => TemplateValue::Float(float.parse().unwrap()),
+                _ => return Err(Error::FailedToLoadPlaybook),
+            };
+            Ok((name, val))
+        })
+        .collect::<Result<HashMap<String, TemplateValue>, Error>>()?;
+    Ok((target, variables))
 }
 
 fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
@@ -307,7 +392,18 @@ fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
                     .get(&Yaml::String("merge".to_owned()))
                     .map(|val| val.as_bool().ok_or(Error::FailedToLoadPlaybook))
                     .unwrap_or(Ok(true))?;
-                Ok(Task::Cp { src, dest, merge })
+                let templates = obj
+                    .get(&Yaml::String("templates".to_owned()))
+                    .map(|templates| {
+                        templates.as_vec().ok_or(Error::FailedToLoadPlaybook)?.iter().map(parse_cp_templates).collect::<Result<HashMap<Vec<String>, HashMap<String, TemplateValue>>, Error>>()
+                    })
+                    .unwrap_or_else(|| Ok(HashMap::new()))?;
+                Ok(Task::Cp {
+                    src,
+                    dest,
+                    merge,
+                    templates,
+                })
             }
             _ => Err(Error::FailedToLoadPlaybook),
         }

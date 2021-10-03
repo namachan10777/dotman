@@ -4,6 +4,10 @@ taskgroups:
   - type: cp
     src: "alacritty/"
     dest: "$XDG_CONFIG_HOME/alacritty/"
+    template:
+      - target: alacritty/alacritty.yml
+        vars:
+        - font_size: 11
 
 scenarios:
 - name: "sakanainu"
