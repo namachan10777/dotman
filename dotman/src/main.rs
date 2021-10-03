@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::path::PathBuf;
 use std::{any, env, fs, io, path, process};
 use std::{collections::HashMap, path::Path};
@@ -44,7 +45,7 @@ enum Task {
         src: String,
         dest: String,
         merge: bool,
-        templates: HashMap<Vec<String>, HashMap<String, TemplateValue>>,
+        templates: Templates,
     },
 }
 
@@ -85,7 +86,7 @@ struct TaskContext {
     dryrun: bool,
 }
 
-type Templates = HashMap<Vec<String>, HashMap<String, TemplateValue>>;
+type Templates = HashMap<Vec<String>, tera::Context>;
 #[derive(Debug, Clone)]
 struct CpContext {
     base: PathBuf,
@@ -217,11 +218,11 @@ fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType,
     Ok(hash)
 }
 
-fn _match_template_target<'a>(
+fn match_template_target<'a>(
     templates: &'a Templates,
     src: &Path,
     target: &Path,
-) -> Option<&'a HashMap<String, TemplateValue>> {
+) -> Option<&'a tera::Context> {
     for (target_patterns, var_set) in templates {
         let target = target.strip_prefix(src).unwrap_or(target);
         for pattern in target_patterns {
@@ -278,11 +279,23 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
             Ok(SyncStatus::Changed)
         }
         (&FileType::File(src), &FileType::File(dest), _) => {
-            let src_buf = fs::read(src)?;
+            let (src_buf, need_to_write) =
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
+                    (tera.render(&src.to_str().unwrap(), var_set)?.as_bytes().to_vec(), true)
+                } else {
+                    (fs::read(src)?, false)
+                };
             let dest_buf = fs::read(dest)?;
             if src_buf != dest_buf {
                 if !ctx.dryrun {
+                    if need_to_write {
+                        let mut writer = io::BufWriter::new(fs::File::open(dest)?);
+                        writer.write_all(&src_buf)?;
+                    }
+                    else {
                     fs::copy(src, dest)?;
+                    }
                 }
                 Ok(SyncStatus::Changed)
             } else {
@@ -292,21 +305,42 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         (&FileType::File(src), &FileType::Dir(dest), _) => {
             if !ctx.dryrun {
                 fs::remove_dir(dest)?;
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                    let mut writer = io::BufWriter::new(fs::File::create(dest)?);
+                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
+                    writer.write_all(tera.render(&src.to_str().unwrap(), var_set)?.as_bytes())?;
+                }
+                else {
                 fs::copy(src, dest)?;
+                }
             }
             Ok(SyncStatus::Changed)
         }
         (&FileType::File(src), &FileType::Other(dest), _) => {
             if !ctx.dryrun {
                 fs::remove_file(dest)?;
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                    let mut writer = io::BufWriter::new(fs::File::create(dest)?);
+                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
+                    writer.write_all(tera.render(&src.to_str().unwrap(), var_set)?.as_bytes())?;
+                }
+                else {
                 fs::copy(src, dest)?;
+                }
             }
             Ok(SyncStatus::Changed)
         }
         (&FileType::File(src), &FileType::Nothing(dest), _) => {
             if !ctx.dryrun {
                 fs::create_dir_all(dest.parent().unwrap())?;
+                if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, &src) {
+                    let mut writer = io::BufWriter::new(fs::File::create(dest)?);
+                    let tera = tera::Tera::new(&src.to_str().unwrap())?;
+                    writer.write_all(tera.render(&src.to_str().unwrap(), var_set)?.as_bytes())?;
+                }
+                else {
                 fs::copy(src, dest)?;
+                }
             }
             Ok(SyncStatus::Changed)
         }
@@ -364,7 +398,7 @@ fn execute(ctx: &TaskContext, task: &Task) -> TaskResult {
     }
 }
 
-fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, HashMap<String, TemplateValue>), Error> {
+fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, tera::Context), Error> {
     let hash = yaml.as_hash().ok_or(Error::FailedToLoadPlaybook)?;
     let target = match hash
         .get(&Yaml::String("target".to_owned()))
@@ -382,24 +416,24 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, HashMap<String, Templ
         Yaml::String(target) => Ok(vec![target.to_owned()]),
         _ => Err(Error::FailedToLoadPlaybook),
     }?;
-    let variables = hash
-        .get(&Yaml::String("vars".to_owned()))
+    let mut context = tera::Context::new();
+    hash.get(&Yaml::String("vars".to_owned()))
         .ok_or(Error::FailedToLoadPlaybook)?
         .as_hash()
         .ok_or(Error::FailedToLoadPlaybook)?
         .into_iter()
         .map(|(name, val)| {
             let name = name.as_str().ok_or(Error::FailedToLoadPlaybook)?.to_owned();
-            let val = match val {
-                Yaml::String(str) => TemplateValue::String(str.to_owned()),
-                Yaml::Integer(int) => TemplateValue::Int(*int),
-                Yaml::Real(float) => TemplateValue::Float(float.parse().unwrap()),
+            match val {
+                Yaml::String(str) => context.insert(name, str),
+                Yaml::Integer(int) => context.insert(name, int),
+                Yaml::Real(float) => context.insert(name, float),
                 _ => return Err(Error::FailedToLoadPlaybook),
             };
-            Ok((name, val))
+            Ok(())
         })
-        .collect::<Result<HashMap<String, TemplateValue>, Error>>()?;
-    Ok((target, variables))
+        .collect::<Result<Vec<()>, Error>>()?;
+    Ok((target, context))
 }
 
 fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
@@ -426,7 +460,12 @@ fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
                 let templates = obj
                     .get(&Yaml::String("templates".to_owned()))
                     .map(|templates| {
-                        templates.as_vec().ok_or(Error::FailedToLoadPlaybook)?.iter().map(parse_cp_templates).collect::<Result<HashMap<Vec<String>, HashMap<String, TemplateValue>>, Error>>()
+                        templates
+                            .as_vec()
+                            .ok_or(Error::FailedToLoadPlaybook)?
+                            .iter()
+                            .map(parse_cp_templates)
+                            .collect::<Result<Templates, Error>>()
                     })
                     .unwrap_or_else(|| Ok(HashMap::new()))?;
                 Ok(Task::Cp {
