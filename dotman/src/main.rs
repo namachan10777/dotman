@@ -299,7 +299,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                     (fs::read(src)?, false)
                 };
             let dest_buf = fs::read(dest)?;
-            if src_buf != dest_buf {
+            if md5::compute(&src_buf) != md5::compute(dest_buf) {
                 if !ctx.dryrun {
                     if need_to_write {
                         let mut writer = io::BufWriter::new(fs::File::create(dest)?);
