@@ -6,7 +6,7 @@ window:
     x: 8
     y: 4
 
-background_opacity: 0.8
+background_opacity: {{ opacity }}
 
 colors:
   primary:
