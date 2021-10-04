@@ -167,7 +167,7 @@ fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
     }
 }
 
-fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType, FileType)>> {
+fn file_table(src: &Path, dest: &Path) -> anyhow::Result<HashMap<PathBuf, (FileType, FileType)>> {
     let src_descendants = enlist_descendants(src)?;
     let dest_descendants = enlist_descendants(dest)?;
     let mut hash = HashMap::new();
@@ -181,13 +181,10 @@ fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType,
             FileType::Other(src_descendant.to_owned())
         };
         hash.insert(
-            src_descendant
-                .strip_prefix(&Path::new(src))
-                .unwrap()
-                .to_owned(),
+            src_descendant.strip_prefix(&Path::new(src))?.to_owned(),
             (
                 src_filetype,
-                FileType::Nothing(dest.join(src_descendant.strip_prefix(src).unwrap())),
+                FileType::Nothing(dest.join(src_descendant.strip_prefix(src)?)),
             ),
         );
     }
@@ -198,17 +195,12 @@ fn file_table(src: &Path, dest: &Path) -> io::Result<HashMap<PathBuf, (FileType,
         } else {
             FileType::Other(dest_descendant.to_owned())
         };
-        hash.entry(
-            dest_descendant
-                .strip_prefix(&Path::new(dest))
-                .unwrap()
-                .to_owned(),
-        )
-        .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
-        .or_insert((
-            FileType::Nothing(src.join(dest_descendant.strip_prefix(dest).unwrap())),
-            dest_filetype,
-        ));
+        hash.entry(dest_descendant.strip_prefix(&Path::new(dest))?.to_owned())
+            .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
+            .or_insert((
+                FileType::Nothing(src.join(dest_descendant.strip_prefix(dest)?)),
+                dest_filetype,
+            ));
     }
     Ok(hash)
 }
@@ -233,6 +225,23 @@ enum SyncStatus {
     Changed,
     UnChanged,
     WellKnownError(String),
+}
+
+#[derive(Error, Debug)]
+struct SyncError {
+    msg: String,
+}
+
+impl std::fmt::Display for SyncError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("SyncError({})", self.msg))
+    }
+}
+
+impl SyncError {
+    fn new(msg: String) -> Self {
+        Self { msg }
+    }
 }
 
 fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result<SyncStatus> {
@@ -263,8 +272,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
             let (src_buf, need_to_write) =
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     match liquid::ParserBuilder::with_stdlib()
-                        .build()
-                        .unwrap()
+                        .build()?
                         .parse(&fs::read_to_string(src)?)
                     {
                         Ok(template) => (template.render(var_set)?.as_bytes().to_vec(), true),
@@ -300,8 +308,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
                     match liquid::ParserBuilder::with_stdlib()
-                        .build()
-                        .unwrap()
+                        .build()?
                         .parse(&fs::read_to_string(src)?)
                     {
                         Ok(template) => {
@@ -326,8 +333,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
                     match liquid::ParserBuilder::with_stdlib()
-                        .build()
-                        .unwrap()
+                        .build()?
                         .parse(&fs::read_to_string(src)?)
                     {
                         Ok(template) => {
@@ -348,12 +354,14 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         }
         (&FileType::File(src), &FileType::Nothing(dest), _) => {
             if !ctx.dryrun {
-                fs::create_dir_all(dest.parent().unwrap())?;
+                let dest_parent = dest
+                    .parent()
+                    .ok_or_else(|| SyncError::new(format!("cannot take parent of {:?}", dest)))?;
+                fs::create_dir_all(dest_parent)?;
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     let mut writer = io::BufWriter::new(fs::File::create(dest)?);
                     match liquid::ParserBuilder::with_stdlib()
-                        .build()
-                        .unwrap()
+                        .build()?
                         .parse(&fs::read_to_string(src)?)
                     {
                         Ok(template) => {
@@ -483,7 +491,7 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), Erro
                 }
                 Yaml::Integer(int) => context.insert(name, liquid::model::Value::scalar(*int)),
                 Yaml::Real(float) => {
-                    let f: f64 = float.parse().unwrap();
+                    let f: f64 = float.parse().expect("already parse as real by yaml parser");
                     context.insert(name, liquid::model::Value::scalar(f))
                 }
                 _ => {
@@ -603,18 +611,17 @@ fn parse_matcher(yaml: &Yaml) -> Result<TargetMatcher, Error> {
     if let Some((Yaml::String(target), val)) = obj.iter().next() {
         match target.as_str() {
             "hostname" => {
-                let hostname_regex = regex::Regex::new(val.as_str().ok_or_else(|| {
+                let hostname_re_src = val.as_str().ok_or_else(|| {
                     Error::InvalidPlaybook(
                         "matcher.hostname must be string".to_owned(),
                         val.to_owned(),
                     )
-                })?)
-                .map_err(|e| {
+                })?;
+                let hostname_regex = regex::Regex::new(hostname_re_src).map_err(|e| {
                     Error::InvalidPlaybook(
                         format!(
                             "cannot compile matcher.hostname {} due to {:?}",
-                            val.as_str().unwrap(),
-                            e
+                            hostname_re_src, e
                         ),
                         val.to_owned(),
                     )
@@ -754,7 +761,7 @@ fn execute_deploy(ctx: &TaskContext, playbook: &PlayBook) -> Result<Stats, Error
 fn run(opts: Opts) -> Result<(), Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
-            let playbook = load_config(&opts.config).unwrap();
+            let playbook = load_config(&opts.config)?;
             let ctx = TaskContext {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
                 dryrun: false,
@@ -764,7 +771,7 @@ fn run(opts: Opts) -> Result<(), Error> {
             Ok(())
         }
         Subcommand::DryRun(opts) => {
-            let playbook = load_config(&opts.config).unwrap();
+            let playbook = load_config(&opts.config)?;
             let ctx = TaskContext {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
                 dryrun: true,
