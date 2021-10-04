@@ -1,28 +1,16 @@
-use std::fs;
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
+use std::{fmt, fs};
+use yaml_rust::yaml::Hash;
 use yaml_rust::{Yaml, YamlLoader};
 
-mod tasks;
+pub mod tasks;
 
 use thiserror::Error;
 
-#[derive(Debug)]
-enum Task {
-    Cp(tasks::cp::CpTask),
-}
-
-trait TaskUnit {
+pub trait Task {
     fn name(&self) -> String;
     fn execute(&self, ctx: &TaskContext) -> TaskResult;
-}
-
-impl Task {
-    fn name(&self) -> String {
-        match self {
-            Task::Cp(cp) => cp.name(),
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -37,10 +25,30 @@ struct Scenario {
     matches: Vec<TargetMatcher>,
 }
 
-#[derive(Debug)]
 pub struct PlayBook {
-    taskgroups: HashMap<String, Vec<Task>>,
+    taskgroups: HashMap<String, Vec<Box<dyn Task>>>,
     scenarios: Vec<Scenario>,
+}
+
+impl fmt::Debug for PlayBook {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PlayBook")
+            .field(
+                "taskgroups",
+                &self
+                    .taskgroups
+                    .iter()
+                    .map(|(key, tasks)| {
+                        (
+                            key,
+                            tasks.iter().map(|task| task.name()).collect::<Vec<_>>(),
+                        )
+                    })
+                    .collect::<HashMap<_, _>>(),
+            )
+            .field("scenarios", &self.scenarios)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -73,23 +81,20 @@ impl From<anyhow::Error> for TaskError {
     }
 }
 
-fn execute(ctx: &TaskContext, task: &Task) -> TaskResult {
-    match task {
-        Task::Cp(cp) => cp.execute(ctx),
-    }
-}
-
-fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
+fn parse_task(taskbuilders: &TaskBuilders, yaml: &Yaml) -> Result<Box<dyn Task>, Error> {
     let obj = yaml
         .as_hash()
         .ok_or_else(|| Error::InvalidPlaybook("task must be hash".to_owned(), yaml.to_owned()))?;
     if let Some(Yaml::String(key)) = obj.get(&Yaml::String("type".to_owned())) {
-        match key.as_str() {
-            "cp" => Ok(Task::Cp(tasks::cp::parse(obj)?)),
-            taskname => Err(Error::InvalidPlaybook(
-                format!("unsupported task \"{}\"", taskname),
+        if let Some(parse)  = taskbuilders.get(key.as_str()) {
+            let task = parse(obj)?;
+            Ok(task)
+        }
+        else {
+            Err(Error::InvalidPlaybook(
+                format!("unsupported task \"{}\"", key.as_str()),
                 yaml.to_owned(),
-            )),
+            ))
         }
     } else {
         Err(Error::InvalidPlaybook(
@@ -99,7 +104,7 @@ fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
     }
 }
 
-fn parse_taskgroups(yaml: &Yaml) -> Result<HashMap<String, Vec<Task>>, Error> {
+fn parse_taskgroups(yaml: &Yaml, taskbuilders: &TaskBuilders) -> Result<HashMap<String, Vec<Box<dyn Task>>>, Error> {
     yaml.as_hash()
         .ok_or_else(|| {
             Error::InvalidPlaybook("taskgroups must be hash".to_owned(), yaml.to_owned())
@@ -110,15 +115,15 @@ fn parse_taskgroups(yaml: &Yaml) -> Result<HashMap<String, Vec<Task>>, Error> {
                 name.to_owned(),
                 tasks
                     .iter()
-                    .map(parse_task)
-                    .collect::<Result<Vec<Task>, Error>>()?,
+                    .map(|src| parse_task(taskbuilders, src))
+                    .collect::<Result<Vec<_>, Error>>()?,
             )),
             _ => Err(Error::InvalidPlaybook(
                 "children of taskgropus must be [string]: <task>[]".to_owned(),
                 yaml.to_owned(),
             )),
         })
-        .collect::<Result<HashMap<String, Vec<Task>>, Error>>()
+        .collect::<Result<HashMap<String, Vec<Box<dyn Task>>>, Error>>()
 }
 
 fn parse_matcher(yaml: &Yaml) -> Result<TargetMatcher, Error> {
@@ -210,9 +215,9 @@ fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
 }
 
 fn enlist_taskgroups<'a>(
-    taskgroups: &'a HashMap<String, Vec<Task>>,
+    taskgroups: &'a HashMap<String, Vec<Box<dyn Task>>>,
     taskgroup_names: &'a [String],
-) -> Result<Vec<(&'a str, &'a [Task])>, Error> {
+) -> Result<Vec<(&'a str, &'a [Box<dyn Task>])>, Error> {
     taskgroup_names
         .iter()
         .map(|taskgroup_name| {
@@ -226,8 +231,10 @@ fn enlist_taskgroups<'a>(
 
 pub type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 
+pub type TaskBuilders = HashMap<String, Box<dyn Fn(&Hash) -> Result<Box<dyn Task>, Error>>>;
+
 impl PlayBook {
-    pub fn load_config(config: &str) -> Result<Self, Error> {
+    pub fn load_config(config: &str, taskbuilders: TaskBuilders) -> Result<Self, Error> {
         let playbook_src = fs::read_to_string(Path::new(&config)).map_err(|e| {
             Error::PlaybookLoadFailed(format!("cannot read playbook {} due to {:?}", config, e))
         })?;
@@ -246,7 +253,7 @@ impl PlayBook {
         let scenarios = playbook_ast
             .get(&Yaml::String("scenarios".to_owned()))
             .ok_or_else(|| Error::PlaybookLoadFailed("scenarios is not found".to_owned()))?;
-        let taskgroups = parse_taskgroups(taskgroups)?;
+        let taskgroups = parse_taskgroups(taskgroups, &taskbuilders)?;
         let scenarios = scenarios
             .as_vec()
             .ok_or_else(|| {
@@ -270,7 +277,7 @@ impl PlayBook {
                     name.to_owned().to_owned(),
                     tasks
                         .iter()
-                        .map(|task| (task.name(), execute(ctx, task)))
+                        .map(|task| (task.name(), task.execute(ctx)))
                         .collect::<Vec<(String, TaskResult)>>(),
                 )
             })

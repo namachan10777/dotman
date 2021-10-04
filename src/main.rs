@@ -1,6 +1,8 @@
 use clap::{AppSettings, Clap};
+use std::collections::HashMap;
 use std::path::Path;
 use std::process;
+use yaml_rust::yaml::Hash;
 #[derive(Clap)]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
@@ -27,9 +29,13 @@ struct DryRunOpts {
 }
 
 fn run(opts: Opts) -> Result<(), dotman::Error> {
+    let mut taskbuilders = HashMap::new();
+    let cp_builder: Box<dyn Fn(&Hash) -> Result<Box<dyn dotman::Task>, dotman::Error>> =
+        Box::new(move |yaml| dotman::tasks::cp::parse(&yaml));
+    taskbuilders.insert("cp".to_owned(), cp_builder);
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
-            let playbook = dotman::PlayBook::load_config(&opts.config)?;
+            let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
             let ctx = dotman::TaskContext {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
                 dryrun: false,
@@ -39,7 +45,7 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
             Ok(())
         }
         Subcommand::DryRun(opts) => {
-            let playbook = dotman::PlayBook::load_config(&opts.config)?;
+            let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
             let ctx = dotman::TaskContext {
                 base: Path::new(&opts.config).parent().unwrap().to_owned(),
                 dryrun: true,

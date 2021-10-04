@@ -330,7 +330,7 @@ impl CpContext {
     }
 }
 
-impl crate::TaskUnit for CpTask {
+impl crate::Task for CpTask {
     fn name(&self) -> String {
         format!("cp {} => {}", self.src, self.dest)
     }
@@ -420,7 +420,7 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), crat
         .collect::<Result<Vec<()>, crate::Error>>()?;
     Ok((target, context))
 }
-pub fn parse(obj: &Hash) -> Result<CpTask, crate::Error> {
+pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
     let src = obj
         .get(&Yaml::String("src".to_owned()))
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cp must have \"src\"".to_owned()))?
@@ -457,10 +457,10 @@ pub fn parse(obj: &Hash) -> Result<CpTask, crate::Error> {
                 .collect::<Result<Templates, crate::Error>>()
         })
         .unwrap_or_else(|| Ok(HashMap::new()))?;
-    Ok(CpTask {
+    Ok(Box::new(CpTask {
         src,
         dest,
         merge,
         templates,
-    })
+    }))
 }
