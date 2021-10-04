@@ -102,7 +102,8 @@ impl CpContext {
 
 #[derive(Debug, Clone)]
 enum Error {
-    FailedToLoadPlaybook,
+    PlaybookLoadFailed(String),
+    InvalidPlaybook(String, Yaml),
     TaskGroupNotFound(String),
     AnyScenarioDoesNotMatch,
     CannotResolveVar(String),
@@ -426,32 +427,56 @@ fn execute(ctx: &TaskContext, task: &Task) -> TaskResult {
 }
 
 fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), Error> {
-    let hash = yaml.as_hash().ok_or(Error::FailedToLoadPlaybook)?;
+    let hash = yaml.as_hash().ok_or_else(|| {
+        Error::InvalidPlaybook("cp.templates must be hash".to_owned(), yaml.to_owned())
+    })?;
     let target = match hash
         .get(&Yaml::String("target".to_owned()))
-        .ok_or(Error::FailedToLoadPlaybook)?
-    {
+        .ok_or_else(|| {
+            Error::InvalidPlaybook(
+                "cp.templates must have \"target\"".to_owned(),
+                yaml.to_owned(),
+            )
+        })? {
         Yaml::Array(targets) => targets
             .iter()
             .map(|target| {
-                target
-                    .as_str()
-                    .map(|s| s.to_owned())
-                    .ok_or(Error::FailedToLoadPlaybook)
+                target.as_str().map(|s| s.to_owned()).ok_or_else(|| {
+                    Error::InvalidPlaybook(
+                        "cp.target must be string of array of string".to_owned(),
+                        target.to_owned(),
+                    )
+                })
             })
             .collect::<Result<Vec<String>, Error>>(),
         Yaml::String(target) => Ok(vec![target.to_owned()]),
-        _ => Err(Error::FailedToLoadPlaybook),
+        invalid => Err(Error::InvalidPlaybook(
+            "cp.target must be string of array of string".to_owned(),
+            invalid.to_owned(),
+        )),
     }?;
     let mut context = liquid::Object::new();
     hash.get(&Yaml::String("vars".to_owned()))
-        .ok_or(Error::FailedToLoadPlaybook)?
+        .ok_or_else(|| {
+            Error::InvalidPlaybook("cp.template must have vars".to_owned(), yaml.to_owned())
+        })?
         .as_hash()
-        .ok_or(Error::FailedToLoadPlaybook)?
+        .ok_or_else(|| {
+            Error::InvalidPlaybook("cp.templates.vars must be hash".to_owned(), yaml.to_owned())
+        })?
         .into_iter()
         .map(|(name, val)| {
-            let name =
-                KString::from_string(name.as_str().ok_or(Error::FailedToLoadPlaybook)?.to_owned());
+            let name = KString::from_string(
+                name.as_str()
+                    .ok_or_else(|| {
+                        Error::InvalidPlaybook(
+                            "children of cp.templates.vars must be string: <string|int|float>"
+                                .to_owned(),
+                            name.to_owned(),
+                        )
+                    })?
+                    .to_owned(),
+            );
             match val {
                 Yaml::String(str) => {
                     context.insert(name, liquid::model::Value::scalar(str.to_owned()))
@@ -461,7 +486,13 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), Erro
                     let f: f64 = float.parse().unwrap();
                     context.insert(name, liquid::model::Value::scalar(f))
                 }
-                _ => return Err(Error::FailedToLoadPlaybook),
+                _ => {
+                    return Err(Error::InvalidPlaybook(
+                        "children of cp.templates.vars must be string: <string|int|float>"
+                            .to_owned(),
+                        val.to_owned(),
+                    ))
+                }
             };
             Ok(())
         })
@@ -470,32 +501,54 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), Erro
 }
 
 fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
-    let obj = yaml.as_hash().ok_or(Error::FailedToLoadPlaybook)?;
+    let obj = yaml
+        .as_hash()
+        .ok_or_else(|| Error::InvalidPlaybook("task must be hash".to_owned(), yaml.to_owned()))?;
     if let Some(Yaml::String(key)) = obj.get(&Yaml::String("type".to_owned())) {
         match key.as_str() {
             "cp" => {
                 let src = obj
                     .get(&Yaml::String("src".to_owned()))
-                    .ok_or(Error::FailedToLoadPlaybook)?
+                    .ok_or_else(|| {
+                        Error::InvalidPlaybook("cp must have \"src\"".to_owned(), yaml.to_owned())
+                    })?
                     .as_str()
-                    .ok_or(Error::FailedToLoadPlaybook)?
+                    .ok_or_else(|| {
+                        Error::InvalidPlaybook("cp.src must be string".to_owned(), yaml.to_owned())
+                    })?
                     .to_owned();
                 let dest = obj
                     .get(&Yaml::String("dest".to_owned()))
-                    .ok_or(Error::FailedToLoadPlaybook)?
+                    .ok_or_else(|| {
+                        Error::InvalidPlaybook("cp must have \"dest\"".to_owned(), yaml.to_owned())
+                    })?
                     .as_str()
-                    .ok_or(Error::FailedToLoadPlaybook)?
+                    .ok_or_else(|| {
+                        Error::InvalidPlaybook("cp.dest must be string".to_owned(), yaml.to_owned())
+                    })?
                     .to_owned();
                 let merge = obj
                     .get(&Yaml::String("merge".to_owned()))
-                    .map(|val| val.as_bool().ok_or(Error::FailedToLoadPlaybook))
+                    .map(|val| {
+                        val.as_bool().ok_or_else(|| {
+                            Error::InvalidPlaybook(
+                                "cp.merge must be boolean".to_owned(),
+                                val.to_owned(),
+                            )
+                        })
+                    })
                     .unwrap_or(Ok(true))?;
                 let templates = obj
                     .get(&Yaml::String("templates".to_owned()))
                     .map(|templates| {
                         templates
                             .as_vec()
-                            .ok_or(Error::FailedToLoadPlaybook)?
+                            .ok_or_else(|| {
+                                Error::InvalidPlaybook(
+                                    "cp.templates must be array".to_owned(),
+                                    templates.to_owned(),
+                                )
+                            })?
                             .iter()
                             .map(parse_cp_templates)
                             .collect::<Result<Templates, Error>>()
@@ -508,16 +561,24 @@ fn parse_task(yaml: &Yaml) -> Result<Task, Error> {
                     templates,
                 })
             }
-            _ => Err(Error::FailedToLoadPlaybook),
+            taskname => Err(Error::InvalidPlaybook(
+                format!("unsupported task \"{}\"", taskname),
+                yaml.to_owned(),
+            )),
         }
     } else {
-        Err(Error::FailedToLoadPlaybook)
+        Err(Error::InvalidPlaybook(
+            "task must have \"type\" property".to_owned(),
+            yaml.to_owned(),
+        ))
     }
 }
 
 fn parse_taskgroups(yaml: &Yaml) -> Result<HashMap<String, Vec<Task>>, Error> {
     yaml.as_hash()
-        .ok_or(Error::FailedToLoadPlaybook)?
+        .ok_or_else(|| {
+            Error::InvalidPlaybook("taskgroups must be hash".to_owned(), yaml.to_owned())
+        })?
         .iter()
         .map(|(name, tasks)| match (name, tasks) {
             (Yaml::String(name), Yaml::Array(tasks)) => Ok((
@@ -527,30 +588,56 @@ fn parse_taskgroups(yaml: &Yaml) -> Result<HashMap<String, Vec<Task>>, Error> {
                     .map(parse_task)
                     .collect::<Result<Vec<Task>, Error>>()?,
             )),
-            _ => Err(Error::FailedToLoadPlaybook),
+            _ => Err(Error::InvalidPlaybook(
+                "children of taskgropus must be [string]: <task>[]".to_owned(),
+                yaml.to_owned(),
+            )),
         })
         .collect::<Result<HashMap<String, Vec<Task>>, Error>>()
 }
 
 fn parse_matcher(yaml: &Yaml) -> Result<TargetMatcher, Error> {
-    let obj = yaml.as_hash().ok_or(Error::FailedToLoadPlaybook)?;
+    let obj = yaml.as_hash().ok_or_else(|| {
+        Error::InvalidPlaybook("matcher must be hash".to_owned(), yaml.to_owned())
+    })?;
     if let Some((Yaml::String(target), val)) = obj.iter().next() {
         match target.as_str() {
             "hostname" => {
-                let hostname_regex =
-                    regex::Regex::new(val.as_str().ok_or(Error::FailedToLoadPlaybook)?)
-                        .map_err(|_| Error::FailedToLoadPlaybook)?;
+                let hostname_regex = regex::Regex::new(val.as_str().ok_or_else(|| {
+                    Error::InvalidPlaybook(
+                        "matcher.hostname must be string".to_owned(),
+                        val.to_owned(),
+                    )
+                })?)
+                .map_err(|e| {
+                    Error::InvalidPlaybook(
+                        format!(
+                            "cannot compile matcher.hostname {} due to {:?}",
+                            val.as_str().unwrap(),
+                            e
+                        ),
+                        val.to_owned(),
+                    )
+                })?;
                 Ok(TargetMatcher::HostName(hostname_regex))
             }
-            _ => Err(Error::FailedToLoadPlaybook),
+            matcher_name => Err(Error::InvalidPlaybook(
+                format!("unsupported matcher \"{}\"", matcher_name),
+                yaml.to_owned(),
+            )),
         }
     } else {
-        Err(Error::FailedToLoadPlaybook)
+        Err(Error::InvalidPlaybook(
+            "matcher must be [string]: <matcher>".to_owned(),
+            yaml.to_owned(),
+        ))
     }
 }
 
 fn parse_scenario(yaml: &Yaml) -> Result<Scenario, Error> {
-    let obj = yaml.as_hash().ok_or(Error::FailedToLoadPlaybook)?;
+    let obj = yaml.as_hash().ok_or_else(|| {
+        Error::InvalidPlaybook("scenario mast be hash".to_owned(), yaml.to_owned())
+    })?;
     if let (Some(Yaml::String(name)), Some(Yaml::Array(matchers)), Some(Yaml::Array(tasks))) = (
         obj.get(&Yaml::String("name".to_owned())),
         obj.get(&Yaml::String("match".to_owned())),
@@ -563,10 +650,12 @@ fn parse_scenario(yaml: &Yaml) -> Result<Scenario, Error> {
         let tasks = tasks
             .iter()
             .map(|taskname| {
-                taskname
-                    .as_str()
-                    .map(|s| s.to_owned())
-                    .ok_or(Error::FailedToLoadPlaybook)
+                taskname.as_str().map(|s| s.to_owned()).ok_or_else(|| {
+                    Error::InvalidPlaybook(
+                        "scenario.tasks must be array of string".to_owned(),
+                        yaml.to_owned(),
+                    )
+                })
             })
             .collect::<Result<Vec<String>, Error>>()?;
         Ok(Scenario {
@@ -575,38 +664,44 @@ fn parse_scenario(yaml: &Yaml) -> Result<Scenario, Error> {
             name: name.to_owned(),
         })
     } else {
-        Err(Error::FailedToLoadPlaybook)
+        Err(Error::InvalidPlaybook(
+            "scenario.name must be string, scenario.match and scenario.tasks must be array"
+                .to_owned(),
+            yaml.to_owned(),
+        ))
     }
 }
 
 fn load_config(config: &str) -> Result<PlayBook, Error> {
-    let playbook_src =
-        fs::read_to_string(Path::new(&config)).map_err(|_| Error::FailedToLoadPlaybook)?;
+    let playbook_src = fs::read_to_string(Path::new(&config)).map_err(|e| {
+        Error::PlaybookLoadFailed(format!("cannot read playbook {} due to {:?}", config, e))
+    })?;
     let playbook_ast = YamlLoader::load_from_str(&playbook_src)
-        .map_err(|_| Error::FailedToLoadPlaybook)?
+        .map_err(|_| Error::PlaybookLoadFailed(format!("playbook {} has invalid syntax", config)))?
         .get(0)
-        .ok_or(Error::FailedToLoadPlaybook)?
+        .ok_or_else(|| Error::PlaybookLoadFailed(format!("playbook {} is empty", config)))?
         .as_hash()
-        .ok_or(Error::FailedToLoadPlaybook)?
+        .ok_or_else(|| Error::PlaybookLoadFailed(format!("playbook {} is not a hash", config)))?
         .clone();
-    if let (Some(taskgroups), Some(scenarios)) = (
-        playbook_ast.get(&Yaml::String("taskgroups".to_owned())),
-        playbook_ast.get(&Yaml::String("scenarios".to_owned())),
-    ) {
-        let taskgroups = parse_taskgroups(taskgroups)?;
-        let scenarios = scenarios
-            .as_vec()
-            .ok_or(Error::FailedToLoadPlaybook)?
-            .iter()
-            .map(parse_scenario)
-            .collect::<Result<Vec<Scenario>, Error>>()?;
-        Ok(PlayBook {
-            taskgroups,
-            scenarios,
-        })
-    } else {
-        Err(Error::FailedToLoadPlaybook)
-    }
+    let taskgroups = playbook_ast
+        .get(&Yaml::String("taskgroups".to_owned()))
+        .ok_or_else(|| Error::PlaybookLoadFailed("taskgroups is not found".to_owned()))?;
+    let scenarios = playbook_ast
+        .get(&Yaml::String("scenarios".to_owned()))
+        .ok_or_else(|| Error::PlaybookLoadFailed("scenarios is not found".to_owned()))?;
+    let taskgroups = parse_taskgroups(taskgroups)?;
+    let scenarios = scenarios
+        .as_vec()
+        .ok_or_else(|| {
+            Error::InvalidPlaybook("scenario must be array".to_owned(), scenarios.to_owned())
+        })?
+        .iter()
+        .map(parse_scenario)
+        .collect::<Result<Vec<Scenario>, Error>>()?;
+    Ok(PlayBook {
+        taskgroups,
+        scenarios,
+    })
 }
 
 fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
@@ -693,8 +788,12 @@ fn main() {
             eprintln!("taskgroup \"{}\" does not found", taskgroup_name);
             process::exit(-1);
         }
-        Err(Error::FailedToLoadPlaybook) => {
-            eprintln!("failed to load playbook");
+        Err(Error::PlaybookLoadFailed(msg)) => {
+            eprintln!("failed to load playbook due to {}", msg);
+            process::exit(-1);
+        }
+        Err(Error::InvalidPlaybook(msg, _)) => {
+            eprintln!("failed to load playbook due to {}", msg);
             process::exit(-1);
         }
         Err(Error::CannotResolveVar(var)) => {
