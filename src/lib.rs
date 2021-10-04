@@ -86,11 +86,10 @@ fn parse_task(taskbuilders: &TaskBuilders, yaml: &Yaml) -> Result<Box<dyn Task>,
         .as_hash()
         .ok_or_else(|| Error::InvalidPlaybook("task must be hash".to_owned(), yaml.to_owned()))?;
     if let Some(Yaml::String(key)) = obj.get(&Yaml::String("type".to_owned())) {
-        if let Some(parse)  = taskbuilders.get(key.as_str()) {
+        if let Some(parse) = taskbuilders.get(key.as_str()) {
             let task = parse(obj)?;
             Ok(task)
-        }
-        else {
+        } else {
             Err(Error::InvalidPlaybook(
                 format!("unsupported task \"{}\"", key.as_str()),
                 yaml.to_owned(),
@@ -104,7 +103,10 @@ fn parse_task(taskbuilders: &TaskBuilders, yaml: &Yaml) -> Result<Box<dyn Task>,
     }
 }
 
-fn parse_taskgroups(yaml: &Yaml, taskbuilders: &TaskBuilders) -> Result<HashMap<String, Vec<Box<dyn Task>>>, Error> {
+fn parse_taskgroups(
+    yaml: &Yaml,
+    taskbuilders: &TaskBuilders,
+) -> Result<HashMap<String, Vec<Box<dyn Task>>>, Error> {
     yaml.as_hash()
         .ok_or_else(|| {
             Error::InvalidPlaybook("taskgroups must be hash".to_owned(), yaml.to_owned())
@@ -214,10 +216,12 @@ fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
     None
 }
 
+type TaskGroup<'a> = Vec<(&'a str, &'a [Box<dyn Task>])>;
+
 fn enlist_taskgroups<'a>(
     taskgroups: &'a HashMap<String, Vec<Box<dyn Task>>>,
     taskgroup_names: &'a [String],
-) -> Result<Vec<(&'a str, &'a [Box<dyn Task>])>, Error> {
+) -> Result<TaskGroup<'a>, Error> {
     taskgroup_names
         .iter()
         .map(|taskgroup_name| {
@@ -231,7 +235,8 @@ fn enlist_taskgroups<'a>(
 
 pub type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 
-pub type TaskBuilders = HashMap<String, Box<dyn Fn(&Hash) -> Result<Box<dyn Task>, Error>>>;
+pub type TaskBuilder = Box<dyn Fn(&Hash) -> Result<Box<dyn Task>, Error>>;
+pub type TaskBuilders = HashMap<String, TaskBuilder>;
 
 impl PlayBook {
     pub fn load_config(config: &str, taskbuilders: TaskBuilders) -> Result<Self, Error> {
