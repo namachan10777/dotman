@@ -30,7 +30,9 @@ struct DryRunOpts {
 fn run(opts: Opts) -> Result<(), dotman::Error> {
     let mut taskbuilders = HashMap::new();
     let cp_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::cp::parse(yaml));
+    let env_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::env::parse(yaml));
     taskbuilders.insert("cp".to_owned(), cp_builder);
+    taskbuilders.insert("env".to_owned(), env_builder);
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
