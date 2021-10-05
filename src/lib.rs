@@ -17,6 +17,7 @@ pub trait Task {
 #[derive(Debug)]
 enum TargetMatcher {
     HostName(regex::Regex),
+    Root(bool),
 }
 
 #[derive(Debug)]
@@ -153,6 +154,9 @@ fn parse_matcher(yaml: &Yaml) -> Result<TargetMatcher, Error> {
                 })?;
                 Ok(TargetMatcher::HostName(hostname_regex))
             }
+            "root" => Ok(TargetMatcher::Root(val.as_bool().ok_or_else(|| {
+                Error::InvalidPlaybook("matcher.root must be boolean".to_owned(), yaml.to_owned())
+            })?)),
             matcher_name => Err(Error::InvalidPlaybook(
                 format!("unsupported matcher \"{}\"", matcher_name),
                 yaml.to_owned(),
@@ -175,10 +179,16 @@ fn parse_scenario(yaml: &Yaml) -> Result<Scenario, Error> {
         obj.get(&Yaml::String("match".to_owned())),
         obj.get(&Yaml::String("tasks".to_owned())),
     ) {
-        let matches = matchers
+        let mut matches = matchers
             .iter()
             .map(parse_matcher)
             .collect::<Result<Vec<TargetMatcher>, Error>>()?;
+        if !matches
+            .iter()
+            .any(|matcher| matches!(matcher, TargetMatcher::Root(_)))
+        {
+            matches.push(TargetMatcher::Root(false));
+        }
         let tasks = tasks
             .iter()
             .map(|taskname| {
@@ -210,6 +220,8 @@ fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
             TargetMatcher::HostName(hostname_re) => hostname::get()
                 .map(|hostname| hostname_re.is_match(&hostname.to_string_lossy()))
                 .unwrap_or(false),
+            #[cfg(target_family = "unix")]
+            TargetMatcher::Root(is_root) => unsafe { (libc::getuid() == 0) == *is_root },
         }) {
             return Some(scenario);
         }

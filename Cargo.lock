@@ -181,6 +181,7 @@ dependencies = [
  "hex",
  "hostname",
  "kstring",
+ "libc",
  "liquid",
  "md5",
  "regex",
