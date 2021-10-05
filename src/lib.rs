@@ -5,6 +5,7 @@ use yaml_rust::yaml::Hash;
 use yaml_rust::{Yaml, YamlLoader};
 
 pub mod tasks;
+pub mod util;
 
 use thiserror::Error;
 

@@ -2,7 +2,7 @@ use kstring::KString;
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::{env, fs, io, path};
+use std::{fs, io};
 use thiserror::Error;
 use yaml_rust::{yaml::Hash, Yaml};
 
@@ -18,24 +18,6 @@ enum FileType {
     Dir(PathBuf),
 }
 
-fn resolve_desitination_path(path: &str) -> Result<PathBuf, crate::Error> {
-    Ok(Path::new(
-        &path
-            .split(path::MAIN_SEPARATOR)
-            .map(|elem| {
-                if let Some(var_name) = elem.strip_prefix('$') {
-                    env::var(var_name).map_err(|_| crate::Error::CannotResolveVar(elem.to_owned()))
-                } else if elem.starts_with("\\$") {
-                    Ok(elem[1..].to_owned())
-                } else {
-                    Ok(elem.to_owned())
-                }
-            })
-            .collect::<Result<Vec<_>, _>>()?
-            .join(&path::MAIN_SEPARATOR.to_string()),
-    )
-    .to_owned())
-}
 
 fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
     if fs::metadata(path)?.is_dir() {
@@ -280,7 +262,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
 // TODO: handle error when src directory is not found.
 fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
     let src_base = ctx.base.join(Path::new(src));
-    if let Ok(dest) = resolve_desitination_path(dest) {
+    if let Ok(dest) = crate::util::resolve_desitination_path(dest) {
         if let Ok(tbl) = file_table(&src_base, &dest) {
             let mut changed = false;
             for (src, dest) in tbl.values() {

@@ -1,10 +1,23 @@
 use sha2::Digest;
+use std::io;
 use std::{fs, io::Read};
+use std::path::Path;
 use yaml_rust::{yaml::Hash, Yaml};
+
+use crate::TaskError;
 
 struct ShTask {
     cmd: (String, Vec<String>),
     test: Option<(String, Option<String>)>,
+}
+
+fn check_sha256(sha: &str, path: &Path) -> io::Result<bool> {
+    let mut buf = Vec::new();
+    fs::File::open(path).map(|mut f| f.read_to_end(&mut buf))??;
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(&buf);
+    let hashed = hasher.finalize();
+    Ok(&hex::encode(hashed) == sha)
 }
 
 impl crate::Task for ShTask {
@@ -15,27 +28,44 @@ impl crate::Task for ShTask {
     fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
         match &self.test {
             Some((path, Some(sha256))) => {
-                let mut buf = Vec::new();
-                if let Ok(Ok(_)) = fs::File::open(path).map(|mut f| f.read_to_end(&mut buf)) {
-                    let mut hasher = sha2::Sha256::new();
-                    hasher.update(&buf);
-                    let hashed = hasher.finalize();
-                    if &hex::encode(hashed) == sha256 {
-                        return Ok(false);
+                let path = crate::util::resolve_desitination_path(path)
+                    .map_err(|_| TaskError::WellKnown(format!("cannot resolve path {}", path)))?;
+                if check_sha256(sha256, &path).map_err(|_| TaskError::WellKnown(format!("cannot hash file {:?}", path)))? {
+                    return Ok(false)
+                }
+                else {
+                    duct::cmd(&self.cmd.0, &self.cmd.1)
+                        .read()
+                        .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
+                    if !check_sha256(sha256, &path).map_err(|_| TaskError::WellKnown(format!("cannot hash file {:?}", path)))? {
+                        return Err(TaskError::WellKnown(format!("hash inconsistent {:?}", path)))
                     }
+                    Ok(true)
                 }
             }
             Some((path, None)) => {
-                if fs::metadata(path).is_ok() {
+                let path = crate::util::resolve_desitination_path(path)
+                    .map_err(|_| TaskError::WellKnown(format!("cannot resolve path {}", path)))?;
+                if fs::metadata(&path).is_ok() {
                     return Ok(false);
                 }
+                duct::cmd(&self.cmd.0, &self.cmd.1)
+                    .read()
+                    .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
+                if fs::metadata(&path).is_ok() {
+                    Ok(false)
+                }
+                else {
+                    return Err(TaskError::WellKnown(format!("file {:?} isn't created", path)))
+                }
             }
-            None => (),
+            None => {
+                duct::cmd(&self.cmd.0, &self.cmd.1)
+                    .read()
+                    .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
+                Ok(true)
+            },
         }
-        duct::cmd(&self.cmd.0, &self.cmd.1)
-            .read()
-            .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
-        Ok(true)
     }
 }
 
