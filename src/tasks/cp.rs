@@ -18,7 +18,6 @@ enum FileType {
     Dir(PathBuf),
 }
 
-
 fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
     if fs::metadata(path)?.is_dir() {
         let mut entries = fs::read_dir(path)?
