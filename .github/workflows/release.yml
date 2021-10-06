@@ -17,7 +17,7 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             asset_name: dotman-x86_64-Darwin
-          - os: ubuntu-latest
+          - os: macos-latest
             target: aarch64-apple-darwin
             asset_name: dotman-aarch64-Darwin
     runs-on: ${{ matrix.os }} 
@@ -25,20 +25,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      
+
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v2
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          overrtide: true
-      
+          override: true
+
       - name: Cross build
         uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: build
           args: --release --target ${{ matrix.target }} --verbose
-      
+
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.1.1
         with:
