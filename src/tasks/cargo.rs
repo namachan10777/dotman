@@ -53,50 +53,62 @@ impl crate::Task for CargoTask {
         }
     }
 
-    fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
-        if let Ok(output) = duct::cmd("cargo", &["install", "--list"]).read() {
-            if let Ok((_, packages)) = parse_cargo_install_list(&output) {
-                match &self.version {
-                    Some(version) => {
-                        if packages.get(&self.package) != Some(version) {
-                            duct::cmd("cargo", &["install", &self.package, "--version", version])
-                                .read()
-                                .map_err(|e| {
-                                    TaskError::WellKnown(format!(
-                                        "cannot install package {}:{} due to {:?}",
-                                        self.package, version, e
-                                    ))
-                                })?;
-                            Ok(true)
-                        } else {
-                            Ok(false)
-                        }
-                    }
-                    None => {
-                        if packages.contains_key(&self.package) {
-                            Ok(false)
-                        } else {
-                            duct::cmd("cargo", &["install", &self.package])
-                                .read()
-                                .map_err(|e| {
-                                    TaskError::WellKnown(format!(
-                                        "cannot install package {} due to {:?}",
-                                        self.package, e
-                                    ))
-                                })?;
-                            Ok(true)
-                        }
-                    }
-                }
-            } else {
-                Err(TaskError::WellKnown(
-                    "cannot parse installed cargo package information. this is bug".to_owned(),
-                ))
-            }
+    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
+        let packages = if ctx.cache.borrow().is_some() {
+            ctx.cache
+                .borrow()
+                .as_ref()
+                .expect("checked")
+                .downcast_ref::<Packages>()
+                .expect("cannot downcast cache for cargo task")
+                .clone()
         } else {
-            Err(TaskError::WellKnown(
-                "cannot fetch installed cargo package information".to_owned(),
-            ))
+            let output = duct::cmd("cargo", &["install", "--list"])
+                .read()
+                .map_err(|_| {
+                    TaskError::WellKnown(
+                        "cannot fetch installed cargo package information".to_owned(),
+                    )
+                })?;
+            let (_, packages) = parse_cargo_install_list(&output).map_err(|_| {
+                TaskError::WellKnown(
+                    "cannot parse installed cargo package information. this is bug".to_owned(),
+                )
+            })?;
+            *ctx.cache.borrow_mut() = Some(Box::new(packages.clone()));
+            packages
+        };
+        match &self.version {
+            Some(version) => {
+                if packages.get(&self.package) != Some(version) {
+                    duct::cmd("cargo", &["install", &self.package, "--version", version])
+                        .read()
+                        .map_err(|e| {
+                            TaskError::WellKnown(format!(
+                                "cannot install package {}:{} due to {:?}",
+                                self.package, version, e
+                            ))
+                        })?;
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            None => {
+                if packages.contains_key(&self.package) {
+                    Ok(false)
+                } else {
+                    duct::cmd("cargo", &["install", &self.package])
+                        .read()
+                        .map_err(|e| {
+                            TaskError::WellKnown(format!(
+                                "cannot install package {} due to {:?}",
+                                self.package, e
+                            ))
+                        })?;
+                    Ok(true)
+                }
+            }
         }
     }
 }
