@@ -1,8 +1,5 @@
 use kstring::KString;
-use once_cell::sync::Lazy;
 use std::env;
-
-pub static LIQUID_OBJECT_GLOBAL: Lazy<liquid::Object> = Lazy::new(liquid_object_for_global_resolve);
 
 fn liquid_object_for_global_resolve() -> liquid::Object {
     let mut obj = liquid::Object::new();
@@ -29,5 +26,5 @@ pub fn resolve_liquid_template(src: &str) -> Result<String, liquid::Error> {
         .build()
         .unwrap()
         .parse(src)?;
-    template.render(&(*LIQUID_OBJECT_GLOBAL))
+    template.render(&liquid_object_for_global_resolve())
 }
