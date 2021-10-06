@@ -9,6 +9,8 @@ taskgroups:
         vars:
           font_size: 11
           opacity: 0.8
+  - type: cargo
+    package: ripgrep
 
 scenarios:
 - name: "sakanainu"

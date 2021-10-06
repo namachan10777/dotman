@@ -75,19 +75,24 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     let cp_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::cp::parse(yaml));
     let env_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::env::parse(yaml));
     let sh_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::sh::parse(yaml));
+    let cargo_builder: dotman::TaskBuilder =
+        Box::new(move |yaml| dotman::tasks::cargo::parse(yaml));
     taskbuilders.insert("cp".to_owned(), cp_builder);
     taskbuilders.insert("env".to_owned(), env_builder);
     taskbuilders.insert("sh".to_owned(), sh_builder);
+    taskbuilders.insert("cargo".to_owned(), cargo_builder);
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            let result = playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), false)?;
+            let result =
+                playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), false)?;
             display_result(&result);
             Ok(())
         }
         Subcommand::DryRun(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            let result = playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), true)?;
+            let result =
+                playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), true)?;
             display_result(&result);
             Ok(())
         }
