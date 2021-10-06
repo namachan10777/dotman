@@ -1,22 +1,33 @@
+use kstring::KString;
+use once_cell::sync::Lazy;
 use std::env;
-use std::path::{self, Path, PathBuf};
 
-pub fn resolve_desitination_path(path: &str) -> Result<PathBuf, crate::Error> {
-    Ok(Path::new(
-        &path
-            .split(path::MAIN_SEPARATOR)
-            .map(|elem| {
-                if let Some(var_name) = elem.strip_prefix('$') {
-                    env::var(var_name)
-                        .map_err(|e| crate::Error::CannotResolveVar(elem.to_owned(), e))
-                } else if elem.starts_with("\\$") {
-                    Ok(elem[1..].to_owned())
-                } else {
-                    Ok(elem.to_owned())
-                }
-            })
-            .collect::<Result<Vec<_>, _>>()?
-            .join(&path::MAIN_SEPARATOR.to_string()),
-    )
-    .to_owned())
+pub static LIQUID_OBJECT_GLOBAL: Lazy<liquid::Object> = Lazy::new(liquid_object_for_global_resolve);
+
+fn liquid_object_for_global_resolve() -> liquid::Object {
+    let mut obj = liquid::Object::new();
+    let mut env_obj = liquid::Object::new();
+    for (name, val) in env::vars() {
+        env_obj.insert(
+            KString::from_string(name),
+            liquid::model::Value::scalar(val),
+        );
+    }
+    obj.insert(
+        KString::from_static("env"),
+        liquid::model::Value::Object(env_obj),
+    );
+    #[cfg(target_os = "linux")]
+    obj.insert(KString::from_static("os"), liquid::model::value!("Linux"));
+    #[cfg(target_os = "macos")]
+    obj.insert(KString::from_static("os"), liquid::model::value!("Darwin"));
+    obj
+}
+
+pub fn resolve_liquid_template(src: &str) -> Result<String, liquid::Error> {
+    let template = liquid::ParserBuilder::with_stdlib()
+        .build()
+        .unwrap()
+        .parse(src)?;
+    template.render(&(*LIQUID_OBJECT_GLOBAL))
 }

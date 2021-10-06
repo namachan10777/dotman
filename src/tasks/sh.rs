@@ -28,9 +28,9 @@ impl crate::Task for ShTask {
     fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
         match &self.test {
             Some((path, Some(sha256))) => {
-                let path = crate::util::resolve_desitination_path(path)
+                let path = crate::util::resolve_liquid_template(path)
                     .map_err(|_| TaskError::WellKnown(format!("cannot resolve path {}", path)))?;
-                if check_sha256(sha256, &path)
+                if check_sha256(sha256, Path::new(&path))
                     .map_err(|_| TaskError::WellKnown(format!("cannot hash file {:?}", path)))?
                 {
                     Ok(false)
@@ -38,7 +38,7 @@ impl crate::Task for ShTask {
                     duct::cmd(&self.cmd.0, &self.cmd.1)
                         .read()
                         .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
-                    if !check_sha256(sha256, &path)
+                    if !check_sha256(sha256, Path::new(&path))
                         .map_err(|_| TaskError::WellKnown(format!("cannot hash file {:?}", path)))?
                     {
                         return Err(TaskError::WellKnown(format!(
@@ -50,7 +50,7 @@ impl crate::Task for ShTask {
                 }
             }
             Some((path, None)) => {
-                let path = crate::util::resolve_desitination_path(path)
+                let path = crate::util::resolve_liquid_template(path)
                     .map_err(|_| TaskError::WellKnown(format!("cannot resolve path {}", path)))?;
                 if fs::metadata(&path).is_ok() {
                     return Ok(false);

@@ -3,7 +3,7 @@ taskgroups:
   normalfile_common:
   - type: cp
     src: "alacritty/"
-    dest: "$XDG_CONFIG_HOME/alacritty/"
+    dest: "{{env.XDG_CONFIG_HOME}}/alacritty/"
     templates:
       - target: alacritty/alacritty.yml
         vars:

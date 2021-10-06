@@ -270,13 +270,13 @@ fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
             src_base
         )));
     }
-    let dest = crate::util::resolve_desitination_path(dest).map_err(|e| {
+    let dest = crate::util::resolve_liquid_template(dest).map_err(|e| {
         crate::TaskError::WellKnown(format!(
             "cannot resolve disitination path {:?} due to {:?}",
             dest, e
         ))
     })?;
-    let tbl = file_table(&src_base, &dest).map_err(|e| {
+    let tbl = file_table(&src_base, Path::new(&dest)).map_err(|e| {
         crate::TaskError::WellKnown(format!(
             "cannot resolve disitination path {:?} due to {:?}",
             dest, e

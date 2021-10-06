@@ -185,6 +185,7 @@ dependencies = [
  "liquid",
  "md5",
  "nom",
+ "once_cell",
  "regex",
  "sha2",
  "termion",
