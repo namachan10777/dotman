@@ -9,7 +9,6 @@ use nom::{
     IResult,
 };
 use std::collections::HashMap;
-use yaml_rust::{yaml::Hash, Yaml};
 
 type Package = (String, String);
 type Packages = HashMap<String, String>;
@@ -113,14 +112,16 @@ impl crate::Task for CargoTask {
     }
 }
 
-pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(
+    obj: &HashMap<String, crate::ast::Value>,
+) -> Result<Box<dyn crate::Task>, crate::Error> {
     let package = obj
-        .get(&Yaml::String("package".to_owned()))
+        .get("package")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cargo.package is required".to_owned()))?
         .as_str()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cargo.package must be string".to_owned()))?
         .to_owned();
-    let version = obj.get(&Yaml::String("version".to_owned())).map(|version| {
+    let version = obj.get("version").map(|version| {
         version.as_str().ok_or_else(|| {
             crate::Error::InvalidPlaybook(
                 "cargo.version must be string".to_owned(),

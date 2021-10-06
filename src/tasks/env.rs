@@ -1,6 +1,4 @@
-use yaml_rust::{yaml::Hash, Yaml};
-
-use std::env;
+use std::{collections::HashMap, env};
 
 use crate::util::resolve_liquid_template;
 
@@ -55,13 +53,12 @@ impl crate::Task for EnvTask {
     }
 }
 
-fn yaml_to_str(yaml: &Yaml) -> Result<Option<String>, crate::Error> {
+fn yaml_to_str(yaml: &crate::ast::Value) -> Result<Option<String>, crate::Error> {
     match &yaml {
-        Yaml::String(s) => Ok(Some(s.clone())),
-        Yaml::Real(r) => Ok(Some(r.clone())),
-        Yaml::Integer(i) => Ok(Some(i.to_string())),
-        Yaml::Boolean(b) => Ok(Some(b.to_string())),
-        Yaml::Null => Ok(None),
+        crate::ast::Value::Str(s) => Ok(Some(s.clone())),
+        crate::ast::Value::Real(r) => Ok(Some(r.to_string())),
+        crate::ast::Value::Int(i) => Ok(Some(i.to_string())),
+        crate::ast::Value::Bool(b) => Ok(Some(b.to_string())),
         _ => Err(crate::Error::InvalidPlaybook(
             "cannot interpret as string".to_owned(),
             yaml.to_owned(),
@@ -69,19 +66,20 @@ fn yaml_to_str(yaml: &Yaml) -> Result<Option<String>, crate::Error> {
     }
 }
 
-pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(
+    obj: &HashMap<String, crate::ast::Value>,
+) -> Result<Box<dyn crate::Task>, crate::Error> {
     let envs = obj
-        .get(&Yaml::String("envs".to_owned()))
+        .get("envs")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("env must have \"envs\"".to_owned()))?
         .as_hash()
         .ok_or_else(|| {
             crate::Error::PlaybookLoadFailed("env.envs must be pairs of environments".to_owned())
         })?
-        .into_iter()
+        .iter()
         .map(|(name, val)| {
-            let name = yaml_to_str(name)?.unwrap_or_else(|| "null".to_owned());
             let val = yaml_to_str(val)?;
-            Ok((name, val))
+            Ok((name.clone(), val))
         })
         .collect::<Result<Vec<_>, _>>()?;
     Ok(Box::new(EnvTask { envs }))

@@ -1,8 +1,8 @@
 use sha2::Digest;
+use std::collections::HashMap;
 use std::io;
 use std::path::Path;
 use std::{fs, io::Read};
-use yaml_rust::{yaml::Hash, Yaml};
 
 use crate::TaskError;
 
@@ -77,11 +77,13 @@ impl crate::Task for ShTask {
     }
 }
 
-pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(
+    obj: &HashMap<String, crate::ast::Value>,
+) -> Result<Box<dyn crate::Task>, crate::Error> {
     let mut cmd = obj
-        .get(&Yaml::String("cmd".to_owned()))
+        .get("cmd")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh must have \"cmd\"".to_owned()))?
-        .as_vec()
+        .as_array()
         .ok_or_else(|| {
             crate::Error::PlaybookLoadFailed("sh.cmd must be array of string".to_owned())
         })?
@@ -95,11 +97,11 @@ pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
         })
         .collect::<Result<Vec<String>, _>>()?
         .into_iter();
-    let test = obj.get(&Yaml::String("test".to_owned())).map(|s| {
+    let test = obj.get("test").map(|s| {
         s.as_str()
             .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh.test must be string".to_owned()))
     });
-    let sha256 = obj.get(&Yaml::String("sha256".to_owned())).map(|s| {
+    let sha256 = obj.get("sha256").map(|s| {
         s.as_str()
             .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh.sha256 must be string".to_owned()))
     });
@@ -121,9 +123,7 @@ pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
     } else {
         Err(crate::Error::InvalidPlaybook(
             "invalid sh.cmd".to_owned(),
-            obj.get(&Yaml::String("cmd".to_owned()))
-                .expect("already suceeded")
-                .to_owned(),
+            obj.get("cmd").expect("already suceeded").to_owned(),
         ))
     }
 }

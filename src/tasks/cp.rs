@@ -4,7 +4,6 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 use thiserror::Error;
-use yaml_rust::{yaml::Hash, Yaml};
 
 type Templates = HashMap<Vec<String>, liquid::Object>;
 
@@ -350,19 +349,19 @@ impl crate::Task for CpTask {
     }
 }
 
-fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), crate::Error> {
+fn parse_cp_templates(
+    yaml: &crate::ast::Value,
+) -> Result<(Vec<String>, liquid::Object), crate::Error> {
     let hash = yaml.as_hash().ok_or_else(|| {
         crate::Error::InvalidPlaybook("cp.templates must be hash".to_owned(), yaml.to_owned())
     })?;
-    let target = match hash
-        .get(&Yaml::String("target".to_owned()))
-        .ok_or_else(|| {
-            crate::Error::InvalidPlaybook(
-                "cp.templates must have \"target\"".to_owned(),
-                yaml.to_owned(),
-            )
-        })? {
-        Yaml::Array(targets) => targets
+    let target = match hash.get("target").ok_or_else(|| {
+        crate::Error::InvalidPlaybook(
+            "cp.templates must have \"target\"".to_owned(),
+            yaml.to_owned(),
+        )
+    })? {
+        crate::ast::Value::Array(targets) => targets
             .iter()
             .map(|target| {
                 target.as_str().map(|s| s.to_owned()).ok_or_else(|| {
@@ -373,14 +372,14 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), crat
                 })
             })
             .collect::<Result<Vec<String>, crate::Error>>(),
-        Yaml::String(target) => Ok(vec![target.to_owned()]),
+        crate::ast::Value::Str(target) => Ok(vec![target.to_owned()]),
         invalid => Err(crate::Error::InvalidPlaybook(
             "cp.target must be string of array of string".to_owned(),
             invalid.to_owned(),
         )),
     }?;
     let mut context = liquid::Object::new();
-    hash.get(&Yaml::String("vars".to_owned()))
+    hash.get("vars")
         .ok_or_else(|| {
             crate::Error::InvalidPlaybook("cp.template must have vars".to_owned(), yaml.to_owned())
         })?
@@ -391,27 +390,18 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), crat
                 yaml.to_owned(),
             )
         })?
-        .into_iter()
+        .iter()
         .map(|(name, val)| {
-            let name = KString::from_string(
-                name.as_str()
-                    .ok_or_else(|| {
-                        crate::Error::InvalidPlaybook(
-                            "children of cp.templates.vars must be string: <string|int|float>"
-                                .to_owned(),
-                            name.to_owned(),
-                        )
-                    })?
-                    .to_owned(),
-            );
+            let name = KString::from_string(name.to_owned());
             match val {
-                Yaml::String(str) => {
+                crate::ast::Value::Str(str) => {
                     context.insert(name, liquid::model::Value::scalar(str.to_owned()))
                 }
-                Yaml::Integer(int) => context.insert(name, liquid::model::Value::scalar(*int)),
-                Yaml::Real(float) => {
-                    let f: f64 = float.parse().expect("already parse as real by yaml parser");
-                    context.insert(name, liquid::model::Value::scalar(f))
+                crate::ast::Value::Int(int) => {
+                    context.insert(name, liquid::model::Value::scalar(*int))
+                }
+                crate::ast::Value::Real(float) => {
+                    context.insert(name, liquid::model::Value::scalar(*float))
                 }
                 _ => {
                     return Err(crate::Error::InvalidPlaybook(
@@ -426,21 +416,23 @@ fn parse_cp_templates(yaml: &Yaml) -> Result<(Vec<String>, liquid::Object), crat
         .collect::<Result<Vec<()>, crate::Error>>()?;
     Ok((target, context))
 }
-pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(
+    obj: &HashMap<String, crate::ast::Value>,
+) -> Result<Box<dyn crate::Task>, crate::Error> {
     let src = obj
-        .get(&Yaml::String("src".to_owned()))
+        .get("src")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cp must have \"src\"".to_owned()))?
         .as_str()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cp.src must be string".to_owned()))?
         .to_owned();
     let dest = obj
-        .get(&Yaml::String("dest".to_owned()))
+        .get("dest")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cp must have \"dest\"".to_owned()))?
         .as_str()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cp.dest must be string".to_owned()))?
         .to_owned();
     let merge = obj
-        .get(&Yaml::String("merge".to_owned()))
+        .get("merge")
         .map(|val| {
             val.as_bool().ok_or_else(|| {
                 crate::Error::InvalidPlaybook("cp.merge must be boolean".to_owned(), val.to_owned())
@@ -448,10 +440,10 @@ pub fn parse(obj: &Hash) -> Result<Box<dyn crate::Task>, crate::Error> {
         })
         .unwrap_or(Ok(true))?;
     let templates = obj
-        .get(&Yaml::String("templates".to_owned()))
+        .get("templates")
         .map(|templates| {
             templates
-                .as_vec()
+                .as_array()
                 .ok_or_else(|| {
                     crate::Error::InvalidPlaybook(
                         "cp.templates must be array".to_owned(),
