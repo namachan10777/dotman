@@ -1,4 +1,7 @@
+use std::any::Any;
+use std::cell::RefCell;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::{collections::HashMap, path::Path};
 use std::{fmt, fs};
 use termion::color;
@@ -28,9 +31,13 @@ struct Scenario {
     matches: Vec<TargetMatcher>,
 }
 
+pub type TaskGroups = HashMap<String, Vec<(String, Box<dyn Task>)>>;
+pub type ScheduledTasks<'a> = Vec<(&'a str, &'a [(String, Box<dyn Task>)])>;
+
 pub struct PlayBook {
-    taskgroups: HashMap<String, Vec<Box<dyn Task>>>,
+    taskgroups: TaskGroups,
     base: PathBuf,
+    task_ids: Vec<String>,
     scenarios: Vec<Scenario>,
 }
 
@@ -45,7 +52,10 @@ impl fmt::Debug for PlayBook {
                     .map(|(key, tasks)| {
                         (
                             key,
-                            tasks.iter().map(|task| task.name()).collect::<Vec<_>>(),
+                            tasks
+                                .iter()
+                                .map(|(_, task)| task.name())
+                                .collect::<Vec<_>>(),
                         )
                     })
                     .collect::<HashMap<_, _>>(),
@@ -55,11 +65,12 @@ impl fmt::Debug for PlayBook {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TaskContext {
     pub base: PathBuf,
     pub dryrun: bool,
     pub scenario: String,
+    pub cache: Rc<RefCell<Option<Box<dyn Any>>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -86,14 +97,14 @@ impl From<anyhow::Error> for TaskError {
     }
 }
 
-fn parse_task(taskbuilders: &TaskBuilders, yaml: &Yaml) -> Result<Box<dyn Task>, Error> {
+fn parse_task(taskbuilders: &TaskBuilders, yaml: &Yaml) -> Result<(String, Box<dyn Task>), Error> {
     let obj = yaml
         .as_hash()
         .ok_or_else(|| Error::InvalidPlaybook("task must be hash".to_owned(), yaml.to_owned()))?;
     if let Some(Yaml::String(key)) = obj.get(&Yaml::String("type".to_owned())) {
         if let Some(parse) = taskbuilders.get(key.as_str()) {
             let task = parse(obj)?;
-            Ok(task)
+            Ok((key.to_owned(), task))
         } else {
             Err(Error::InvalidPlaybook(
                 format!("unsupported task \"{}\"", key.as_str()),
@@ -108,10 +119,7 @@ fn parse_task(taskbuilders: &TaskBuilders, yaml: &Yaml) -> Result<Box<dyn Task>,
     }
 }
 
-fn parse_taskgroups(
-    yaml: &Yaml,
-    taskbuilders: &TaskBuilders,
-) -> Result<HashMap<String, Vec<Box<dyn Task>>>, Error> {
+fn parse_taskgroups(yaml: &Yaml, taskbuilders: &TaskBuilders) -> Result<TaskGroups, Error> {
     yaml.as_hash()
         .ok_or_else(|| {
             Error::InvalidPlaybook("taskgroups must be hash".to_owned(), yaml.to_owned())
@@ -130,7 +138,7 @@ fn parse_taskgroups(
                 yaml.to_owned(),
             )),
         })
-        .collect::<Result<HashMap<String, Vec<Box<dyn Task>>>, Error>>()
+        .collect::<Result<HashMap<_, _>, Error>>()
 }
 
 fn parse_matcher(yaml: &Yaml) -> Result<TargetMatcher, Error> {
@@ -232,12 +240,10 @@ fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
     None
 }
 
-pub type TaskGroups<'a> = Vec<(&'a str, &'a [Box<dyn Task>])>;
-
 fn enlist_taskgroups<'a>(
-    taskgroups: &'a HashMap<String, Vec<Box<dyn Task>>>,
+    taskgroups: &'a TaskGroups,
     taskgroup_names: &'a [String],
-) -> Result<TaskGroups<'a>, Error> {
+) -> Result<ScheduledTasks<'a>, Error> {
     taskgroup_names
         .iter()
         .map(|taskgroup_name| {
@@ -285,6 +291,10 @@ impl PlayBook {
             .collect::<Result<Vec<Scenario>, Error>>()?;
         Ok(PlayBook {
             taskgroups,
+            task_ids: taskbuilders
+                .into_iter()
+                .map(|(task, _)| task)
+                .collect::<Vec<_>>(),
             base: Path::new(config)
                 .parent()
                 .ok_or_else(|| {
@@ -294,7 +304,7 @@ impl PlayBook {
             scenarios,
         })
     }
-    pub fn deploys(&self) -> Result<(String, TaskGroups), Error> {
+    pub fn deploys(&self) -> Result<(String, ScheduledTasks), Error> {
         let scenario = match_scenario(&self.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
         Ok((
             scenario.name.to_owned(),
@@ -304,15 +314,21 @@ impl PlayBook {
 
     pub fn execute_graphicaly(&self, dryrun: bool) -> Result<(), Error> {
         let (scenario, taskgroups) = self.deploys()?;
-        let ctx = TaskContext {
-            dryrun,
-            scenario,
-            base: self.base.clone(),
-        };
+        let mut caches = HashMap::new();
+        for task in &self.task_ids {
+            caches.insert(task, Rc::new(RefCell::new(None)));
+        }
+
         for (group, tasks) in taskgroups {
             println!("[{}]", group);
-            for task in tasks {
+            for (id, task) in tasks {
                 let task_name = task.name();
+                let ctx = TaskContext {
+                    dryrun,
+                    scenario: scenario.clone(),
+                    base: self.base.clone(),
+                    cache: caches.get(&id).expect("already registered").clone(),
+                };
                 let result = task.execute(&ctx);
                 match result {
                     Ok(true) => println!(

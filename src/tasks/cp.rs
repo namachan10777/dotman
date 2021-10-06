@@ -314,7 +314,7 @@ struct CpContext {
 }
 
 impl CpContext {
-    fn extend(ctx: crate::TaskContext, merge: bool, templates: Templates) -> Self {
+    fn extend(ctx: &crate::TaskContext, merge: bool, templates: Templates) -> Self {
         let templates = templates
             .into_iter()
             .map(|(target, mut object)| {
@@ -343,7 +343,7 @@ impl crate::Task for CpTask {
 
     fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         execute_cp(
-            &CpContext::extend(ctx.clone(), self.merge, self.templates.clone()),
+            &CpContext::extend(ctx, self.merge, self.templates.clone()),
             &self.src,
             &self.dest,
         )
