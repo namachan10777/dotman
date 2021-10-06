@@ -1,6 +1,9 @@
 ---
 taskgroups:
   normalfile_common:
+  - type: env
+    envs:
+      XDG_CONFIG_HOME: "{{env.HOME}}/.config"
   - type: cp
     src: "alacritty/"
     dest: "{{env.XDG_CONFIG_HOME}}/alacritty/"

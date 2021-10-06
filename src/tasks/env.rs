@@ -2,6 +2,8 @@ use yaml_rust::{yaml::Hash, Yaml};
 
 use std::env;
 
+use crate::util::resolve_liquid_template;
+
 struct EnvTask {
     envs: Vec<(String, Option<String>)>,
 }
@@ -29,9 +31,12 @@ impl crate::Task for EnvTask {
         let mut changed = false;
         for (name, value) in &self.envs {
             if let Some(value) = value {
+                let value = resolve_liquid_template(value).map_err(|_| {
+                    crate::TaskError::WellKnown(format!("cannot resolve env value {}", value))
+                })?;
                 match env::var(&name) {
                     Ok(s) => {
-                        changed |= &s != value;
+                        changed |= s != value;
                     }
                     Err(env::VarError::NotPresent) => {
                         changed = true;
