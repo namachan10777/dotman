@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::{collections::HashMap, path::Path};
 use std::{fmt, fs};
+use termion::color;
 use yaml_rust::yaml::Hash;
 use yaml_rust::{Yaml, YamlLoader};
 
@@ -29,6 +30,7 @@ struct Scenario {
 
 pub struct PlayBook {
     taskgroups: HashMap<String, Vec<Box<dyn Task>>>,
+    base: PathBuf,
     scenarios: Vec<Scenario>,
 }
 
@@ -283,6 +285,12 @@ impl PlayBook {
             .collect::<Result<Vec<Scenario>, Error>>()?;
         Ok(PlayBook {
             taskgroups,
+            base: Path::new(config)
+                .parent()
+                .ok_or_else(|| {
+                    Error::PlaybookLoadFailed(format!("cannot take parent of {}", config))
+                })?
+                .to_owned(),
             scenarios,
         })
     }
@@ -292,5 +300,54 @@ impl PlayBook {
             scenario.name.to_owned(),
             enlist_taskgroups(&self.taskgroups, scenario.tasks.as_slice())?,
         ))
+    }
+
+    pub fn execute_graphicaly(&self, dryrun: bool) -> Result<(), Error> {
+        let (scenario, taskgroups) = self.deploys()?;
+        let ctx = TaskContext {
+            dryrun,
+            scenario,
+            base: self.base.clone(),
+        };
+        for (group, tasks) in taskgroups {
+            println!("[{}]", group);
+            for task in tasks {
+                let task_name = task.name();
+                let result = task.execute(&ctx);
+                match result {
+                    Ok(true) => println!(
+                        "{}[Changed] {}{}",
+                        color::Fg(color::Yellow),
+                        color::Fg(color::White),
+                        task_name
+                    ),
+                    Ok(false) => println!(
+                        "{}[Ok]      {}{}",
+                        color::Fg(color::Green),
+                        color::Fg(color::LightWhite),
+                        task_name
+                    ),
+                    Err(TaskError::WellKnown(msg)) => {
+                        println!(
+                            "{}[Failed]  {}{}",
+                            color::Fg(color::Red),
+                            color::Fg(color::Reset),
+                            task_name
+                        );
+                        println!("  -> {}", msg);
+                    }
+                    Err(TaskError::Unknown(e)) => {
+                        println!(
+                            "{}[Failed]  {}{}",
+                            color::Fg(color::Red),
+                            color::Fg(color::Reset),
+                            task_name
+                        );
+                        println!("  -> {}", e);
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 }
