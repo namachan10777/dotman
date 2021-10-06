@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Release binary
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            asset_name: dotman-x86_64-Linux
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            asset_name: dotman-x86_64-Darwin
+          - os: ubuntu-latest
+            target: aarch64-apple-darwin
+            asset_name: dotman-aarch64-Darwin
+    runs-on: ${{ matrix.os }} 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v2
+        with:
+          toolchain: stable
+          overrtide: true
+      
+      - name: Cross build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target ${{ matrix.target }} --verbose
+      
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@2.1.1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/${{ matrix.target }}/release/dotman
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
