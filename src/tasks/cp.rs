@@ -19,6 +19,9 @@ enum FileType {
 }
 
 fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
+    if fs::metadata(path).is_err() {
+        return Ok(Vec::new());
+    }
     if fs::metadata(path)?.is_dir() {
         let mut entries = fs::read_dir(path)?
             .into_iter()
@@ -261,27 +264,37 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
 // TODO: handle error when src directory is not found.
 fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
     let src_base = ctx.base.join(Path::new(src));
-    if let Ok(dest) = crate::util::resolve_desitination_path(dest) {
-        if let Ok(tbl) = file_table(&src_base, &dest) {
-            let mut changed = false;
-            for (src, dest) in tbl.values() {
-                match sync_file(ctx, src, dest)? {
-                    SyncStatus::Changed => {
-                        changed = true;
-                    }
-                    SyncStatus::UnChanged => (),
-                    SyncStatus::WellKnownError(msg) => {
-                        return Err(crate::TaskError::WellKnown(msg));
-                    }
-                }
+    if fs::metadata(&src_base).is_err() {
+        return Err(crate::TaskError::WellKnown(format!(
+            "src {:?} is not found",
+            src_base
+        )));
+    }
+    let dest = crate::util::resolve_desitination_path(dest).map_err(|e| {
+        crate::TaskError::WellKnown(format!(
+            "cannot resolve disitination path {:?} due to {:?}",
+            dest, e
+        ))
+    })?;
+    let tbl = file_table(&src_base, &dest).map_err(|e| {
+        crate::TaskError::WellKnown(format!(
+            "cannot resolve disitination path {:?} due to {:?}",
+            dest, e
+        ))
+    })?;
+    let mut changed = false;
+    for (src, dest) in tbl.values() {
+        match sync_file(ctx, src, dest)? {
+            SyncStatus::Changed => {
+                changed = true;
             }
-            return Ok(changed);
+            SyncStatus::UnChanged => (),
+            SyncStatus::WellKnownError(msg) => {
+                return Err(crate::TaskError::WellKnown(msg));
+            }
         }
     }
-    Err(crate::TaskError::WellKnown(format!(
-        "cannot resolve disitination path {:?}",
-        dest
-    )))
+    Ok(changed)
 }
 
 #[derive(Debug)]

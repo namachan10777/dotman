@@ -66,7 +66,7 @@ pub enum Error {
     InvalidPlaybook(String, Yaml),
     TaskGroupNotFound(String),
     AnyScenarioDoesNotMatch,
-    CannotResolveVar(String),
+    CannotResolveVar(String, std::env::VarError),
 }
 
 type TaskResult = Result<bool, TaskError>;
@@ -230,12 +230,12 @@ fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
     None
 }
 
-type TaskGroup<'a> = Vec<(&'a str, &'a [Box<dyn Task>])>;
+pub type TaskGroups<'a> = Vec<(&'a str, &'a [Box<dyn Task>])>;
 
 fn enlist_taskgroups<'a>(
     taskgroups: &'a HashMap<String, Vec<Box<dyn Task>>>,
     taskgroup_names: &'a [String],
-) -> Result<TaskGroup<'a>, Error> {
+) -> Result<TaskGroups<'a>, Error> {
     taskgroup_names
         .iter()
         .map(|taskgroup_name| {
@@ -286,25 +286,11 @@ impl PlayBook {
             scenarios,
         })
     }
-    pub fn execute_deploy(&self, base: &Path, dryrun: bool) -> Result<Stats, Error> {
+    pub fn deploys(&self) -> Result<(String, TaskGroups), Error> {
         let scenario = match_scenario(&self.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
-        let taskgroups = enlist_taskgroups(&self.taskgroups, scenario.tasks.as_slice())?;
-        let ctx = TaskContext {
-            base: base.to_owned(),
-            dryrun,
-            scenario: scenario.name.clone(),
-        };
-        Ok(taskgroups
-            .iter()
-            .map(|(name, tasks)| {
-                (
-                    name.to_owned().to_owned(),
-                    tasks
-                        .iter()
-                        .map(|task| (task.name(), task.execute(&ctx)))
-                        .collect::<Vec<(String, TaskResult)>>(),
-                )
-            })
-            .collect::<Stats>())
+        Ok((
+            scenario.name.to_owned(),
+            enlist_taskgroups(&self.taskgroups, scenario.tasks.as_slice())?,
+        ))
     }
 }

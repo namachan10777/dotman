@@ -7,7 +7,8 @@ pub fn resolve_desitination_path(path: &str) -> Result<PathBuf, crate::Error> {
             .split(path::MAIN_SEPARATOR)
             .map(|elem| {
                 if let Some(var_name) = elem.strip_prefix('$') {
-                    env::var(var_name).map_err(|_| crate::Error::CannotResolveVar(elem.to_owned()))
+                    env::var(var_name)
+                        .map_err(|e| crate::Error::CannotResolveVar(elem.to_owned(), e))
                 } else if elem.starts_with("\\$") {
                     Ok(elem[1..].to_owned())
                 } else {

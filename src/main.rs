@@ -28,12 +28,14 @@ struct DryRunOpts {
     config: String,
 }
 
-type Stats = [(String, Vec<(String, Result<bool, dotman::TaskError>)>)];
+type TaskGroups<'a> = &'a [(&'a str, &'a [Box<dyn dotman::Task>])];
 
-fn display_result(stats: &Stats) {
-    for (group, tasks) in stats {
+fn execute_graphicaly(taskgroups: TaskGroups, ctx: &dotman::TaskContext) {
+    for (group, tasks) in taskgroups {
         println!("[{}]", group);
-        for (task_name, result) in tasks {
+        for task in *tasks {
+            let task_name = task.name();
+            let result = task.execute(ctx);
             match result {
                 Ok(true) => println!(
                     "{}[Changed] {}{}",
@@ -84,16 +86,28 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            let result =
-                playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), false)?;
-            display_result(&result);
+            let (scenario, deploys) = playbook.deploys()?;
+            execute_graphicaly(
+                &deploys,
+                &dotman::TaskContext {
+                    base: Path::new(&opts.config).parent().unwrap().to_owned(),
+                    dryrun: false,
+                    scenario,
+                },
+            );
             Ok(())
         }
         Subcommand::DryRun(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            let result =
-                playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), true)?;
-            display_result(&result);
+            let (scenario, deploys) = playbook.deploys()?;
+            execute_graphicaly(
+                &deploys,
+                &dotman::TaskContext {
+                    base: Path::new(&opts.config).parent().unwrap().to_owned(),
+                    dryrun: true,
+                    scenario,
+                },
+            );
             Ok(())
         }
     }
@@ -138,12 +152,13 @@ fn main() {
             );
             process::exit(-1);
         }
-        Err(dotman::Error::CannotResolveVar(var)) => {
+        Err(dotman::Error::CannotResolveVar(var, e)) => {
             eprintln!(
-                "{}[Error] {}cannot resolve var ${}",
+                "{}[Error] {}cannot resolve var ${} due to {:?}",
                 color::Fg(color::Red),
                 color::Fg(color::Reset),
-                var
+                var,
+                e
             );
             process::exit(-1);
         }
