@@ -302,10 +302,22 @@ struct CpContext {
 
 impl CpContext {
     fn extend(ctx: crate::TaskContext, merge: bool, templates: Templates) -> Self {
+        let templates = templates
+            .into_iter()
+            .map(|(target, mut object)| {
+                if !object.contains_key("_scenario") {
+                    object.insert(
+                        KString::from_static("_scenario"),
+                        liquid::model::Value::scalar(ctx.scenario.clone()),
+                    );
+                }
+                (target, object)
+            })
+            .collect::<HashMap<_, _>>();
         Self {
             merge,
             templates,
-            base: ctx.base,
+            base: ctx.base.clone(),
             dryrun: ctx.dryrun,
         }
     }

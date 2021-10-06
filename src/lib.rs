@@ -57,6 +57,7 @@ impl fmt::Debug for PlayBook {
 pub struct TaskContext {
     pub base: PathBuf,
     pub dryrun: bool,
+    pub scenario: String,
 }
 
 #[derive(Debug, Clone)]
@@ -285,9 +286,14 @@ impl PlayBook {
             scenarios,
         })
     }
-    pub fn execute_deploy(&self, ctx: &TaskContext) -> Result<Stats, Error> {
+    pub fn execute_deploy(&self, base: &Path, dryrun: bool) -> Result<Stats, Error> {
         let scenario = match_scenario(&self.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
         let taskgroups = enlist_taskgroups(&self.taskgroups, scenario.tasks.as_slice())?;
+        let ctx = TaskContext {
+            base: base.to_owned(),
+            dryrun,
+            scenario: scenario.name.clone(),
+        };
         Ok(taskgroups
             .iter()
             .map(|(name, tasks)| {
@@ -295,7 +301,7 @@ impl PlayBook {
                     name.to_owned().to_owned(),
                     tasks
                         .iter()
-                        .map(|task| (task.name(), task.execute(ctx)))
+                        .map(|task| (task.name(), task.execute(&ctx)))
                         .collect::<Vec<(String, TaskResult)>>(),
                 )
             })

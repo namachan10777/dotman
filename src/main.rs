@@ -81,21 +81,13 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            let ctx = dotman::TaskContext {
-                base: Path::new(&opts.config).parent().unwrap().to_owned(),
-                dryrun: false,
-            };
-            let result = playbook.execute_deploy(&ctx)?;
+            let result = playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), false)?;
             display_result(&result);
             Ok(())
         }
         Subcommand::DryRun(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            let ctx = dotman::TaskContext {
-                base: Path::new(&opts.config).parent().unwrap().to_owned(),
-                dryrun: true,
-            };
-            let result = playbook.execute_deploy(&ctx)?;
+            let result = playbook.execute_deploy(Path::new(&opts.config).parent().unwrap(), true)?;
             display_result(&result);
             Ok(())
         }
