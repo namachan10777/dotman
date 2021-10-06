@@ -17,9 +17,9 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             asset_name: dotman-x86_64-Darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            asset_name: dotman-aarch64-Darwin
+#          - os: macos-latest
+#            target: aarch64-apple-darwin
+#            asset_name: dotman-aarch64-Darwin
     runs-on: ${{ matrix.os }} 
 
     steps:
