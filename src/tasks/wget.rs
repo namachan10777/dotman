@@ -24,10 +24,8 @@ impl crate::Task for WgetTask {
     fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
         let mut buf = Vec::new();
         if let Ok(mut f) = fs::File::open(&self.dest) {
-            if f.read_to_end(&mut buf).is_ok() {
-                if check_sha256(&self.sha256, buf.as_slice()) {
-                    return Ok(false);
-                }
+            if f.read_to_end(&mut buf).is_ok() && check_sha256(&self.sha256, buf.as_slice()) {
+                return Ok(false);
             }
         }
         let mut res = reqwest::blocking::get(&self.url).map_err(|e| {
