@@ -3,7 +3,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::{alphanumeric1, anychar, char, digit1},
-    combinator::{recognize, verify},
+    combinator::{opt, recognize, verify},
     multi::{many0, many1},
     sequence::tuple,
     IResult,
@@ -24,7 +24,10 @@ fn parse_installed_package(src: &str) -> IResult<&str, Package> {
         char('.'),
         digit1,
     )))(src)?;
-    let (src, _) = tag(":\n")(src)?;
+    let (src, _) = tuple((
+        opt(tuple((tag(" "), many1(verify(anychar, |c| *c != ':'))))),
+        tag(":\n"),
+    ))(src)?;
     let (src, _) = many0(tuple((
         tag("    "),
         many1(verify(anychar, |c| *c != '\n')),
