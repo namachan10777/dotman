@@ -48,7 +48,10 @@ impl crate::Task for WgetTask {
         }
 
         let f = fs::File::create(&self.dest).map_err(|e| {
-            crate::TaskError::WellKnown(format!("cannot open {} as writ-mode due to {:?}", &self.dest, e))
+            crate::TaskError::WellKnown(format!(
+                "cannot open {} as writ-mode due to {:?}",
+                &self.dest, e
+            ))
         })?;
         let mut writer = io::BufWriter::new(f);
         writer.write_all(buf.as_slice()).map_err(|e| {
