@@ -28,3 +28,16 @@ pub fn resolve_liquid_template(src: &str) -> Result<String, liquid::Error> {
         .parse(src)?;
     template.render(&liquid_object_for_global_resolve())
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_resolve_liquid_template() {
+        assert_eq!(
+            resolve_liquid_template("{{env.HOME}}/.config").unwrap(),
+            format!("{}/.config", std::env::var("HOME").unwrap())
+        );
+    }
+}
