@@ -10,7 +10,8 @@ taskgroups:
   - type: sh
     cmd: ["sh", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -- -y"]
     test: "{{env.HOME}}/.cargo/bin/rustup"
-    sha256: 3dc5ef50861ee18657f9db2eeb7392f9c2a6c95c90ab41e45ab4ca71476b4338
+    sha256:
+      sakanainu: 3dc5ef50861ee18657f9db2eeb7392f9c2a6c95c90ab41e45ab4ca71476b4338
   - { type: cargo, package: alacritty }
   - { type: cargo, package: bandwhich }
   - { type: cargo, package: bat }
