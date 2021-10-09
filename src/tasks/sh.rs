@@ -8,7 +8,7 @@ use crate::TaskError;
 
 struct ShTask {
     cmd: (String, Vec<String>),
-    test: Option<(String, Option<String>)>,
+    test: Option<(String, Option<HashMap<String, String>>)>,
 }
 
 fn check_sha256(sha: &str, path: &Path) -> io::Result<bool> {
@@ -25,11 +25,14 @@ impl crate::Task for ShTask {
         format!("sh \"{} {}\"", self.cmd.0, self.cmd.1.join(" "))
     }
 
-    fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
+    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         match &self.test {
             Some((path, Some(sha256))) => {
                 let path = crate::util::resolve_liquid_template(path)
                     .map_err(|_| TaskError::WellKnown(format!("cannot resolve path {}", path)))?;
+                let sha256 = sha256.get(&ctx.scenario).ok_or_else(|| {
+                    crate::TaskError::WellKnown(format!("sh.sha256.{} is not found", &ctx.scenario))
+                })?;
                 if check_sha256(sha256, Path::new(&path))
                     .map_err(|_| TaskError::WellKnown(format!("cannot hash file {:?}", path)))?
                 {
@@ -102,11 +105,21 @@ pub fn parse(
             .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh.test must be string".to_owned()))
     });
     let sha256 = obj.get("sha256").map(|s| {
-        s.as_str()
-            .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh.sha256 must be string".to_owned()))
+        s.as_hash()
+            .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh.sha256 must be string".to_owned()))?
+            .iter()
+            .map(|(key, value)| {
+                value
+                    .as_str()
+                    .ok_or_else(|| {
+                        crate::Error::PlaybookLoadFailed("sh.sha256.xxx must be string".to_owned())
+                    })
+                    .map(|v| (key.to_owned(), v.to_owned()))
+            })
+            .collect::<Result<HashMap<_, _>, _>>()
     });
     let test = match (test, sha256) {
-        (Some(test), Some(sha256)) => Some((test?.to_owned(), Some(sha256?.to_owned()))),
+        (Some(test), Some(sha256)) => Some((test?.to_owned(), Some(sha256?))),
         (Some(test), None) => Some((test?.to_owned(), None)),
         (None, None) => None,
         (None, Some(_)) => {

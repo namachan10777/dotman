@@ -5,7 +5,7 @@ use std::io::{self, Read, Write};
 use sha2::{Digest, Sha256};
 
 struct WgetTask {
-    sha256: String,
+    sha256: HashMap<String, String>,
     dest: String,
     url: String,
 }
@@ -21,10 +21,13 @@ impl crate::Task for WgetTask {
         format!("wget {}", self.url)
     }
 
-    fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
+    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         let mut buf = Vec::new();
+        let sha256 = &self.sha256.get(&ctx.scenario).ok_or_else(|| {
+            crate::TaskError::WellKnown(format!("wget.sha256.{} is not found", &ctx.scenario))
+        })?;
         if let Ok(mut f) = fs::File::open(&self.dest) {
-            if f.read_to_end(&mut buf).is_ok() && check_sha256(&self.sha256, buf.as_slice()) {
+            if f.read_to_end(&mut buf).is_ok() && check_sha256(sha256, buf.as_slice()) {
                 return Ok(false);
             }
         }
@@ -39,7 +42,7 @@ impl crate::Task for WgetTask {
             ))
         })?;
 
-        if !check_sha256(&self.sha256, buf.as_slice()) {
+        if !check_sha256(sha256, buf.as_slice()) {
             return Err(crate::TaskError::WellKnown(
                 "inconsistent hash value of downloaded file".to_owned(),
             ));
@@ -68,9 +71,18 @@ pub fn parse(
     let sha256 = obj
         .get("sha256")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?
-        .as_str()
+        .as_hash()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 must be string".to_owned()))?
-        .to_owned();
+        .iter()
+        .map(|(key, value)| {
+            value
+                .as_str()
+                .ok_or_else(|| {
+                    crate::Error::PlaybookLoadFailed("wget.sha256.xxx must be string".to_owned())
+                })
+                .map(|v| (key.to_owned(), v.to_owned()))
+        })
+        .collect::<Result<HashMap<_, _>, _>>()?;
     let url = obj
         .get("url")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?
