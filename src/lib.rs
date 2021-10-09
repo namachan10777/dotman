@@ -86,7 +86,7 @@ impl fmt::Debug for PlayBook {
 pub struct TaskContext {
     /// Base directory to execute deploy
     pub base: PathBuf,
-    /// Dry-run flag 
+    /// Dry-run flag
     pub dryrun: bool,
     /// Selected deploy scenario
     pub scenario: String,

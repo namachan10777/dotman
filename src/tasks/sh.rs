@@ -1,4 +1,3 @@
-
 //! Builtin sh task.
 use sha2::Digest;
 use std::collections::HashMap;
