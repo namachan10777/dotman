@@ -1,3 +1,4 @@
+//! Abstraction layer of configuration language.
 use std::collections::HashMap;
 use yaml_rust::Yaml;
 
@@ -11,12 +12,18 @@ pub enum Value {
     Hash(HashMap<String, Value>),
 }
 
+/// Error about conversion of ast
 #[derive(Debug)]
 pub enum ConvError {
+    /// Yaml alias is unsupported
     YamlAlias,
+    /// Yaml alias is unsupported
     YamlBadValue,
+    /// Yaml null is unsupported
     YamlNull,
+    /// Yaml hashkey must be string
     YamlInvalidHashKey(Yaml),
+    /// Failed to parse yaml real
     YamlCannotParseReal(String),
 }
 impl Value {
@@ -100,6 +107,8 @@ where
         .collect::<Vec<_>>()
 }
 
+/// Check to see if invalid members are included.
+/// This function will report [UnrecognizedMembers](../enum.Error.html) with passed prefix.
 pub fn verify_hash(
     hash: &HashMap<String, Value>,
     allowed: &[&str],

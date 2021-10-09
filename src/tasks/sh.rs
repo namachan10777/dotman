@@ -1,3 +1,5 @@
+
+//! Builtin sh task.
 use sha2::Digest;
 use std::collections::HashMap;
 use std::io;
@@ -6,6 +8,7 @@ use std::{fs, io::Read};
 
 use crate::TaskError;
 
+/// Implementation of [Task trait](../../trait.Task.html).
 struct ShTask {
     cmd: (String, Vec<String>),
     test: Option<(String, Option<HashMap<String, String>>)>,
@@ -80,6 +83,7 @@ impl crate::Task for ShTask {
     }
 }
 
+/// parse task section as a sh task
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {

@@ -1,3 +1,5 @@
+
+//! Builtin cargo task.
 use crate::TaskError;
 use nom::{
     branch::alt,
@@ -82,6 +84,7 @@ mod test_parser {
     }
 }
 
+/// Implementation of [Task trait](../../trait.Task.html).
 pub struct CargoTask {
     package: String,
     version: Option<String>,
@@ -156,6 +159,7 @@ impl crate::Task for CargoTask {
     }
 }
 
+/// parse task section as a cp task
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {

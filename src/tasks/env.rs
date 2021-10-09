@@ -1,7 +1,10 @@
+
+//! Builtin env task.
 use std::{collections::HashMap, env};
 
 use crate::util::resolve_liquid_template;
 
+/// Implementation of [Task trait](../../trait.Task.html).
 struct EnvTask {
     envs: Vec<(String, Option<String>)>,
 }
@@ -66,6 +69,7 @@ fn yaml_to_str(yaml: &crate::ast::Value) -> Result<Option<String>, crate::Error>
     }
 }
 
+/// parse task section as a cp task
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {

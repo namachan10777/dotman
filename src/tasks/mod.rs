@@ -1,3 +1,4 @@
+//! Builtin tasks
 pub mod cargo;
 pub mod cp;
 pub mod env;

@@ -15,8 +15,11 @@ pub mod util;
 
 use thiserror::Error;
 
+/// The trait of Task
 pub trait Task {
+    /// return human-readable identity name.
     fn name(&self) -> String;
+    /// execute with context.
     fn execute(&self, ctx: &TaskContext) -> TaskResult;
 }
 
@@ -46,6 +49,7 @@ struct Scenario {
 pub type TaskGroups = HashMap<String, Vec<(String, Box<dyn Task>)>>;
 pub type ScheduledTasks<'a> = Vec<(&'a str, &'a [(String, Box<dyn Task>)])>;
 
+/// Compiled configuration
 pub struct PlayBook {
     taskgroups: TaskGroups,
     base: PathBuf,
@@ -77,33 +81,51 @@ impl fmt::Debug for PlayBook {
     }
 }
 
+/// execution context to pass to Task
 #[derive(Debug)]
 pub struct TaskContext {
+    /// Base directory to execute deploy
     pub base: PathBuf,
+    /// Dry-run flag 
     pub dryrun: bool,
+    /// Selected deploy scenario
     pub scenario: String,
+    /// Cache shared between same task type
     pub cache: Rc<RefCell<Option<Box<dyn Any>>>>,
 }
 
+/// Critical errors
 #[derive(Debug, Clone)]
 pub enum Error {
+    /// Found unrecognized member of configuration
     UnrecognizedMembers {
+        /// prefix to identity where the error was reported
         prefix: Option<String>,
+        /// unrecognized members
         members: Vec<(String, ast::Value)>,
     },
+    /// Failed to load playbook
     PlaybookLoadFailed(String),
+    /// Failed to load playbook with a part of configuration
     InvalidPlaybook(String, ast::Value),
+    /// Taskgroup was not found
     TaskGroupNotFound(String),
+    /// No scenario
     AnyScenarioDoesNotMatch,
+    /// Failed to resolve template variable
     CannotResolveVar(String, std::env::VarError),
+    /// Failed to collect node information
     CannotCollectNodeInformation(String),
 }
 
 type TaskResult = Result<bool, TaskError>;
 #[derive(Error, Debug)]
+/// Error for tasks
 pub enum TaskError {
+    /// Wellknown error to be reported
     #[error("wellknown {0}")]
     WellKnown(String),
+    /// Unknown error that can be considered bugs
     #[error("unknown {0}")]
     Unknown(anyhow::Error),
 }
@@ -451,6 +473,7 @@ pub type TaskBuilder = Box<dyn Fn(&HashMap<String, ast::Value>) -> Result<Box<dy
 pub type TaskBuilders = HashMap<String, TaskBuilder>;
 
 impl PlayBook {
+    /// Load configuration from yaml text with taskbuilders.
     pub fn load_config(config: &str, taskbuilders: TaskBuilders) -> Result<Self, Error> {
         let playbook_src = fs::read_to_string(Path::new(&config)).map_err(|e| {
             Error::PlaybookLoadFailed(format!("cannot read playbook {} due to {:?}", config, e))
@@ -499,6 +522,8 @@ impl PlayBook {
             scenarios,
         })
     }
+
+    /// Enlist selected tasks by scenario.
     pub fn deploys(&self, scenario: Option<&str>) -> Result<(String, ScheduledTasks), Error> {
         let scenario = if let Some(scenario) = scenario {
             self.scenarios
@@ -519,6 +544,7 @@ impl PlayBook {
         ))
     }
 
+    /// Utility to execute playbook graphicaly
     pub fn execute_graphicaly(&self, dryrun: bool, scenario: Option<&str>) -> Result<(), Error> {
         let (scenario, taskgroups) = self.deploys(scenario)?;
         let mut caches = HashMap::new();

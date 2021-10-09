@@ -1,9 +1,11 @@
+//! Builtin wget task.
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Read, Write};
 
 use sha2::{Digest, Sha256};
 
+/// Implementation of [Task trait](../../trait.Task.html).
 struct WgetTask {
     sha256: HashMap<String, String>,
     dest: String,
@@ -65,6 +67,7 @@ impl crate::Task for WgetTask {
     }
 }
 
+/// parse task as a wget task
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {

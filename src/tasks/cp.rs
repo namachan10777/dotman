@@ -1,3 +1,5 @@
+
+//! Builtin cp task.
 use kstring::KString;
 use std::collections::HashMap;
 use std::io::Write;
@@ -296,6 +298,7 @@ fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
     Ok(changed)
 }
 
+/// Implementation of [Task trait](../../trait.Task.html).
 #[derive(Debug)]
 pub struct CpTask {
     src: String,
@@ -421,6 +424,8 @@ fn parse_cp_templates(
         .collect::<Result<Vec<()>, crate::Error>>()?;
     Ok((target, context))
 }
+
+/// parse task section as a cp task
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {
