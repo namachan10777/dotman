@@ -223,6 +223,7 @@ dependencies = [
  "kstring",
  "libc",
  "liquid",
+ "maplit",
  "md5",
  "nom",
  "once_cell",
