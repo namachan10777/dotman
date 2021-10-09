@@ -19,12 +19,16 @@ enum Subcommand {
 struct DeployOpts {
     #[clap(short, long)]
     config: String,
+    #[clap(short, long)]
+    scenario: Option<String>,
 }
 
 #[derive(Clap)]
 struct DryRunOpts {
     #[clap(short, long)]
     config: String,
+    #[clap(short, long)]
+    scenario: Option<String>,
 }
 
 fn run(opts: Opts) -> Result<(), dotman::Error> {
@@ -46,11 +50,19 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            playbook.execute_graphicaly(false)
+            if let Some(scenario) = opts.scenario {
+                playbook.execute_graphicaly(false, Some(&scenario))
+            } else {
+                playbook.execute_graphicaly(false, None)
+            }
         }
         Subcommand::DryRun(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            playbook.execute_graphicaly(true)
+            if let Some(scenario) = opts.scenario {
+                playbook.execute_graphicaly(true, Some(&scenario))
+            } else {
+                playbook.execute_graphicaly(true, None)
+            }
         }
     }
 }

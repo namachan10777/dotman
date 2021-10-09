@@ -485,21 +485,28 @@ impl PlayBook {
             scenarios,
         })
     }
-    pub fn deploys(&self) -> Result<(String, ScheduledTasks), Error> {
-        let scenario = match_scenario(
-            &self.scenarios,
-            &NodeInformation::collect()
-                .map_err(|e| Error::CannotCollectNodeInformation(format!("{:?}", e)))?,
-        )
-        .ok_or(Error::AnyScenarioDoesNotMatch)?;
+    pub fn deploys(&self, scenario: Option<&str>) -> Result<(String, ScheduledTasks), Error> {
+        let scenario = if let Some(scenario) = scenario {
+            self.scenarios
+                .iter()
+                .find(|s| s.name == scenario)
+                .ok_or(Error::AnyScenarioDoesNotMatch)?
+        } else {
+            match_scenario(
+                &self.scenarios,
+                &NodeInformation::collect()
+                    .map_err(|e| Error::CannotCollectNodeInformation(format!("{:?}", e)))?,
+            )
+            .ok_or(Error::AnyScenarioDoesNotMatch)?
+        };
         Ok((
             scenario.name.to_owned(),
             enlist_taskgroups(&self.taskgroups, scenario.tasks.as_slice())?,
         ))
     }
 
-    pub fn execute_graphicaly(&self, dryrun: bool) -> Result<(), Error> {
-        let (scenario, taskgroups) = self.deploys()?;
+    pub fn execute_graphicaly(&self, dryrun: bool, scenario: Option<&str>) -> Result<(), Error> {
+        let (scenario, taskgroups) = self.deploys(scenario)?;
         let mut caches = HashMap::new();
         for task in &self.task_ids {
             caches.insert(task, Rc::new(RefCell::new(None)));
