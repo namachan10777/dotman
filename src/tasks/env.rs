@@ -69,6 +69,7 @@ fn yaml_to_str(yaml: &crate::ast::Value) -> Result<Option<String>, crate::Error>
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {
+    crate::ast::verify_hash(obj, &["type", "envs"], Some("tasks.env"))?;
     let envs = obj
         .get("envs")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("env must have \"envs\"".to_owned()))?

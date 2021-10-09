@@ -85,7 +85,7 @@ impl Value {
     }
 }
 
-pub fn not_allowed_member<'a, K, T>(map: &'a HashMap<K, T>, allowed: &[&K]) -> Vec<(&'a K, &'a T)>
+fn not_allowed_member<'a, K, T>(map: &'a HashMap<K, T>, allowed: &[&K]) -> Vec<(&'a K, &'a T)>
 where
     K: PartialEq,
 {
@@ -98,6 +98,26 @@ where
             }
         })
         .collect::<Vec<_>>()
+}
+
+pub fn verify_hash(
+    hash: &HashMap<String, Value>,
+    allowed: &[&str],
+    prefix: Option<&str>,
+) -> Result<(), crate::Error> {
+    let allowed = allowed.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>();
+    let not_allowed = not_allowed_member(hash, allowed.iter().collect::<Vec<_>>().as_slice());
+    if !not_allowed.is_empty() {
+        return Err(crate::Error::UnrecognizedMembers {
+            prefix: prefix.map(|s| s.to_owned()),
+            members: not_allowed
+                .iter()
+                .map(|(k, v)| ((*k).clone(), (*v).clone()))
+                .collect::<Vec<_>>(),
+        });
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(test)]

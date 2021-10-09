@@ -80,6 +80,7 @@ impl crate::Task for ShTask {
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {
+    crate::ast::verify_hash(obj, &["type", "cmd", "test", "sha256"], Some("tasks.env"))?;
     let mut cmd = obj
         .get("cmd")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh must have \"cmd\"".to_owned()))?

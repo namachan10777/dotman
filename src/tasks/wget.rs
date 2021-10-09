@@ -65,6 +65,7 @@ impl crate::Task for WgetTask {
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {
+    crate::ast::verify_hash(obj, &["type", "url", "dest", "sha256"], Some("tasks.env"))?;
     let sha256 = obj
         .get("sha256")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?
