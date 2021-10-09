@@ -1,5 +1,7 @@
+use regex::Regex;
 use std::any::Any;
 use std::cell::RefCell;
+use std::ffi::OsString;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::{collections::HashMap, path::Path};
@@ -18,13 +20,23 @@ pub trait Task {
     fn execute(&self, ctx: &TaskContext) -> TaskResult;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum TargetMatcher {
-    HostName(regex::Regex),
+    HostName(String, Regex),
     Root(bool),
 }
 
-#[derive(Debug)]
+impl PartialEq for TargetMatcher {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::HostName(x, _), Self::HostName(y, _)) => x == y,
+            (Self::Root(x), Self::Root(y)) => x == y,
+            _ => false,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 struct Scenario {
     name: String,
     tasks: Vec<String>,
@@ -80,6 +92,7 @@ pub enum Error {
     TaskGroupNotFound(String),
     AnyScenarioDoesNotMatch,
     CannotResolveVar(String, std::env::VarError),
+    CannotCollectNodeInformation(String),
 }
 
 type TaskResult = Result<bool, TaskError>;
@@ -166,7 +179,10 @@ fn parse_matcher(yaml: &ast::Value) -> Result<TargetMatcher, Error> {
                         val.to_owned(),
                     )
                 })?;
-                Ok(TargetMatcher::HostName(hostname_regex))
+                Ok(TargetMatcher::HostName(
+                    hostname_re_src.to_owned(),
+                    hostname_regex,
+                ))
             }
             "root" => Ok(TargetMatcher::Root(val.as_bool().ok_or_else(|| {
                 Error::InvalidPlaybook("matcher.root must be boolean".to_owned(), yaml.to_owned())
@@ -229,19 +245,176 @@ fn parse_scenario(yaml: &ast::Value) -> Result<Scenario, Error> {
     }
 }
 
-fn match_scenario(scenarios: &[Scenario]) -> Option<&Scenario> {
+#[cfg(test)]
+mod test_parsers {
+    use super::*;
+
+    #[test]
+    fn test_parse_scenario() {
+        let src = concat!(
+            "---\n",
+            "name: test_scenario\n",
+            "match:\n",
+            "- hostname: hoge\n",
+            "tasks:\n",
+            "- task1\n"
+        );
+        let yaml = YamlLoader::load_from_str(src).unwrap();
+        let ast = ast::Value::from_yaml(yaml[0].clone()).unwrap();
+        assert_eq!(
+            parse_scenario(&ast).unwrap(),
+            Scenario {
+                tasks: vec!["task1".to_owned()],
+                matches: vec![
+                    TargetMatcher::HostName("hoge".to_owned(), Regex::new(r"hoge").unwrap()),
+                    TargetMatcher::Root(false)
+                ],
+                name: "test_scenario".to_owned()
+            }
+        );
+    }
+}
+
+struct NodeInformation {
+    root: bool,
+    hostname: OsString,
+}
+
+impl NodeInformation {
+    fn collect() -> anyhow::Result<Self> {
+        Ok(Self {
+            #[cfg(target_family = "unix")]
+            root: unsafe { libc::getuid() == 0 },
+            #[cfg(target_family = "windows")]
+            root: false,
+            hostname: hostname::get()?,
+        })
+    }
+}
+
+fn match_scenario<'a>(
+    scenarios: &'a [Scenario],
+    node_info: &NodeInformation,
+) -> Option<&'a Scenario> {
     for scenario in scenarios {
         if scenario.matches.iter().all(|matcher| match matcher {
-            TargetMatcher::HostName(hostname_re) => hostname::get()
-                .map(|hostname| hostname_re.is_match(&hostname.to_string_lossy()))
-                .unwrap_or(false),
-            #[cfg(target_family = "unix")]
-            TargetMatcher::Root(is_root) => unsafe { (libc::getuid() == 0) == *is_root },
+            TargetMatcher::HostName(_, hostname_re) => {
+                hostname_re.is_match(&node_info.hostname.to_string_lossy())
+            }
+            TargetMatcher::Root(is_root) => *is_root == node_info.root,
         }) {
             return Some(scenario);
         }
     }
     None
+}
+
+#[cfg(test)]
+mod test_matcher {
+    use super::*;
+
+    #[test]
+    fn test_match_scenario() {
+        let src_nonroot1 = concat!(
+            "---\n",
+            "name: test_scenario\n",
+            "match:\n",
+            "- hostname: ^hoge$\n",
+            "tasks:\n",
+            "- task1\n"
+        );
+        let src_nonroot2 = concat!(
+            "---\n",
+            "name: test_scenario\n",
+            "match:\n",
+            "- hostname: ^fuga$\n",
+            "tasks:\n",
+            "- task1\n"
+        );
+        let src_root = concat!(
+            "---\n",
+            "name: test_scenario\n",
+            "match:\n",
+            "- hostname: ^hoge$\n",
+            "- root: true\n",
+            "tasks:\n",
+            "- task1\n"
+        );
+        let nonroot1 = parse_scenario(
+            &ast::Value::from_yaml(
+                YamlLoader::load_from_str(src_nonroot1)
+                    .unwrap()
+                    .into_iter()
+                    .next()
+                    .unwrap(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        let nonroot2 = parse_scenario(
+            &ast::Value::from_yaml(
+                YamlLoader::load_from_str(src_nonroot2)
+                    .unwrap()
+                    .into_iter()
+                    .next()
+                    .unwrap(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        let root = parse_scenario(
+            &ast::Value::from_yaml(
+                YamlLoader::load_from_str(src_root)
+                    .unwrap()
+                    .into_iter()
+                    .next()
+                    .unwrap(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        let scenarios = vec![nonroot1.clone(), nonroot2.clone(), root.clone()];
+        assert_eq!(
+            match_scenario(
+                scenarios.as_slice(),
+                &NodeInformation {
+                    hostname: OsString::from("hoge".to_owned()),
+                    root: false,
+                }
+            ),
+            Some(&nonroot1)
+        );
+        assert_eq!(
+            match_scenario(
+                scenarios.as_slice(),
+                &NodeInformation {
+                    hostname: OsString::from("fuga".to_owned()),
+                    root: false,
+                }
+            ),
+            Some(&nonroot2)
+        );
+        assert_eq!(
+            match_scenario(
+                scenarios.as_slice(),
+                &NodeInformation {
+                    hostname: OsString::from("hoge".to_owned()),
+                    root: true,
+                }
+            ),
+            Some(&root)
+        );
+        assert_eq!(
+            match_scenario(
+                scenarios.as_slice(),
+                &NodeInformation {
+                    hostname: OsString::from("bar".to_owned()),
+                    root: true,
+                }
+            ),
+            None
+        );
+    }
 }
 
 fn enlist_taskgroups<'a>(
@@ -313,7 +486,12 @@ impl PlayBook {
         })
     }
     pub fn deploys(&self) -> Result<(String, ScheduledTasks), Error> {
-        let scenario = match_scenario(&self.scenarios).ok_or(Error::AnyScenarioDoesNotMatch)?;
+        let scenario = match_scenario(
+            &self.scenarios,
+            &NodeInformation::collect()
+                .map_err(|e| Error::CannotCollectNodeInformation(format!("{:?}", e)))?,
+        )
+        .ok_or(Error::AnyScenarioDoesNotMatch)?;
         Ok((
             scenario.name.to_owned(),
             enlist_taskgroups(&self.taskgroups, scenario.tasks.as_slice())?,

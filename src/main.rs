@@ -104,5 +104,13 @@ fn main() {
             );
             process::exit(-1);
         }
+        Err(dotman::Error::CannotCollectNodeInformation(msg)) => {
+            eprintln!(
+                "{}[Error] {}cannot collect node information due to {}",
+                color::Fg(color::Red),
+                color::Fg(color::Reset),
+                msg
+            )
+        }
     }
 }
