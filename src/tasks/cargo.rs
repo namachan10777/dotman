@@ -41,6 +41,47 @@ fn parse_cargo_install_list(src: &str) -> IResult<&str, Packages> {
     Ok((src, packages.into_iter().collect::<HashMap<_, _>>()))
 }
 
+#[cfg(test)]
+mod test_parser {
+    use super::*;
+    use maplit::hashmap;
+
+    #[test]
+    fn test_parse_cargo_install_list() {
+        let src = concat!(
+            "bandwhich v0.20.0:\n",
+            "    bandwhich\n",
+            "bingrep v0.9.0:\n",
+            "    bingrep\n",
+            "cargo-edit v0.8.0:\n",
+            "    cargo-add\n",
+            "    cargo-rm\n",
+            "    cargo-set-version\n",
+            "    cargo-upgrade\n",
+            "gping v1.2.5:\n",
+            "    gping\n",
+            "helix-term v0.1.0 (/home/namachan/Project/github.com/topecongiro/helix/helix-term):\n",
+            "    hx\n",
+            "zoxide v0.7.5:\n",
+            "    zoxide\n",
+        );
+        assert_eq!(
+            parse_cargo_install_list(src),
+            Ok((
+                "",
+                hashmap! {
+                    "bandwhich".to_owned() => "v0.20.0".to_owned(),
+                    "bingrep".to_owned() => "v0.9.0".to_owned(),
+                    "cargo-edit".to_owned() => "v0.8.0".to_owned(),
+                    "gping".to_owned() => "v1.2.5".to_owned(),
+                    "helix-term".to_owned() => "v0.1.0".to_owned(),
+                    "zoxide".to_owned() => "v0.7.5".to_owned(),
+                }
+            ))
+        );
+    }
+}
+
 pub struct CargoTask {
     package: String,
     version: Option<String>,

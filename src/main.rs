@@ -1,5 +1,5 @@
 use clap::{AppSettings, Clap};
-use std::collections::HashMap;
+use maplit::hashmap;
 use std::process;
 use termion::color;
 #[derive(Clap)]
@@ -28,16 +28,21 @@ struct DryRunOpts {
 }
 
 fn run(opts: Opts) -> Result<(), dotman::Error> {
-    let mut taskbuilders = HashMap::new();
     let cp_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::cp::parse(yaml));
     let env_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::env::parse(yaml));
     let sh_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::sh::parse(yaml));
     let cargo_builder: dotman::TaskBuilder =
         Box::new(move |yaml| dotman::tasks::cargo::parse(yaml));
-    taskbuilders.insert("cp".to_owned(), cp_builder);
-    taskbuilders.insert("env".to_owned(), env_builder);
-    taskbuilders.insert("sh".to_owned(), sh_builder);
-    taskbuilders.insert("cargo".to_owned(), cargo_builder);
+    let wget_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::wget::parse(yaml));
+
+    let taskbuilders = hashmap! {
+        "cp".to_owned() => cp_builder,
+        "env".to_owned() => env_builder,
+        "sh".to_owned() => sh_builder,
+        "cargo".to_owned() => cargo_builder,
+        "wget".to_owned() => wget_builder,
+    };
+
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
@@ -98,6 +103,14 @@ fn main() {
                 e
             );
             process::exit(-1);
+        }
+        Err(dotman::Error::CannotCollectNodeInformation(msg)) => {
+            eprintln!(
+                "{}[Error] {}cannot collect node information due to {}",
+                color::Fg(color::Red),
+                color::Fg(color::Reset),
+                msg
+            )
         }
     }
 }

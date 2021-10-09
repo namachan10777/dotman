@@ -11,6 +11,7 @@ pub enum Value {
     Hash(HashMap<String, Value>),
 }
 
+#[derive(Debug)]
 pub enum ConvError {
     YamlAlias,
     YamlBadValue,
