@@ -87,6 +87,10 @@ pub struct TaskContext {
 
 #[derive(Debug, Clone)]
 pub enum Error {
+    UnrecognizedMembers {
+        prefix: Option<String>,
+        members: Vec<(String, ast::Value)>,
+    },
     PlaybookLoadFailed(String),
     InvalidPlaybook(String, ast::Value),
     TaskGroupNotFound(String),
@@ -164,6 +168,7 @@ fn parse_matcher(yaml: &ast::Value) -> Result<TargetMatcher, Error> {
     if let Some((target, val)) = obj.iter().next() {
         match target.as_str() {
             "hostname" => {
+                ast::verify_hash(obj, &["hostname"], Some("matcher"))?;
                 let hostname_re_src = val.as_str().ok_or_else(|| {
                     Error::InvalidPlaybook(
                         "matcher.hostname must be string".to_owned(),
@@ -184,9 +189,15 @@ fn parse_matcher(yaml: &ast::Value) -> Result<TargetMatcher, Error> {
                     hostname_regex,
                 ))
             }
-            "root" => Ok(TargetMatcher::Root(val.as_bool().ok_or_else(|| {
-                Error::InvalidPlaybook("matcher.root must be boolean".to_owned(), yaml.to_owned())
-            })?)),
+            "root" => {
+                ast::verify_hash(obj, &["root"], Some("matcher"))?;
+                Ok(TargetMatcher::Root(val.as_bool().ok_or_else(|| {
+                    Error::InvalidPlaybook(
+                        "matcher.root must be boolean".to_owned(),
+                        yaml.to_owned(),
+                    )
+                })?))
+            }
             matcher_name => Err(Error::InvalidPlaybook(
                 format!("unsupported matcher \"{}\"", matcher_name),
                 yaml.to_owned(),
@@ -204,6 +215,8 @@ fn parse_scenario(yaml: &ast::Value) -> Result<Scenario, Error> {
     let obj = yaml.as_hash().ok_or_else(|| {
         Error::InvalidPlaybook("scenario mast be hash".to_owned(), yaml.to_owned())
     })?;
+
+    ast::verify_hash(obj, &["name", "match", "tasks"], Some("scenario"))?;
     if let (
         Some(ast::Value::Str(name)),
         Some(ast::Value::Array(matchers)),
@@ -455,6 +468,7 @@ impl PlayBook {
         .as_hash()
         .ok_or_else(|| Error::PlaybookLoadFailed("invalid playbook".to_owned()))?
         .clone();
+        ast::verify_hash(&playbook_ast, &["taskgroups", "scenarios"], None)?;
         let taskgroups = playbook_ast
             .get("taskgroups")
             .ok_or_else(|| Error::PlaybookLoadFailed("taskgroups is not found".to_owned()))?;

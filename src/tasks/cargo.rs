@@ -159,6 +159,7 @@ impl crate::Task for CargoTask {
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {
+    crate::ast::verify_hash(obj, &["type", "version", "package"], Some("tasks.cargo"))?;
     let package = obj
         .get("package")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cargo.package is required".to_owned()))?

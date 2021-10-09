@@ -124,5 +124,27 @@ fn main() {
                 msg
             )
         }
+        Err(dotman::Error::UnrecognizedMembers { prefix, members }) => {
+            if let Some(prefix) = prefix {
+                for (key, _) in members {
+                    eprintln!(
+                        "{}[Error] {}unrecognized member {}.{}",
+                        color::Fg(color::Red),
+                        color::Fg(color::Reset),
+                        prefix,
+                        key
+                    );
+                }
+            } else {
+                for (key, _) in members {
+                    eprintln!(
+                        "{}[Error] {}unrecognized member {}",
+                        color::Fg(color::Red),
+                        color::Fg(color::Reset),
+                        key
+                    );
+                }
+            }
+        }
     }
 }

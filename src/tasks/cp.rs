@@ -355,6 +355,11 @@ fn parse_cp_templates(
     let hash = yaml.as_hash().ok_or_else(|| {
         crate::Error::InvalidPlaybook("cp.templates must be hash".to_owned(), yaml.to_owned())
     })?;
+    crate::ast::verify_hash(
+        hash,
+        &["type", "vars", "target"],
+        Some("tasks.cp.templates"),
+    )?;
     let target = match hash.get("target").ok_or_else(|| {
         crate::Error::InvalidPlaybook(
             "cp.templates must have \"target\"".to_owned(),
@@ -419,6 +424,11 @@ fn parse_cp_templates(
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {
+    crate::ast::verify_hash(
+        obj,
+        &["type", "src", "dest", "merge", "templates"],
+        Some("tasks.cp"),
+    )?;
     let src = obj
         .get("src")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("cp must have \"src\"".to_owned()))?
