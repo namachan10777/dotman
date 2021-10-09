@@ -1,0 +1,8 @@
+Host ssh.namachan10777.dev
+  ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h
+  User namachan
+  ForwardAgent yes
+Host ssh2.namachan10777.dev
+  ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h
+  User namachan
+  ForwardAgent yes
