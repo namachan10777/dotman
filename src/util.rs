@@ -18,6 +18,12 @@ fn liquid_object_for_global_resolve() -> liquid::Object {
     obj.insert(KString::from_static("os"), liquid::model::value!("Linux"));
     #[cfg(target_os = "macos")]
     obj.insert(KString::from_static("os"), liquid::model::value!("Darwin"));
+    #[cfg(target_arch = "x86_64")]
+    obj.insert(KString::from_static("arch"), liquid::model::value!("x86_64"));
+    #[cfg(target_arch = "x86")]
+    obj.insert(KString::from_static("arch"), liquid::model::value!("x86"));
+    #[cfg(target_arch = "aarch64")]
+    obj.insert(KString::from_static("arch"), liquid::model::value!("aarch64"));
     obj
 }
 
