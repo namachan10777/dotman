@@ -35,9 +35,7 @@ impl crate::Task for ShTask {
                 let sha256 = sha256.get(&ctx.scenario).ok_or_else(|| {
                     crate::TaskError::WellKnown(format!("sh.sha256.{} is not found", &ctx.scenario))
                 })?;
-                if check_sha256(sha256, Path::new(&path))
-                    .map_err(|_| TaskError::WellKnown(format!("cannot hash file {:?}", path)))?
-                {
+                if check_sha256(sha256, Path::new(&path)).unwrap_or(false) {
                     Ok(false)
                 } else {
                     duct::cmd(&self.cmd.0, &self.cmd.1)
