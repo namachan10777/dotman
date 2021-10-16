@@ -24,23 +24,35 @@ impl crate::Task for WgetTask {
     }
 
     fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
+        let dest = crate::util::resolve_liquid_template(&self.dest).map_err(|e| {
+            crate::TaskError::WellKnown(format!(
+                "cannot resolve wget.dest {:?} due to {:?}",
+                &self.dest, e
+            ))
+        })?;
+        let url = crate::util::resolve_liquid_template(&self.url).map_err(|e| {
+            crate::TaskError::WellKnown(format!(
+                "cannot resolve wget.url {:?} due to {:?}",
+                &self.dest, e
+            ))
+        })?;
         let mut buf = Vec::new();
         let sha256 = &self.sha256.get(&ctx.scenario).ok_or_else(|| {
             crate::TaskError::WellKnown(format!("wget.sha256.{} is not found", &ctx.scenario))
         })?;
-        if let Ok(mut f) = fs::File::open(&self.dest) {
+        if let Ok(mut f) = fs::File::open(&dest) {
             if f.read_to_end(&mut buf).is_ok() && check_sha256(sha256, buf.as_slice()) {
                 return Ok(false);
             }
         }
-        let mut res = reqwest::blocking::get(&self.url).map_err(|e| {
-            crate::TaskError::WellKnown(format!("cannot download {} due to {:?}", &self.url, e))
+        let mut res = reqwest::blocking::get(&url).map_err(|e| {
+            crate::TaskError::WellKnown(format!("cannot download {} due to {:?}", &url, e))
         })?;
         buf.clear();
         res.read_to_end(&mut buf).map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot read response body of {} due to {:?}",
-                &self.url, e
+                &url, e
             ))
         })?;
 
@@ -50,10 +62,10 @@ impl crate::Task for WgetTask {
             ));
         }
 
-        let f = fs::File::create(&self.dest).map_err(|e| {
+        let f = fs::File::create(&dest).map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot open {} as writ-mode due to {:?}",
-                &self.dest, e
+                &dest, e
             ))
         })?;
         let mut writer = io::BufWriter::new(f);
