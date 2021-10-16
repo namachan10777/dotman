@@ -71,7 +71,7 @@ impl crate::Task for WgetTask {
 pub fn parse(
     obj: &HashMap<String, crate::ast::Value>,
 ) -> Result<Box<dyn crate::Task>, crate::Error> {
-    crate::ast::verify_hash(obj, &["type", "url", "dest", "sha256"], Some("tasks.env"))?;
+    crate::ast::verify_hash(obj, &["type", "url", "dest", "sha256"], Some("tasks.wget"))?;
     let sha256 = obj
         .get("sha256")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?
@@ -89,13 +89,13 @@ pub fn parse(
         .collect::<Result<HashMap<_, _>, _>>()?;
     let url = obj
         .get("url")
-        .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?
+        .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.url is required".to_owned()))?
         .as_str()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.url must be string".to_owned()))?
         .to_owned();
     let dest = obj
         .get("dest")
-        .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?
+        .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.dest is required".to_owned()))?
         .as_str()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.dest must be string".to_owned()))?
         .to_owned();

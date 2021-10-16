@@ -74,11 +74,11 @@ fn file_table(src: &Path, dest: &Path) -> anyhow::Result<HashMap<PathBuf, (FileT
         };
         let stripped = dest_descendant.strip_prefix(&Path::new(dest))?.to_owned();
         if is_target_root(&stripped) {
-            hash.entry(dest_descendant)
+            hash.entry(src.to_owned())
                 .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
                 .or_insert((FileType::Nothing(dest.to_owned()), dest_filetype));
         } else {
-            hash.entry(stripped)
+            hash.entry(stripped.clone())
                 .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
                 .or_insert((
                     FileType::Nothing(src.join(dest_descendant.strip_prefix(dest)?)),
