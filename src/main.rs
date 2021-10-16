@@ -38,6 +38,7 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     let cargo_builder: dotman::TaskBuilder =
         Box::new(move |yaml| dotman::tasks::cargo::parse(yaml));
     let wget_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::wget::parse(yaml));
+    let link_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::link::parse(yaml));
 
     let taskbuilders = hashmap! {
         "cp".to_owned() => cp_builder,
@@ -45,6 +46,7 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
         "sh".to_owned() => sh_builder,
         "cargo".to_owned() => cargo_builder,
         "wget".to_owned() => wget_builder,
+        "link".to_owned() => link_builder,
     };
 
     match opts.subcmd {
