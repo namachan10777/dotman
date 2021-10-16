@@ -35,6 +35,10 @@ fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
     }
 }
 
+fn is_target_root(path: &Path) -> bool {
+    path.to_str() == Some("") || path.to_str() == Some(&std::path::MAIN_SEPARATOR.to_string())
+}
+
 fn file_table(src: &Path, dest: &Path) -> anyhow::Result<HashMap<PathBuf, (FileType, FileType)>> {
     let src_descendants = enlist_descendants(src)?;
     let dest_descendants = enlist_descendants(dest)?;
@@ -48,13 +52,18 @@ fn file_table(src: &Path, dest: &Path) -> anyhow::Result<HashMap<PathBuf, (FileT
         } else {
             FileType::Other(src_descendant.to_owned())
         };
-        hash.insert(
-            src_descendant.strip_prefix(&Path::new(src))?.to_owned(),
-            (
-                src_filetype,
-                FileType::Nothing(dest.join(src_descendant.strip_prefix(src)?)),
-            ),
-        );
+        let stripped = src_descendant.strip_prefix(&Path::new(src))?.to_owned();
+        if is_target_root(&stripped) {
+            hash.insert(
+                src_descendant,
+                (src_filetype, FileType::Nothing(dest.to_owned())),
+            );
+        } else {
+            hash.insert(
+                stripped.clone(),
+                (src_filetype, FileType::Nothing(dest.join(stripped))),
+            );
+        }
     }
     for dest_descendant in dest_descendants {
         let meta = fs::metadata(&dest_descendant)?;
@@ -63,12 +72,19 @@ fn file_table(src: &Path, dest: &Path) -> anyhow::Result<HashMap<PathBuf, (FileT
         } else {
             FileType::Other(dest_descendant.to_owned())
         };
-        hash.entry(dest_descendant.strip_prefix(&Path::new(dest))?.to_owned())
-            .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
-            .or_insert((
-                FileType::Nothing(src.join(dest_descendant.strip_prefix(dest)?)),
-                dest_filetype,
-            ));
+        let stripped = dest_descendant.strip_prefix(&Path::new(dest))?.to_owned();
+        if is_target_root(&stripped) {
+            hash.entry(dest_descendant)
+                .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
+                .or_insert((FileType::Nothing(dest.to_owned()), dest_filetype));
+        } else {
+            hash.entry(stripped)
+                .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))
+                .or_insert((
+                    FileType::Nothing(src.join(dest_descendant.strip_prefix(dest)?)),
+                    dest_filetype,
+                ));
+        }
     }
     Ok(hash)
 }
