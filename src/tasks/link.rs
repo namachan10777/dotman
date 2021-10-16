@@ -79,7 +79,7 @@ impl crate::Task for LinkTask {
                 dest, e
             ))
         })?;
-        symlink(&src, &dest).map_err(|e| {
+        symlink(&src, dest).map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot link {:?} to {:?} due to {:?}",
                 src, dest, e
