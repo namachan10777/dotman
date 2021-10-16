@@ -44,6 +44,7 @@ jobs:
         with:
           files: |-
             target/${{ matrix.target }}/release/dotman
+        if: ${{ matrix.target != 'x86_64-apple-darwin' }}
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.2.1
