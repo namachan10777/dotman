@@ -1,21 +1,20 @@
-use clap::{AppSettings, Clap};
+use clap::Parser;
 use maplit::hashmap;
 use std::process;
 use termion::color;
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Parser)]
 struct Opts {
     #[clap(subcommand)]
     subcmd: Subcommand,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 enum Subcommand {
     Deploy(DeployOpts),
     DryRun(DryRunOpts),
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct DeployOpts {
     #[clap(short, long)]
     config: String,
@@ -23,7 +22,7 @@ struct DeployOpts {
     scenario: Option<String>,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 struct DryRunOpts {
     #[clap(short, long)]
     config: String,
