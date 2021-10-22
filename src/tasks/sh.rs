@@ -7,10 +7,23 @@ use std::{fs, io::Read};
 
 use crate::TaskError;
 
+enum Sha256Set {
+    Each(HashMap<String, String>),
+    All(String),
+}
+
+impl Sha256Set {
+    fn get(&self, key: &str) -> Option<&String> {
+        match self {
+            Sha256Set::All(s) => Some(s),
+            Sha256Set::Each(hash) => hash.get(key),
+        }
+    }
+}
 /// Implementation of [Task trait](../../trait.Task.html).
 struct ShTask {
     cmd: (String, Vec<String>),
-    test: Option<(String, Option<HashMap<String, String>>)>,
+    test: Option<(String, Option<Sha256Set>)>,
 }
 
 fn check_sha256(sha: &str, path: &Path) -> io::Result<bool> {
@@ -106,22 +119,30 @@ pub fn parse(
         s.as_str()
             .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh.test must be string".to_owned()))
     });
-    let sha256 = obj.get("sha256").map(|s| {
-        s.as_hash()
-            .ok_or_else(|| crate::Error::PlaybookLoadFailed("sh.sha256 must be string".to_owned()))?
-            .iter()
-            .map(|(key, value)| {
-                value
-                    .as_str()
-                    .ok_or_else(|| {
-                        crate::Error::PlaybookLoadFailed("sh.sha256.xxx must be string".to_owned())
-                    })
-                    .map(|v| (key.to_owned(), v.to_owned()))
-            })
-            .collect::<Result<HashMap<_, _>, _>>()
-    });
+    let sha256 = obj.get("sha256");
+    let sha256 = match sha256 {
+        Some(crate::ast::Value::Hash(hash)) => Ok(Some(Sha256Set::Each(
+            hash.iter()
+                .map(|(key, value)| {
+                    value
+                        .as_str()
+                        .ok_or_else(|| {
+                            crate::Error::PlaybookLoadFailed(
+                                "sh.sha256.xxx must be string".to_owned(),
+                            )
+                        })
+                        .map(|v| (key.to_owned(), v.to_owned()))
+                })
+                .collect::<Result<HashMap<_, _>, _>>()?,
+        ))),
+        Some(crate::ast::Value::Str(s)) => Ok(Some(Sha256Set::All(s.to_owned()))),
+        None => Ok(None),
+        _ => Err(crate::Error::PlaybookLoadFailed(
+            "sh.sha256 must be hash or string".to_owned(),
+        )),
+    }?;
     let test = match (test, sha256) {
-        (Some(test), Some(sha256)) => Some((test?.to_owned(), Some(sha256?))),
+        (Some(test), Some(sha256)) => Some((test?.to_owned(), Some(sha256))),
         (Some(test), None) => Some((test?.to_owned(), None)),
         (None, None) => None,
         (None, Some(_)) => {

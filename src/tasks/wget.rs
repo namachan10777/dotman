@@ -7,9 +7,23 @@ use sha2::{Digest, Sha256};
 
 use crate::util::resolve_liquid_template;
 
+enum Sha256Set {
+    Each(HashMap<String, String>),
+    All(String),
+}
+
+impl Sha256Set {
+    fn get(&self, key: &str) -> Option<&String> {
+        match self {
+            Sha256Set::All(s) => Some(s),
+            Sha256Set::Each(hash) => hash.get(key),
+        }
+    }
+}
+
 /// Implementation of [Task trait](../../trait.Task.html).
 struct WgetTask {
-    sha256: HashMap<String, String>,
+    sha256: Sha256Set,
     dest: String,
     url: String,
 }
@@ -82,19 +96,27 @@ pub fn parse(
     crate::ast::verify_hash(obj, &["type", "url", "dest", "sha256"], Some("tasks.wget"))?;
     let sha256 = obj
         .get("sha256")
-        .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?
-        .as_hash()
-        .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 must be string".to_owned()))?
-        .iter()
-        .map(|(key, value)| {
-            value
-                .as_str()
-                .ok_or_else(|| {
-                    crate::Error::PlaybookLoadFailed("wget.sha256.xxx must be string".to_owned())
+        .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.sha256 is required".to_owned()))?;
+    let sha256 = match sha256 {
+        crate::ast::Value::Hash(hash) => Ok(Sha256Set::Each(
+            hash.iter()
+                .map(|(key, value)| {
+                    value
+                        .as_str()
+                        .ok_or_else(|| {
+                            crate::Error::PlaybookLoadFailed(
+                                "wget.sha256.xxx must be string".to_owned(),
+                            )
+                        })
+                        .map(|v| (key.to_owned(), v.to_owned()))
                 })
-                .map(|v| (key.to_owned(), v.to_owned()))
-        })
-        .collect::<Result<HashMap<_, _>, _>>()?;
+                .collect::<Result<HashMap<_, _>, _>>()?,
+        )),
+        crate::ast::Value::Str(s) => Ok(Sha256Set::All(s.to_owned())),
+        _ => Err(crate::Error::PlaybookLoadFailed(
+            "wget.sha256 must be hash or string".to_owned(),
+        )),
+    }?;
     let url = obj
         .get("url")
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.url is required".to_owned()))?
