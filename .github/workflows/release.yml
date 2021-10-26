@@ -9,6 +9,7 @@ jobs:
   build:
     name: Release binary
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
