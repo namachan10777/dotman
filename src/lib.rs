@@ -475,9 +475,17 @@ pub type TaskBuilders = HashMap<String, TaskBuilder>;
 impl PlayBook {
     /// Load configuration from yaml text with taskbuilders.
     pub fn load_config(config: &str, taskbuilders: TaskBuilders) -> Result<Self, Error> {
-        let playbook_src = fs::read_to_string(Path::new(&config)).map_err(|e| {
-            Error::PlaybookLoadFailed(format!("cannot read playbook {} due to {:?}", config, e))
-        })?;
+        let playbook_src = if config.ends_with(".jsonnet") {
+            let mut vm = jsonnet::JsonnetVm::new();
+            let result = vm.evaluate_file(config).map_err(|e| {
+                Error::PlaybookLoadFailed(format!("cannot load playbook {} due to {:?}", config, e))
+            })?;
+            result.as_str().to_owned()
+        } else {
+            fs::read_to_string(Path::new(&config)).map_err(|e| {
+                Error::PlaybookLoadFailed(format!("cannot read playbook {} due to {:?}", config, e))
+            })?
+        };
         let playbook_ast = ast::Value::from_yaml(
             YamlLoader::load_from_str(&playbook_src)
                 .map_err(|_| {

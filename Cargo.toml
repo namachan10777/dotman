@@ -11,6 +11,7 @@ clap = { version="3.0.0-beta.5", features=["derive"] }
 duct = "0.13.5"
 hex = "0.4.3"
 hostname = "0.3.1"
+jsonnet-rs = "0.17.0"
 kstring = "1.0.5"
 libc = "0.2.105"
 liquid = "0.23.0"
