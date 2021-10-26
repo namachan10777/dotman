@@ -472,6 +472,12 @@ pub type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 pub type TaskBuilder = Box<dyn Fn(&HashMap<String, ast::Value>) -> Result<Box<dyn Task>, Error>>;
 pub type TaskBuilders = HashMap<String, TaskBuilder>;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum VerboseLevel {
+    Compact,
+    ShowAllTask,
+}
+
 impl PlayBook {
     /// Load configuration from yaml text with taskbuilders.
     pub fn load_config(config: &str, taskbuilders: TaskBuilders) -> Result<Self, Error> {
@@ -553,15 +559,22 @@ impl PlayBook {
     }
 
     /// Utility to execute playbook graphicaly
-    pub fn execute_graphicaly(&self, dryrun: bool, scenario: Option<&str>) -> Result<(), Error> {
+    pub fn execute_graphicaly(
+        &self,
+        dryrun: bool,
+        scenario: Option<&str>,
+        verbose_level: &VerboseLevel,
+    ) -> Result<(), Error> {
         let (scenario, taskgroups) = self.deploys(scenario)?;
         let mut caches = HashMap::new();
         for task in &self.task_ids {
             caches.insert(task, Rc::new(RefCell::new(None)));
         }
 
+        let mut change_count = 0;
+        let mut skip_count = 0;
+
         for (group, tasks) in taskgroups {
-            println!("[{}]", group);
             for (id, task) in tasks {
                 let task_name = task.name();
                 let ctx = TaskContext {
@@ -571,20 +584,33 @@ impl PlayBook {
                     cache: caches.get(&id).expect("already registered").clone(),
                 };
                 let result = task.execute(&ctx);
-                match result {
-                    Ok(true) => println!(
-                        "{}[Changed] {}{}",
-                        color::Fg(color::Yellow),
-                        color::Fg(color::White),
-                        task_name
-                    ),
-                    Ok(false) => println!(
-                        "{}[Ok]      {}{}",
-                        color::Fg(color::Green),
-                        color::Fg(color::LightWhite),
-                        task_name
-                    ),
-                    Err(TaskError::WellKnown(msg)) => {
+                match (result, verbose_level) {
+                    (Ok(true), VerboseLevel::Compact) => {
+                        change_count += 1;
+                    }
+                    (Ok(false), VerboseLevel::Compact) => {
+                        skip_count += 1;
+                    }
+                    (Ok(true), VerboseLevel::ShowAllTask) => {
+                        println!("[{}]", group);
+                        println!(
+                            "{}[Changed] {}{}",
+                            color::Fg(color::Yellow),
+                            color::Fg(color::White),
+                            task_name
+                        );
+                    }
+                    (Ok(false), VerboseLevel::ShowAllTask) => {
+                        println!("[{}]", group);
+                        println!(
+                            "{}[Ok]      {}{}",
+                            color::Fg(color::Green),
+                            color::Fg(color::LightWhite),
+                            task_name
+                        );
+                    }
+                    (Err(TaskError::WellKnown(msg)), _) => {
+                        println!("[{}]", group);
                         println!(
                             "{}[Failed]  {}{}",
                             color::Fg(color::Red),
@@ -593,7 +619,8 @@ impl PlayBook {
                         );
                         println!("  -> {}", msg);
                     }
-                    Err(TaskError::Unknown(e)) => {
+                    (Err(TaskError::Unknown(e)), _) => {
+                        println!("[{}]", group);
                         println!(
                             "{}[Failed]  {}{}",
                             color::Fg(color::Red),
@@ -603,6 +630,24 @@ impl PlayBook {
                         println!("  -> {}", e);
                     }
                 }
+            }
+        }
+        if verbose_level == &VerboseLevel::Compact {
+            if change_count > 0 {
+                println!(
+                    "{}[Changed] {}{} tasks",
+                    color::Fg(color::Yellow),
+                    color::Fg(color::White),
+                    change_count
+                );
+            }
+            if skip_count > 0 {
+                println!(
+                    "{}[Ok] {}{} tasks",
+                    color::Fg(color::Green),
+                    color::Fg(color::White),
+                    skip_count
+                );
             }
         }
         Ok(())

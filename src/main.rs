@@ -1,4 +1,5 @@
 use clap::Parser;
+use dotman::VerboseLevel;
 use maplit::hashmap;
 use std::process;
 use termion::color;
@@ -20,6 +21,8 @@ struct DeployOpts {
     config: String,
     #[clap(short, long)]
     scenario: Option<String>,
+    #[clap(short = 'V', long)]
+    verbose: bool,
 }
 
 #[derive(Parser)]
@@ -28,6 +31,8 @@ struct DryRunOpts {
     config: String,
     #[clap(short, long)]
     scenario: Option<String>,
+    #[clap(short = 'V', long)]
+    verbose: bool,
 }
 
 fn run(opts: Opts) -> Result<(), dotman::Error> {
@@ -51,18 +56,28 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            if let Some(scenario) = opts.scenario {
-                playbook.execute_graphicaly(false, Some(&scenario))
+            let verbose_lebel = if opts.verbose {
+                VerboseLevel::ShowAllTask
             } else {
-                playbook.execute_graphicaly(false, None)
+                VerboseLevel::Compact
+            };
+            if let Some(scenario) = opts.scenario {
+                playbook.execute_graphicaly(false, Some(&scenario), &verbose_lebel)
+            } else {
+                playbook.execute_graphicaly(false, None, &verbose_lebel)
             }
         }
         Subcommand::DryRun(opts) => {
             let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
-            if let Some(scenario) = opts.scenario {
-                playbook.execute_graphicaly(true, Some(&scenario))
+            let verbose_lebel = if opts.verbose {
+                VerboseLevel::ShowAllTask
             } else {
-                playbook.execute_graphicaly(true, None)
+                VerboseLevel::Compact
+            };
+            if let Some(scenario) = opts.scenario {
+                playbook.execute_graphicaly(true, Some(&scenario), &verbose_lebel)
+            } else {
+                playbook.execute_graphicaly(true, None, &verbose_lebel)
             }
         }
     }
