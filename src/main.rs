@@ -41,15 +41,26 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     let sh_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::sh::parse(yaml));
     let cargo_builder: dotman::TaskBuilder =
         Box::new(move |yaml| dotman::tasks::cargo::parse(yaml));
+    #[cfg(feature = "network")]
     let wget_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::wget::parse(yaml));
     let link_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::link::parse(yaml));
 
+    #[cfg(feature = "network")]
     let taskbuilders = hashmap! {
         "cp".to_owned() => cp_builder,
         "env".to_owned() => env_builder,
         "sh".to_owned() => sh_builder,
         "cargo".to_owned() => cargo_builder,
         "wget".to_owned() => wget_builder,
+        "link".to_owned() => link_builder,
+    };
+
+    #[cfg(not(feature = "network"))]
+    let taskbuilders = hashmap! {
+        "cp".to_owned() => cp_builder,
+        "env".to_owned() => env_builder,
+        "sh".to_owned() => sh_builder,
+        "cargo".to_owned() => cargo_builder,
         "link".to_owned() => link_builder,
     };
 

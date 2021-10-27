@@ -14,15 +14,19 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
+            features: network jsonnet
             asset_name: dotman-x86_64-Linux
           - os: ubuntu-latest
             target: aarch64-unknown-linux-musl
+            features: network jsonnet
             asset_name: dotman-aarch64-Linux
           - os: ubuntu-latest
             target: armv7-unknown-linux-musleabi
+            features: network
             asset_name: dotman-armv7-Linux
           - os: macos-latest
             target: x86_64-apple-darwin
+            features: network jsonnet
             asset_name: dotman-x86_64-Darwin
 #          - os: macos-latest
 #            target: aarch64-apple-darwin
@@ -44,7 +48,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --release --target ${{ matrix.target }} --verbose
+          args: --release --target ${{ matrix.target }} --features "${{ matrix.features }}" --verbose
 
       - name: UPX GitHub Action
         uses: crazy-max/ghaction-upx@v1.4.0 
