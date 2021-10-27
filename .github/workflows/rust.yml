@@ -33,4 +33,4 @@ jobs:
     - name: Run clippy
       run: cargo clippy --all-features -- -D warnings
     - name: Check format
-      run: cargo fmt --all-features -- --check
+      run: cargo fmt -- --check
