@@ -1,6 +1,7 @@
 use clap::Parser;
 use dotman::VerboseLevel;
 use maplit::hashmap;
+use std::io;
 use std::process;
 use termion::color;
 #[derive(Parser)]
@@ -13,6 +14,21 @@ struct Opts {
 enum Subcommand {
     Deploy(DeployOpts),
     DryRun(DryRunOpts),
+    Completion(CompletionOpts),
+}
+
+#[derive(Parser)]
+struct CompletionOpts {
+    #[clap(
+        short,
+        long,
+        possible_value = "fish",
+        possible_value = "zsh",
+        possible_value = "bash",
+        possible_value = "elvish",
+        possible_value = "powershell"
+    )]
+    shell: String,
 }
 
 #[derive(Parser)]
@@ -90,6 +106,19 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
             } else {
                 playbook.execute_graphicaly(true, None, &verbose_lebel)
             }
+        }
+        Subcommand::Completion(completion_opts) => {
+            let target = match completion_opts.shell.as_str() {
+                "fish" => clap_generate::Shell::Fish,
+                "zsh" => clap_generate::Shell::Zsh,
+                "bash" => clap_generate::Shell::Bash,
+                "powershell" => clap_generate::Shell::PowerShell,
+                "elvish" => clap_generate::Shell::Elvish,
+                _ => unreachable!(),
+            };
+            use clap::IntoApp;
+            clap_generate::generate(target, &mut Opts::into_app(), "dotman", &mut io::stdout());
+            Ok(())
         }
     }
 }
