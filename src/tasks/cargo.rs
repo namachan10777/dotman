@@ -100,13 +100,8 @@ impl crate::Task for CargoTask {
 
     fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         let packages = if ctx.cache.borrow().is_some() {
-            ctx.cache
-                .borrow()
-                .as_ref()
-                .expect("checked")
-                .downcast_ref::<Packages>()
-                .expect("cannot downcast cache for cargo task")
-                .clone()
+            rmp_serde::from_read_ref(&mut ctx.cache.borrow().as_ref().expect("checked").clone())
+                .map_err(|e| TaskError::Unknown(e.into()))?
         } else {
             let output = duct::cmd("cargo", &["install", "--list"])
                 .read()
@@ -120,7 +115,7 @@ impl crate::Task for CargoTask {
                     "cannot parse installed cargo package information. this is bug".to_owned(),
                 )
             })?;
-            *ctx.cache.borrow_mut() = Some(Box::new(packages.clone()));
+            *ctx.cache.borrow_mut() = Some(rmp_serde::to_vec(&packages).map_err(|e| TaskError::Unknown(e.into()))?);
             packages
         };
         match &self.version {

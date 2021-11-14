@@ -1,5 +1,4 @@
 use regex::Regex;
-use std::any::Any;
 use std::cell::RefCell;
 use std::ffi::OsString;
 use std::path::PathBuf;
@@ -91,7 +90,7 @@ pub struct TaskContext {
     /// Selected deploy scenario
     pub scenario: String,
     /// Cache shared between same task type
-    pub cache: Rc<RefCell<Option<Box<dyn Any>>>>,
+    pub cache: Rc<RefCell<Option<Vec<u8>>>>,
 }
 
 /// Critical errors
