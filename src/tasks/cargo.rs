@@ -13,6 +13,7 @@ use std::collections::HashMap;
 
 type Package = (String, String);
 type Packages = HashMap<String, String>;
+pub type Cache = Packages;
 
 fn parse_installed_package(src: &str) -> IResult<&str, Package> {
     let (src, package) = recognize(many1(alt((alphanumeric1, tag("-"), tag("_")))))(src)?;
@@ -100,7 +101,7 @@ impl crate::Task for CargoTask {
 
     fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         let packages = if ctx.cache.borrow().is_some() {
-            rmp_serde::from_read_ref(&mut ctx.cache.borrow().as_ref().expect("checked").clone())
+            rmp_serde::from_read_ref(&ctx.cache.borrow().as_ref().expect("checked").clone())
                 .map_err(|e| TaskError::Unknown(e.into()))?
         } else {
             let output = duct::cmd("cargo", &["install", "--list"])
@@ -115,7 +116,8 @@ impl crate::Task for CargoTask {
                     "cannot parse installed cargo package information. this is bug".to_owned(),
                 )
             })?;
-            *ctx.cache.borrow_mut() = Some(rmp_serde::to_vec(&packages).map_err(|e| TaskError::Unknown(e.into()))?);
+            *ctx.cache.borrow_mut() =
+                Some(rmp_serde::to_vec(&packages).map_err(|e| TaskError::Unknown(e.into()))?);
             packages
         };
         match &self.version {
@@ -154,9 +156,7 @@ impl crate::Task for CargoTask {
 }
 
 /// parse task section as a cp task
-pub fn parse(
-    obj: &HashMap<String, crate::ast::Value>,
-) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(obj: &HashMap<String, crate::ast::Value>) -> Result<crate::TaskEntity, crate::Error> {
     crate::ast::verify_hash(obj, &["type", "version", "package"], Some("tasks.cargo"))?;
     let package = obj
         .get("package")
@@ -173,12 +173,12 @@ pub fn parse(
         })
     });
     if let Some(version) = version {
-        Ok(Box::new(CargoTask {
+        Ok(crate::TaskEntity::Cargo(CargoTask {
             package,
             version: Some(version?.to_owned()),
         }))
     } else {
-        Ok(Box::new(CargoTask {
+        Ok(crate::TaskEntity::Cargo(CargoTask {
             package,
             version: None,
         }))

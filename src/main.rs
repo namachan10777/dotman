@@ -1,8 +1,9 @@
 use clap::Parser;
 use dotman::VerboseLevel;
-use maplit::hashmap;
-use std::io;
-use std::process;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::Path;
+use std::{fs, io, process};
 use termion::color;
 #[derive(Parser)]
 struct Opts {
@@ -62,61 +63,109 @@ struct DryRunOpts {
     verbose: bool,
 }
 
+#[derive(Serialize, Deserialize)]
+struct Cache {
+    cargo: Option<dotman::tasks::cargo::Cache>,
+}
+
+struct TaskBuilder {
+    ids: Vec<&'static str>,
+    cache: Cache,
+}
+
+impl dotman::TaskBuilder for TaskBuilder {
+    fn parse(
+        taskname: &str,
+        hash: &HashMap<String, dotman::ast::Value>,
+    ) -> Option<Result<dotman::TaskEntity, dotman::Error>> {
+        match taskname {
+            "cp" => Some(dotman::tasks::cp::parse(hash)),
+            "env" => Some(dotman::tasks::env::parse(hash)),
+            "sh" => Some(dotman::tasks::sh::parse(hash)),
+            "cargo" => Some(dotman::tasks::cargo::parse(hash)),
+            "link" => Some(dotman::tasks::link::parse(hash)),
+            #[cfg(feature = "network")]
+            "wget" => Some(dotman::tasks::wget::parse(hash)),
+            _ => None,
+        }
+    }
+
+    fn cache(&self, key: &str) -> Option<Vec<u8>> {
+        match (key, &self.cache.cargo) {
+            ("cargo", Some(cache)) => Some(rmp_serde::to_vec(cache).unwrap()),
+            _ => None,
+        }
+    }
+
+    fn ids(&self) -> &[&str] {
+        self.ids.as_slice()
+    }
+}
+
+impl TaskBuilder {
+    fn from_cache_path<P: AsRef<Path>>(path: Option<P>) -> Self {
+        #[cfg(feature = "network")]
+        let ids = vec!["cp", "env", "sh", "cargo", "link", "wget"];
+        #[cfg(not(feature = "network"))]
+        let ids = vec!["cp", "env", "sh", "cargo", "link"];
+        if let Some(path) = path {
+            if let Ok(f) = fs::File::open(path) {
+                if let Ok(cache) = serde_json::from_reader(f) {
+                    return Self { ids, cache };
+                }
+            }
+        };
+        Self {
+            cache: Cache { cargo: None },
+            ids,
+        }
+    }
+}
+
 fn run(opts: Opts) -> Result<(), dotman::Error> {
-    let cp_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::cp::parse(yaml));
-    let env_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::env::parse(yaml));
-    let sh_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::sh::parse(yaml));
-    let cargo_builder: dotman::TaskBuilder =
-        Box::new(move |yaml| dotman::tasks::cargo::parse(yaml));
-    #[cfg(feature = "network")]
-    let wget_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::wget::parse(yaml));
-    let link_builder: dotman::TaskBuilder = Box::new(move |yaml| dotman::tasks::link::parse(yaml));
-
-    #[cfg(feature = "network")]
-    let taskbuilders = hashmap! {
-        "cp".to_owned() => cp_builder,
-        "env".to_owned() => env_builder,
-        "sh".to_owned() => sh_builder,
-        "cargo".to_owned() => cargo_builder,
-        "wget".to_owned() => wget_builder,
-        "link".to_owned() => link_builder,
-    };
-
-    #[cfg(not(feature = "network"))]
-    let taskbuilders = hashmap! {
-        "cp".to_owned() => cp_builder,
-        "env".to_owned() => env_builder,
-        "sh".to_owned() => sh_builder,
-        "cargo".to_owned() => cargo_builder,
-        "link".to_owned() => link_builder,
-    };
-
+    let cache_path = format!(
+        "{}/.dotfiles.cache.json",
+        std::env::var("HOME")
+            .map_err(|_| dotman::Error::CannotLoadCache("Cannot expand $HOME".to_owned()))?,
+    );
+    let task_builder = TaskBuilder::from_cache_path(Some(std::path::Path::new(&cache_path)));
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
-            let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
+            let playbook = dotman::PlayBook::load_config(&opts.config, &task_builder)?;
             let verbose_lebel = if opts.verbose {
                 VerboseLevel::ShowAllTask
             } else {
                 VerboseLevel::Compact
             };
-            if let Some(scenario) = opts.scenario {
+            let cache = if let Some(scenario) = opts.scenario {
                 playbook.execute_graphicaly(false, Some(&scenario), &verbose_lebel)
             } else {
                 playbook.execute_graphicaly(false, None, &verbose_lebel)
-            }
+            }?;
+            let mut f = fs::File::create(cache_path).map_err(|e| {
+                dotman::Error::CannotLoadCache(format!("cannot write cache due to {:?}", e))
+            })?;
+            let cargo_cache = rmp_serde::from_read_ref(&cache.get("cargo").unwrap()).unwrap();
+            let cache = Cache { cargo: cargo_cache };
+            let writer = io::BufWriter::new(&mut f);
+            serde_json::to_writer_pretty(writer, &cache).map_err(|e| {
+                dotman::Error::CannotLoadCache(format!("cannot write cache due to {:?}", e))
+            })?;
+            Ok(())
         }
         Subcommand::DryRun(opts) => {
-            let playbook = dotman::PlayBook::load_config(&opts.config, taskbuilders)?;
+            let playbook = dotman::PlayBook::load_config(&opts.config, &task_builder)?;
             let verbose_lebel = if opts.verbose {
                 VerboseLevel::ShowAllTask
             } else {
                 VerboseLevel::Compact
             };
-            if let Some(scenario) = opts.scenario {
+            let _ = if let Some(scenario) = opts.scenario {
                 playbook.execute_graphicaly(true, Some(&scenario), &verbose_lebel)
             } else {
                 playbook.execute_graphicaly(true, None, &verbose_lebel)
-            }
+            }?;
+            Ok(())
         }
         Subcommand::Completion(completion_opts) => {
             let target = match completion_opts.shell.as_str() {
@@ -212,6 +261,14 @@ fn main() {
                     );
                 }
             }
+        }
+        Err(dotman::Error::CannotLoadCache(msg)) => {
+            eprintln!(
+                "{}[Error] {}cannot load cache due to {}",
+                color::Fg(color::Red),
+                color::Fg(color::Reset),
+                msg
+            );
         }
     }
 }

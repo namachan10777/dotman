@@ -5,7 +5,7 @@ use std::path::Path;
 use std::{fs, io, os};
 
 /// Implementation of [Task trait](../../trait.Task.html).
-struct LinkTask {
+pub struct LinkTask {
     src: String,
     dest: String,
 }
@@ -90,9 +90,7 @@ impl crate::Task for LinkTask {
 }
 
 /// parse task as a link task
-pub fn parse(
-    obj: &HashMap<String, crate::ast::Value>,
-) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(obj: &HashMap<String, crate::ast::Value>) -> Result<crate::TaskEntity, crate::Error> {
     crate::ast::verify_hash(obj, &["type", "src", "dest"], Some("tasks.link"))?;
     let src = obj
         .get("src")
@@ -106,5 +104,5 @@ pub fn parse(
         .as_str()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("link.dest must be string".to_owned()))?
         .to_owned();
-    Ok(Box::new(LinkTask { src, dest }))
+    Ok(crate::TaskEntity::Link(LinkTask { src, dest }))
 }

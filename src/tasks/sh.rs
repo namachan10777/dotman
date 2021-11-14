@@ -5,7 +5,7 @@ use std::io;
 use std::path::Path;
 use std::{fs, io::Read};
 
-use crate::TaskError;
+use crate::{TaskEntity, TaskError};
 
 enum Sha256Set {
     Each(HashMap<String, String>),
@@ -21,7 +21,7 @@ impl Sha256Set {
     }
 }
 /// Implementation of [Task trait](../../trait.Task.html).
-struct ShTask {
+pub struct ShTask {
     cmd: (String, Vec<String>),
     test: Option<(String, Option<Sha256Set>)>,
 }
@@ -94,9 +94,7 @@ impl crate::Task for ShTask {
 }
 
 /// parse task section as a sh task
-pub fn parse(
-    obj: &HashMap<String, crate::ast::Value>,
-) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(obj: &HashMap<String, crate::ast::Value>) -> Result<crate::TaskEntity, crate::Error> {
     crate::ast::verify_hash(obj, &["type", "cmd", "test", "sha256"], Some("tasks.env"))?;
     let mut cmd = obj
         .get("cmd")
@@ -152,7 +150,7 @@ pub fn parse(
         }
     };
     if let Some(exe) = cmd.next() {
-        Ok(Box::new(ShTask {
+        Ok(TaskEntity::Sh(ShTask {
             cmd: (exe, cmd.collect::<Vec<_>>()),
             test,
         }))

@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 use thiserror::Error;
 
+use crate::TaskEntity;
+
 type Templates = HashMap<Vec<String>, liquid::Object>;
 
 #[derive(Debug, Clone)]
@@ -441,9 +443,7 @@ fn parse_cp_templates(
 }
 
 /// parse task section as a cp task
-pub fn parse(
-    obj: &HashMap<String, crate::ast::Value>,
-) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(obj: &HashMap<String, crate::ast::Value>) -> Result<crate::TaskEntity, crate::Error> {
     crate::ast::verify_hash(
         obj,
         &["type", "src", "dest", "merge", "templates"],
@@ -485,7 +485,7 @@ pub fn parse(
                 .collect::<Result<Templates, crate::Error>>()
         })
         .unwrap_or_else(|| Ok(HashMap::new()))?;
-    Ok(Box::new(CpTask {
+    Ok(TaskEntity::Cp(CpTask {
         src,
         dest,
         merge,

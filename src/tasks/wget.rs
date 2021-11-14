@@ -6,6 +6,7 @@ use std::io::{self, Read, Write};
 use sha2::{Digest, Sha256};
 
 use crate::util::resolve_liquid_template;
+use crate::TaskEntity;
 
 enum Sha256Set {
     Each(HashMap<String, String>),
@@ -22,7 +23,7 @@ impl Sha256Set {
 }
 
 /// Implementation of [Task trait](../../trait.Task.html).
-struct WgetTask {
+pub struct WgetTask {
     sha256: Sha256Set,
     dest: String,
     url: String,
@@ -90,9 +91,7 @@ impl crate::Task for WgetTask {
 }
 
 /// parse task as a wget task
-pub fn parse(
-    obj: &HashMap<String, crate::ast::Value>,
-) -> Result<Box<dyn crate::Task>, crate::Error> {
+pub fn parse(obj: &HashMap<String, crate::ast::Value>) -> Result<crate::TaskEntity, crate::Error> {
     crate::ast::verify_hash(obj, &["type", "url", "dest", "sha256"], Some("tasks.wget"))?;
     let sha256 = obj
         .get("sha256")
@@ -129,5 +128,5 @@ pub fn parse(
         .as_str()
         .ok_or_else(|| crate::Error::PlaybookLoadFailed("wget.dest must be string".to_owned()))?
         .to_owned();
-    Ok(Box::new(WgetTask { sha256, url, dest }))
+    Ok(TaskEntity::Wget(WgetTask { sha256, url, dest }))
 }

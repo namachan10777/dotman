@@ -45,8 +45,41 @@ struct Scenario {
     matches: Vec<TargetMatcher>,
 }
 
-pub type TaskGroups = HashMap<String, Vec<(String, Box<dyn Task>)>>;
-pub type ScheduledTasks<'a> = Vec<(&'a str, &'a [(String, Box<dyn Task>)])>;
+pub enum TaskEntity {
+    Cargo(tasks::cargo::CargoTask),
+    Cp(tasks::cp::CpTask),
+    Env(tasks::env::EnvTask),
+    Link(tasks::link::LinkTask),
+    Sh(tasks::sh::ShTask),
+    Wget(tasks::wget::WgetTask),
+}
+
+impl Task for TaskEntity {
+    fn name(&self) -> String {
+        match self {
+            Self::Cargo(task) => task.name(),
+            Self::Cp(task) => task.name(),
+            Self::Env(task) => task.name(),
+            Self::Link(task) => task.name(),
+            Self::Sh(task) => task.name(),
+            Self::Wget(task) => task.name(),
+        }
+    }
+
+    fn execute(&self, ctx: &TaskContext) -> TaskResult {
+        match self {
+            Self::Cargo(task) => task.execute(ctx),
+            Self::Cp(task) => task.execute(ctx),
+            Self::Env(task) => task.execute(ctx),
+            Self::Link(task) => task.execute(ctx),
+            Self::Sh(task) => task.execute(ctx),
+            Self::Wget(task) => task.execute(ctx),
+        }
+    }
+}
+
+pub type TaskGroups = HashMap<String, Vec<(String, TaskEntity)>>;
+pub type ScheduledTasks<'a> = Vec<(&'a str, &'a [(String, TaskEntity)])>;
 
 /// Compiled configuration
 pub struct PlayBook {
@@ -115,6 +148,8 @@ pub enum Error {
     CannotResolveVar(String, std::env::VarError),
     /// Failed to collect node information
     CannotCollectNodeInformation(String),
+    /// Failed to load cache
+    CannotLoadCache(String),
 }
 
 type TaskResult = Result<bool, TaskError>;
@@ -135,17 +170,13 @@ impl From<anyhow::Error> for TaskError {
     }
 }
 
-fn parse_task(
-    taskbuilders: &TaskBuilders,
-    yaml: &ast::Value,
-) -> Result<(String, Box<dyn Task>), Error> {
+fn parse_task<T: TaskBuilder>(yaml: &ast::Value) -> Result<(String, TaskEntity), Error> {
     let obj = yaml
         .as_hash()
         .ok_or_else(|| Error::InvalidPlaybook("task must be hash".to_owned(), yaml.to_owned()))?;
     if let Some(ast::Value::Str(key)) = obj.get("type") {
-        if let Some(parse) = taskbuilders.get(key.as_str()) {
-            let task = parse(obj)?;
-            Ok((key.to_owned(), task))
+        if let Some(task) = T::parse(key.as_str(), obj) {
+            Ok((key.to_owned(), task?))
         } else {
             Err(Error::InvalidPlaybook(
                 format!("unsupported task \"{}\"", key.as_str()),
@@ -160,7 +191,7 @@ fn parse_task(
     }
 }
 
-fn parse_taskgroups(yaml: &ast::Value, taskbuilders: &TaskBuilders) -> Result<TaskGroups, Error> {
+fn parse_taskgroups<T: TaskBuilder>(yaml: &ast::Value) -> Result<TaskGroups, Error> {
     yaml.as_hash()
         .ok_or_else(|| {
             Error::InvalidPlaybook("taskgroups must be hash".to_owned(), yaml.to_owned())
@@ -171,7 +202,7 @@ fn parse_taskgroups(yaml: &ast::Value, taskbuilders: &TaskBuilders) -> Result<Ta
                 name.to_owned(),
                 tasks
                     .iter()
-                    .map(|src| parse_task(taskbuilders, src))
+                    .map(|src| parse_task::<T>(src))
                     .collect::<Result<Vec<_>, Error>>()?,
             )),
             _ => Err(Error::InvalidPlaybook(
@@ -468,8 +499,11 @@ fn enlist_taskgroups<'a>(
 
 pub type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 
-pub type TaskBuilder = Box<dyn Fn(&HashMap<String, ast::Value>) -> Result<Box<dyn Task>, Error>>;
-pub type TaskBuilders = HashMap<String, TaskBuilder>;
+pub trait TaskBuilder {
+    fn parse(key: &str, hash: &HashMap<String, ast::Value>) -> Option<Result<TaskEntity, Error>>;
+    fn ids<'a>(&'a self) -> &'a [&str];
+    fn cache(&self, key: &str) -> Option<Vec<u8>>;
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum VerboseLevel {
@@ -501,7 +535,7 @@ fn load_config_str(config: &str) -> Result<String, Error> {
 
 impl PlayBook {
     /// Load configuration from yaml text with taskbuilders.
-    pub fn load_config(config: &str, taskbuilders: TaskBuilders) -> Result<Self, Error> {
+    pub fn load_config<T: TaskBuilder>(config: &str, taskbuilders: &T) -> Result<Self, Error> {
         let playbook_src = load_config_str(config)?;
         let playbook_ast = ast::Value::from_yaml(
             YamlLoader::load_from_str(&playbook_src)
@@ -523,7 +557,7 @@ impl PlayBook {
         let scenarios = playbook_ast
             .get("scenarios")
             .ok_or_else(|| Error::PlaybookLoadFailed("scenarios is not found".to_owned()))?;
-        let taskgroups = parse_taskgroups(taskgroups, &taskbuilders)?;
+        let taskgroups = parse_taskgroups::<T>(taskgroups)?;
         let scenarios = scenarios
             .as_array()
             .ok_or_else(|| {
@@ -535,8 +569,9 @@ impl PlayBook {
         Ok(PlayBook {
             taskgroups,
             task_ids: taskbuilders
-                .into_iter()
-                .map(|(task, _)| task)
+                .ids()
+                .iter()
+                .map(|s| (*s).to_owned())
                 .collect::<Vec<_>>(),
             base: Path::new(config)
                 .parent()
@@ -575,7 +610,7 @@ impl PlayBook {
         dryrun: bool,
         scenario: Option<&str>,
         verbose_level: &VerboseLevel,
-    ) -> Result<(), Error> {
+    ) -> Result<HashMap<String, Vec<u8>>, Error> {
         let (scenario, taskgroups) = self.deploys(scenario)?;
         let mut caches = HashMap::new();
         for task in &self.task_ids {
@@ -661,6 +696,9 @@ impl PlayBook {
                 );
             }
         }
-        Ok(())
+        Ok(caches
+            .into_iter()
+            .flat_map(|(k, v)| v.borrow().as_ref().map(|v| (k.to_owned(), v.to_owned())))
+            .collect::<HashMap<_, _>>())
     }
 }
