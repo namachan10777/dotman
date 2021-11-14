@@ -12,8 +12,11 @@ struct Opts {
 
 #[derive(Parser)]
 enum Subcommand {
+    #[clap(about = "deploy dotfiles")]
     Deploy(DeployOpts),
+    #[clap(about = "dry run")]
     DryRun(DryRunOpts),
+    #[clap(about = "generate shell completion")]
     Completion(CompletionOpts),
 }
 
@@ -33,9 +36,13 @@ struct CompletionOpts {
 
 #[derive(Parser)]
 struct DeployOpts {
-    #[clap(short, long)]
+    #[clap(index = 1, about = "specify configuration file e.g. \"dotfiles.yaml\"")]
     config: String,
-    #[clap(short, long)]
+    #[clap(
+        short,
+        long,
+        about = "specify scenario with no auto scenario detection"
+    )]
     scenario: Option<String>,
     #[clap(short = 'V', long)]
     verbose: bool,
@@ -43,9 +50,13 @@ struct DeployOpts {
 
 #[derive(Parser)]
 struct DryRunOpts {
-    #[clap(short, long)]
+    #[clap(index = 1, about = "specify configuration file e.g. \"dotfiles.yaml\"")]
     config: String,
-    #[clap(short, long)]
+    #[clap(
+        short,
+        long,
+        about = "specify scenario with no auto scenario detection"
+    )]
     scenario: Option<String>,
     #[clap(short = 'V', long)]
     verbose: bool,
