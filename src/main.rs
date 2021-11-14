@@ -39,11 +39,14 @@ struct CompletionOpts {
 struct DeployOpts {
     #[clap(index = 1, about = "specify configuration file e.g. \"dotfiles.yaml\"")]
     config: String,
+    #[clap(long = "no-cache", about = "deploy without cache")]
+    no_cache: bool,
     #[clap(
         short,
         long,
         about = "specify scenario with no auto scenario detection"
     )]
+    #[clap(short = 's', long = "scenario")]
     scenario: Option<String>,
     #[clap(short = 'V', long)]
     verbose: bool,
@@ -53,6 +56,8 @@ struct DeployOpts {
 struct DryRunOpts {
     #[clap(index = 1, about = "specify configuration file e.g. \"dotfiles.yaml\"")]
     config: String,
+    #[clap(long = "no-cache", about = "dry-run without cache")]
+    no_cache: bool,
     #[clap(
         short,
         long,
@@ -128,9 +133,13 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
         std::env::var("HOME")
             .map_err(|_| dotman::Error::CannotLoadCache("Cannot expand $HOME".to_owned()))?,
     );
-    let task_builder = TaskBuilder::from_cache_path(Some(std::path::Path::new(&cache_path)));
     match opts.subcmd {
         Subcommand::Deploy(opts) => {
+            let task_builder = TaskBuilder::from_cache_path(if opts.no_cache {
+                None
+            } else {
+                Some(std::path::Path::new(&cache_path))
+            });
             let playbook = dotman::PlayBook::load_config(&opts.config, &task_builder)?;
             let verbose_lebel = if opts.verbose {
                 VerboseLevel::ShowAllTask
@@ -154,6 +163,11 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
             Ok(())
         }
         Subcommand::DryRun(opts) => {
+            let task_builder = TaskBuilder::from_cache_path(if opts.no_cache {
+                None
+            } else {
+                Some(std::path::Path::new(&cache_path))
+            });
             let playbook = dotman::PlayBook::load_config(&opts.config, &task_builder)?;
             let verbose_lebel = if opts.verbose {
                 VerboseLevel::ShowAllTask
