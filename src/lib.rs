@@ -52,6 +52,7 @@ pub enum TaskEntity {
     Link(tasks::link::LinkTask),
     Sh(tasks::sh::ShTask),
     Wget(tasks::wget::WgetTask),
+    Brew(tasks::brew::BrewTask),
 }
 
 impl Task for TaskEntity {
@@ -63,6 +64,7 @@ impl Task for TaskEntity {
             Self::Link(task) => task.name(),
             Self::Sh(task) => task.name(),
             Self::Wget(task) => task.name(),
+            Self::Brew(task) => task.name(),
         }
     }
 
@@ -74,6 +76,7 @@ impl Task for TaskEntity {
             Self::Link(task) => task.execute(ctx),
             Self::Sh(task) => task.execute(ctx),
             Self::Wget(task) => task.execute(ctx),
+            Self::Brew(task) => task.execute(ctx),
         }
     }
 }

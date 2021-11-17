@@ -91,6 +91,8 @@ impl dotman::TaskBuilder for TaskBuilder {
             "link" => Some(dotman::tasks::link::parse(hash)),
             #[cfg(feature = "network")]
             "wget" => Some(dotman::tasks::wget::parse(hash)),
+            #[cfg(target_os = "macos")]
+            "brew" => Some(dotman::tasks::brew::parse(hash)),
             _ => None,
         }
     }
@@ -109,10 +111,11 @@ impl dotman::TaskBuilder for TaskBuilder {
 
 impl TaskBuilder {
     fn from_cache_path<P: AsRef<Path>>(path: Option<P>) -> Self {
+        let mut ids = vec!["cp", "env", "sh", "cargo", "link"];
         #[cfg(feature = "network")]
-        let ids = vec!["cp", "env", "sh", "cargo", "link", "wget"];
-        #[cfg(not(feature = "network"))]
-        let ids = vec!["cp", "env", "sh", "cargo", "link"];
+        ids.push("wget");
+        #[cfg(target_os = "macos")]
+        ids.push("brew");
         if let Some(path) = path {
             if let Ok(f) = fs::File::open(path) {
                 if let Ok(cache) = serde_json::from_reader(f) {
