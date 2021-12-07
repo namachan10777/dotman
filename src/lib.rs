@@ -636,6 +636,13 @@ impl PlayBook {
                 match (result, verbose_level) {
                     (Ok(true), VerboseLevel::Compact) => {
                         change_count += 1;
+                        println!("[{}]", group);
+                        println!(
+                            "{}[Changed] {}{}",
+                            color::Fg(color::Yellow),
+                            color::Fg(color::White),
+                            task_name
+                        );
                     }
                     (Ok(false), VerboseLevel::Compact) => {
                         skip_count += 1;
