@@ -1,8 +1,9 @@
 //! Builtin env task.
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use std::os;
 use std::path::Path;
-use std::{fs, io, os};
+use tokio::{fs, io};
 
 /// Implementation of [Task trait](../../trait.Task.html).
 pub struct LinkTask {
@@ -47,20 +48,24 @@ impl crate::Task for LinkTask {
         })?;
         let dest = Path::new(dest);
 
-        if fs::read_link(&dest).map(|p| p == src).unwrap_or(false) {
+        if fs::read_link(&dest)
+            .await
+            .map(|p| p == src)
+            .unwrap_or(false)
+        {
             return Ok(false);
         }
-        if let Ok(meta) = fs::metadata(&dest) {
+        if let Ok(meta) = fs::metadata(&dest).await {
             // TODO: use is_link
             if meta.is_dir() {
-                fs::remove_dir_all(&dest).map_err(|e| {
+                fs::remove_dir_all(&dest).await.map_err(|e| {
                     crate::TaskError::WellKnown(format!(
                         "cannot remove dir {:?} due to {:?}",
                         dest, e
                     ))
                 })?;
             } else {
-                fs::remove_file(&dest).map_err(|e| {
+                fs::remove_file(&dest).await.map_err(|e| {
                     crate::TaskError::WellKnown(format!(
                         "cannot remove dir {:?} due to {:?}",
                         dest, e
@@ -74,6 +79,7 @@ impl crate::Task for LinkTask {
                 dest
             ))
         })?)
+        .await
         .map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot create parent dir of desitination path {:?} due to {:?}",

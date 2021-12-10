@@ -1,7 +1,7 @@
 //! Builtin wget task.
 use std::collections::HashMap;
-use std::fs;
-use std::io::{self, Read, Write};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::{fs, io};
 
 use sha2::{Digest, Sha256};
 
@@ -52,8 +52,8 @@ impl crate::Task for WgetTask {
         let sha256 = &self.sha256.get(&ctx.scenario).ok_or_else(|| {
             crate::TaskError::WellKnown(format!("wget.sha256.{} is not found", &ctx.scenario))
         })?;
-        if let Ok(mut f) = fs::File::open(&dest) {
-            if f.read_to_end(&mut buf).is_ok() && check_sha256(sha256, buf.as_slice()) {
+        if let Ok(mut f) = fs::File::open(&dest).await {
+            if f.read_to_end(&mut buf).await.is_ok() && check_sha256(sha256, buf.as_slice()) {
                 return Ok(false);
             }
         }
@@ -73,14 +73,14 @@ impl crate::Task for WgetTask {
             ));
         }
 
-        let f = fs::File::create(&dest).map_err(|e| {
+        let f = fs::File::create(&dest).await.map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot open {} as writ-mode due to {:?}",
                 &dest, e
             ))
         })?;
         let mut writer = io::BufWriter::new(f);
-        writer.write_all(buf.as_ref()).map_err(|e| {
+        writer.write_all(buf.as_ref()).await.map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot write response body to local file due to {:?}",
                 e
