@@ -109,13 +109,14 @@ impl dotman::TaskBuilder for TaskBuilder {
 impl TaskBuilder {
     fn from_cache_path<P: AsRef<Path>>(path: Option<P>) -> Self {
         let mut ids = vec!["cp", "env", "sh", "cargo", "link"];
-        let mut serialize_ids = vec!["cargo", "brew"];
+        #[cfg(target_os = "macos")]
+        let serialize_ids = vec!["cargo", "brew"];
+        #[cfg(not(target_os = "macos"))]
+        let serialize_ids = vec!["cargo"];
         #[cfg(feature = "network")]
         ids.push("wget");
         #[cfg(target_os = "macos")]
         ids.push("brew");
-        #[cfg(target_os = "macos")]
-        serialize_ids.push("brew");
         if let Some(path) = path {
             if let Ok(f) = fs::File::open(path) {
                 if let Ok(cache) = serde_json::from_reader(f) {
