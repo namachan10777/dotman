@@ -1,9 +1,8 @@
 //! Builtin sh task.
 use sha2::Digest;
 use std::collections::HashMap;
-use std::io;
 use std::path::Path;
-use std::{fs, io::Read};
+use tokio::{fs, io, io::AsyncReadExt};
 
 use crate::{TaskEntity, TaskError};
 
@@ -26,9 +25,10 @@ pub struct ShTask {
     test: Option<(String, Option<Sha256Set>)>,
 }
 
-fn check_sha256(sha: &str, path: &Path) -> io::Result<bool> {
+async fn check_sha256(sha: &str, path: &Path) -> io::Result<bool> {
     let mut buf = Vec::new();
-    fs::File::open(path).map(|mut f| f.read_to_end(&mut buf))??;
+    let mut f = fs::File::open(path).await?;
+    f.read_to_end(&mut buf).await?;
     let mut hasher = sha2::Sha256::new();
     hasher.update(&buf);
     let hashed = hasher.finalize();
@@ -49,13 +49,17 @@ impl crate::Task for ShTask {
                 let sha256 = sha256.get(&ctx.scenario).ok_or_else(|| {
                     crate::TaskError::WellKnown(format!("sh.sha256.{} is not found", &ctx.scenario))
                 })?;
-                if check_sha256(sha256, Path::new(&path)).unwrap_or(false) {
+                if check_sha256(sha256, Path::new(&path))
+                    .await
+                    .unwrap_or(false)
+                {
                     Ok(false)
                 } else {
                     duct::cmd(&self.cmd.0, &self.cmd.1)
                         .read()
                         .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
                     if !check_sha256(sha256, Path::new(&path))
+                        .await
                         .map_err(|_| TaskError::WellKnown(format!("cannot hash file {:?}", path)))?
                     {
                         return Err(TaskError::WellKnown(format!(
@@ -69,13 +73,13 @@ impl crate::Task for ShTask {
             Some((path, None)) => {
                 let path = crate::util::resolve_liquid_template(path)
                     .map_err(|_| TaskError::WellKnown(format!("cannot resolve path {}", path)))?;
-                if fs::metadata(&path).is_ok() {
+                if fs::metadata(&path).await.is_ok() {
                     return Ok(false);
                 }
                 duct::cmd(&self.cmd.0, &self.cmd.1)
                     .read()
                     .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
-                if fs::metadata(&path).is_ok() {
+                if fs::metadata(&path).await.is_ok() {
                     Ok(false)
                 } else {
                     return Err(TaskError::WellKnown(format!(

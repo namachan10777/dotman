@@ -1,10 +1,13 @@
 //! Builtin cp task.
+use futures::future::BoxFuture;
+use futures::stream::StreamExt;
+use futures::FutureExt;
 use kstring::KString;
 use std::collections::HashMap;
-use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::{fs, io};
 use thiserror::Error;
+use tokio::io::AsyncWriteExt;
+use tokio::{fs, io};
 
 use crate::TaskEntity;
 
@@ -20,33 +23,43 @@ enum FileType {
     Dir(PathBuf),
 }
 
-fn enlist_descendants(path: &Path) -> io::Result<Vec<PathBuf>> {
-    if fs::metadata(path).is_err() {
-        return Ok(Vec::new());
+fn enlist_descendants(path: &Path) -> BoxFuture<io::Result<Vec<PathBuf>>> {
+    async move {
+        if fs::metadata(path).await.is_err() {
+            return Ok(Vec::new());
+        }
+        if fs::metadata(path).await?.is_dir() {
+            let read_dir = tokio_stream::wrappers::ReadDirStream::new(fs::read_dir(path).await?);
+            let entries: Vec<io::Result<Vec<PathBuf>>> = read_dir
+                .then(|entry| async { enlist_descendants(&entry.expect("TODO").path()).await })
+                .collect::<Vec<_>>()
+                .await;
+            let mut entries = entries
+                .into_iter()
+                .collect::<io::Result<Vec<_>>>()?
+                .concat();
+            entries.push(path.to_owned());
+            Ok(entries)
+        } else {
+            Ok(vec![path.to_owned()])
+        }
     }
-    if fs::metadata(path)?.is_dir() {
-        let mut entries = fs::read_dir(path)?
-            .into_iter()
-            .map(|entry| enlist_descendants(&entry?.path()))
-            .collect::<io::Result<Vec<_>>>()?
-            .concat();
-        entries.push(path.to_owned());
-        Ok(entries)
-    } else {
-        Ok(vec![path.to_owned()])
-    }
+    .boxed()
 }
 
 fn is_target_root(path: &Path) -> bool {
     path.to_str() == Some("") || path.to_str() == Some(&std::path::MAIN_SEPARATOR.to_string())
 }
 
-fn file_table(src: &Path, dest: &Path) -> anyhow::Result<HashMap<PathBuf, (FileType, FileType)>> {
-    let src_descendants = enlist_descendants(src)?;
-    let dest_descendants = enlist_descendants(dest)?;
+async fn file_table(
+    src: &Path,
+    dest: &Path,
+) -> anyhow::Result<HashMap<PathBuf, (FileType, FileType)>> {
+    let src_descendants = enlist_descendants(src).await?;
+    let dest_descendants = enlist_descendants(dest).await?;
     let mut hash = HashMap::new();
     for src_descendant in src_descendants {
-        let meta = fs::metadata(&src_descendant)?;
+        let meta = fs::metadata(&src_descendant).await?;
         let src_filetype = if meta.is_file() {
             FileType::File(src_descendant.to_owned())
         } else if meta.is_dir() {
@@ -68,7 +81,7 @@ fn file_table(src: &Path, dest: &Path) -> anyhow::Result<HashMap<PathBuf, (FileT
         }
     }
     for dest_descendant in dest_descendants {
-        let meta = fs::metadata(&dest_descendant)?;
+        let meta = fs::metadata(&dest_descendant).await?;
         let dest_filetype = if meta.is_file() {
             FileType::File(dest_descendant.to_owned())
         } else {
@@ -130,27 +143,27 @@ impl SyncError {
     }
 }
 
-fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result<SyncStatus> {
+async fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result<SyncStatus> {
     match (&src, &dest, ctx.merge) {
         (FileType::Nothing(_), FileType::Nothing(_), _) => Ok(SyncStatus::UnChanged),
         (FileType::Nothing(_), _, true) => Ok(SyncStatus::UnChanged),
         (FileType::Nothing(_), FileType::Dir(dest), false) => {
             // TODO: fix to unlink
             if !ctx.dryrun {
-                fs::remove_dir(dest)?;
+                fs::remove_dir(dest).await?;
             }
             Ok(SyncStatus::Changed)
         }
         (FileType::Nothing(_), FileType::Symlink(dest), false) => {
             // TODO: fix to unlink
             if !ctx.dryrun {
-                fs::remove_file(dest)?;
+                fs::remove_file(dest).await?;
             }
             Ok(SyncStatus::Changed)
         }
         (FileType::Nothing(_), FileType::File(dest) | FileType::Other(dest), false) => {
             if !ctx.dryrun {
-                fs::remove_file(dest)?;
+                fs::remove_file(dest).await?;
             }
             Ok(SyncStatus::Changed)
         }
@@ -159,7 +172,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
                     match liquid::ParserBuilder::with_stdlib()
                         .build()?
-                        .parse(&fs::read_to_string(src)?)
+                        .parse(&fs::read_to_string(src).await?)
                     {
                         Ok(template) => (template.render(var_set)?.as_bytes().to_vec(), true),
                         Err(_) => {
@@ -170,17 +183,17 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                         }
                     }
                 } else {
-                    (fs::read(src)?, false)
+                    (fs::read(src).await?, false)
                 };
-            let dest_buf = fs::read(dest)?;
+            let dest_buf = fs::read(dest).await?;
             if md5::compute(&src_buf) != md5::compute(dest_buf) {
                 if !ctx.dryrun {
                     if need_to_write {
-                        let mut writer = io::BufWriter::new(fs::File::create(dest)?);
-                        writer.write_all(&src_buf)?;
-                        writer.flush()?;
+                        let mut writer = io::BufWriter::new(fs::File::create(dest).await?);
+                        writer.write_all(&src_buf).await?;
+                        writer.flush().await?;
                     } else {
-                        fs::copy(src, dest)?;
+                        fs::copy(src, dest).await?;
                     }
                 }
                 Ok(SyncStatus::Changed)
@@ -190,15 +203,16 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
         }
         (&FileType::File(src), &FileType::Dir(dest), _) => {
             if !ctx.dryrun {
-                fs::remove_dir(dest)?;
+                fs::remove_dir(dest).await?;
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
-                    let mut writer = io::BufWriter::new(fs::File::create(dest)?);
+                    let mut writer = io::BufWriter::new(fs::File::create(dest).await?);
                     match liquid::ParserBuilder::with_stdlib()
                         .build()?
-                        .parse(&fs::read_to_string(src)?)
+                        .parse(&fs::read_to_string(src).await?)
                     {
                         Ok(template) => {
-                            writer.write_all(template.render(var_set)?.as_bytes())?;
+                            let rendered = template.render(var_set)?;
+                            writer.write_all(rendered.as_bytes()).await?;
                         }
                         Err(_) => {
                             return Ok(SyncStatus::WellKnownError(format!(
@@ -208,22 +222,23 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                         }
                     }
                 } else {
-                    fs::copy(src, dest)?;
+                    fs::copy(src, dest).await?;
                 }
             }
             Ok(SyncStatus::Changed)
         }
         (&FileType::File(src), &FileType::Other(dest), _) => {
             if !ctx.dryrun {
-                fs::remove_file(dest)?;
+                fs::remove_file(dest).await?;
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
-                    let mut writer = io::BufWriter::new(fs::File::create(dest)?);
+                    let mut writer = io::BufWriter::new(fs::File::create(dest).await?);
                     match liquid::ParserBuilder::with_stdlib()
                         .build()?
-                        .parse(&fs::read_to_string(src)?)
+                        .parse(&fs::read_to_string(src).await?)
                     {
                         Ok(template) => {
-                            writer.write_all(template.render(var_set)?.as_bytes())?;
+                            let rendered = template.render(var_set)?;
+                            writer.write_all(rendered.as_bytes()).await?;
                         }
                         Err(_) => {
                             return Ok(SyncStatus::WellKnownError(format!(
@@ -233,7 +248,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                         }
                     }
                 } else {
-                    fs::copy(src, dest)?;
+                    fs::copy(src, dest).await?;
                 }
             }
             Ok(SyncStatus::Changed)
@@ -243,15 +258,16 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                 let dest_parent = dest
                     .parent()
                     .ok_or_else(|| SyncError::new(format!("cannot take parent of {:?}", dest)))?;
-                fs::create_dir_all(dest_parent)?;
+                fs::create_dir_all(dest_parent).await?;
                 if let Some(var_set) = match_template_target(&ctx.templates, &ctx.base, src) {
-                    let mut writer = io::BufWriter::new(fs::File::create(dest)?);
+                    let mut writer = io::BufWriter::new(fs::File::create(dest).await?);
                     match liquid::ParserBuilder::with_stdlib()
                         .build()?
-                        .parse(&fs::read_to_string(src)?)
+                        .parse(&fs::read_to_string(src).await?)
                     {
                         Ok(template) => {
-                            writer.write_all(template.render(var_set)?.as_bytes())?;
+                            let rendered = template.render(var_set)?;
+                            writer.write_all(rendered.as_bytes()).await?;
                         }
                         Err(_) => {
                             return Ok(SyncStatus::WellKnownError(format!(
@@ -261,7 +277,7 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
                         }
                     }
                 } else {
-                    fs::copy(src, dest)?;
+                    fs::copy(src, dest).await?;
                 }
             }
             Ok(SyncStatus::Changed)
@@ -280,9 +296,9 @@ fn sync_file(ctx: &CpContext, src: &FileType, dest: &FileType) -> anyhow::Result
 }
 
 // TODO: handle error when src directory is not found.
-fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
+async fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
     let src_base = ctx.base.join(Path::new(src));
-    if fs::metadata(&src_base).is_err() {
+    if fs::metadata(&src_base).await.is_err() {
         return Err(crate::TaskError::WellKnown(format!(
             "src {:?} is not found",
             src_base
@@ -294,7 +310,7 @@ fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
             dest, e
         ))
     })?;
-    let tbl = file_table(&src_base, Path::new(&dest)).map_err(|e| {
+    let tbl = file_table(&src_base, Path::new(&dest)).await.map_err(|e| {
         crate::TaskError::WellKnown(format!(
             "cannot resolve disitination path {:?} due to {:?}",
             dest, e
@@ -302,7 +318,7 @@ fn execute_cp(ctx: &CpContext, src: &str, dest: &str) -> crate::TaskResult {
     })?;
     let mut changed = false;
     for (src, dest) in tbl.values() {
-        match sync_file(ctx, src, dest)? {
+        match sync_file(ctx, src, dest).await? {
             SyncStatus::Changed => {
                 changed = true;
             }
@@ -367,6 +383,7 @@ impl crate::Task for CpTask {
             &self.src,
             &self.dest,
         )
+        .await
     }
 }
 
