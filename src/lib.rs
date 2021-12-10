@@ -2,6 +2,7 @@ use futures::stream::StreamExt;
 use regex::Regex;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::{collections::HashMap, path::Path};
 use std::{fmt, fs};
 use termion::color;
@@ -619,14 +620,28 @@ impl PlayBook {
         let (scenario, taskgroups) = self.deploys(scenario)?;
         let mut caches = HashMap::new();
         for task in &self.task_ids {
-            caches.insert(task, RwLock::new(None));
+            caches.insert(task, Arc::new(RwLock::new(None)));
         }
 
-        let mut change_count = 0;
-        let mut skip_count = 0;
+        let change_count = Arc::new(RwLock::new(0));
+        let skip_count = Arc::new(RwLock::new(0));
 
-        for (group, tasks) in taskgroups {
-            for (id, task) in tasks {
+        let tasks = taskgroups
+            .iter()
+            .map(|(group, tasks)| {
+                tasks
+                    .iter()
+                    .map(|(id, task)| (*group, id, task))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>()
+            .concat();
+        futures::stream::iter(tasks).for_each(|(group, id, task)| {
+            let scenario = scenario.clone();
+            let caches = caches.clone();
+            let change_count = change_count.clone();
+            let skip_count = skip_count.clone();
+            async move {
                 let task_name = task.name();
                 let ctx = TaskContext {
                     dryrun,
@@ -637,7 +652,7 @@ impl PlayBook {
                 let result = task.execute(&ctx).await;
                 match (result, verbose_level) {
                     (Ok(true), VerboseLevel::Compact) => {
-                        change_count += 1;
+                        *change_count.write().await += 1;
                         println!("[{}]", group);
                         println!(
                             "{}[Changed] {}{}",
@@ -647,7 +662,7 @@ impl PlayBook {
                         );
                     }
                     (Ok(false), VerboseLevel::Compact) => {
-                        skip_count += 1;
+                        *skip_count.write().await += 1;
                     }
                     (Ok(true), VerboseLevel::ShowAllTask) => {
                         println!("[{}]", group);
@@ -689,22 +704,22 @@ impl PlayBook {
                     }
                 }
             }
-        }
+        }).await;
         if verbose_level == &VerboseLevel::Compact {
-            if change_count > 0 {
+            if *change_count.read().await > 0 {
                 println!(
                     "{}[Changed] {}{} tasks",
                     color::Fg(color::Yellow),
                     color::Fg(color::White),
-                    change_count
+                    change_count.read().await
                 );
             }
-            if skip_count > 0 {
+            if *skip_count.read().await > 0 {
                 println!(
                     "{}[Ok] {}{} tasks",
                     color::Fg(color::Green),
                     color::Fg(color::White),
-                    skip_count
+                    skip_count.read().await
                 );
             }
         }

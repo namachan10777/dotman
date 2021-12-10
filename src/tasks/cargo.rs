@@ -3,7 +3,7 @@ use crate::TaskError;
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alphanumeric1, anychar, char, digit1},
+    character::complete::{alphanumeric1, anychar, char},
     combinator::{opt, recognize, verify},
     multi::{many0, many1},
     sequence::tuple,
@@ -18,14 +18,7 @@ pub type Cache = Packages;
 fn parse_installed_package(src: &str) -> IResult<&str, Package> {
     let (src, package) = recognize(many1(alt((alphanumeric1, tag("-"), tag("_")))))(src)?;
     let (src, _) = char(' ')(src)?;
-    let (src, version) = recognize(tuple((
-        char('v'),
-        digit1,
-        char('.'),
-        digit1,
-        char('.'),
-        digit1,
-    )))(src)?;
+    let (src, version) = recognize(many1(verify(anychar, |c| *c != ' ' && *c != ':')))(src)?;
     let (src, _) = tuple((
         opt(tuple((tag(" "), many1(verify(anychar, |c| *c != ':'))))),
         tag(":\n"),
