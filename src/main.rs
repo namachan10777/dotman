@@ -122,7 +122,7 @@ impl TaskBuilder {
     }
 }
 
-fn run(opts: Opts) -> Result<(), dotman::Error> {
+async fn run(opts: Opts) -> Result<(), dotman::Error> {
     let cache_path = format!(
         "{}/.dotfiles.cache.json",
         std::env::var("HOME")
@@ -142,9 +142,13 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
                 VerboseLevel::Compact
             };
             let cache = if let Some(scenario) = opts.scenario {
-                playbook.execute_graphicaly(false, Some(&scenario), &verbose_lebel)
+                playbook
+                    .execute_graphicaly(false, Some(&scenario), &verbose_lebel)
+                    .await
             } else {
-                playbook.execute_graphicaly(false, None, &verbose_lebel)
+                playbook
+                    .execute_graphicaly(false, None, &verbose_lebel)
+                    .await
             }?;
             let mut f = fs::File::create(cache_path).map_err(|e| {
                 dotman::Error::CannotLoadCache(format!("cannot write cache due to {:?}", e))
@@ -170,9 +174,13 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
                 VerboseLevel::Compact
             };
             let _ = if let Some(scenario) = opts.scenario {
-                playbook.execute_graphicaly(true, Some(&scenario), &verbose_lebel)
+                playbook
+                    .execute_graphicaly(true, Some(&scenario), &verbose_lebel)
+                    .await
             } else {
-                playbook.execute_graphicaly(true, None, &verbose_lebel)
+                playbook
+                    .execute_graphicaly(true, None, &verbose_lebel)
+                    .await
             }?;
             Ok(())
         }
@@ -192,9 +200,10 @@ fn run(opts: Opts) -> Result<(), dotman::Error> {
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let opts: Opts = Opts::parse();
-    match run(opts) {
+    match run(opts).await {
         Ok(()) => (),
         Err(dotman::Error::AnyScenarioDoesNotMatch) => {
             eprintln!(

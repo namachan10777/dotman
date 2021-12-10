@@ -8,6 +8,7 @@ pub struct EnvTask {
     envs: Vec<(String, Option<String>)>,
 }
 
+#[async_trait::async_trait]
 impl crate::Task for EnvTask {
     fn name(&self) -> String {
         let envs = self
@@ -27,7 +28,7 @@ impl crate::Task for EnvTask {
         }
     }
 
-    fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
+    async fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
         let mut changed = false;
         for (name, value) in &self.envs {
             if let Some(value) = value {

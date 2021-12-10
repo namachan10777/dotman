@@ -35,12 +35,13 @@ fn check_sha256(sha256: &str, data: &[u8]) -> bool {
     hex::encode(hasher.finalize()) == sha256
 }
 
+#[async_trait::async_trait]
 impl crate::Task for WgetTask {
     fn name(&self) -> String {
         format!("wget {}", self.url)
     }
 
-    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
+    async fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         let dest = resolve_liquid_template(&self.dest).map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot resolve template {} due to {:?}",
@@ -56,18 +57,17 @@ impl crate::Task for WgetTask {
                 return Ok(false);
             }
         }
-        let mut res = reqwest::blocking::get(&self.url).map_err(|e| {
+        let res = reqwest::get(&self.url).await.map_err(|e| {
             crate::TaskError::WellKnown(format!("cannot download {} due to {:?}", &self.url, e))
         })?;
-        buf.clear();
-        res.read_to_end(&mut buf).map_err(|e| {
+        let buf = res.bytes().await.map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot read response body of {} due to {:?}",
                 &self.url, e
             ))
         })?;
 
-        if !check_sha256(sha256, buf.as_slice()) {
+        if !check_sha256(sha256, buf.as_ref()) {
             return Err(crate::TaskError::WellKnown(
                 "inconsistent hash value of downloaded file".to_owned(),
             ));
@@ -80,7 +80,7 @@ impl crate::Task for WgetTask {
             ))
         })?;
         let mut writer = io::BufWriter::new(f);
-        writer.write_all(buf.as_slice()).map_err(|e| {
+        writer.write_all(buf.as_ref()).map_err(|e| {
             crate::TaskError::WellKnown(format!(
                 "cannot write response body to local file due to {:?}",
                 e

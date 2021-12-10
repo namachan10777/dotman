@@ -355,12 +355,13 @@ impl CpContext {
     }
 }
 
+#[async_trait::async_trait]
 impl crate::Task for CpTask {
     fn name(&self) -> String {
         format!("cp {} => {}", self.src, self.dest)
     }
 
-    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
+    async fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         execute_cp(
             &CpContext::extend(ctx, self.merge, self.templates.clone()),
             &self.src,

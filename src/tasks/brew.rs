@@ -84,6 +84,7 @@ fn calcurate_cache() -> Result<Cache, TaskError> {
     })
 }
 
+#[async_trait::async_trait]
 impl crate::Task for BrewTask {
     fn name(&self) -> String {
         match self {
@@ -100,13 +101,13 @@ impl crate::Task for BrewTask {
         }
     }
 
-    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
-        let packages = if ctx.cache.borrow().is_some() {
-            rmp_serde::from_read_ref(ctx.cache.borrow().as_ref().expect("already checked"))
+    async fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
+        let packages = if ctx.cache.read().await.is_some() {
+            rmp_serde::from_read_ref(ctx.cache.read().await.as_ref().expect("already checked"))
                 .map_err(|e| TaskError::Unknown(e.into()))?
         } else {
             let cache = calcurate_cache()?;
-            *ctx.cache.borrow_mut() =
+            *ctx.cache.write().await =
                 Some(rmp_serde::to_vec(&cache).map_err(|e| TaskError::Unknown(e.into()))?);
             cache
         };
