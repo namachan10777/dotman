@@ -12,8 +12,8 @@ network = ["reqwest"]
 
 [dependencies]
 anyhow = "1.0.51"
-clap = { version="3.0.0-beta.5", features=["derive"] }
-clap_generate = "3.0.0-beta.5"
+clap = { version="3.0.0-rc.3", features=["derive"] }
+clap_generate = "3.0.0-rc.3"
 duct = "0.13.5"
 hex = "0.4.3"
 hostname = "0.3.1"

@@ -13,11 +13,11 @@ struct Opts {
 
 #[derive(Parser)]
 enum Subcommand {
-    #[clap(about = "deploy dotfiles")]
+    #[clap(override_help = "deploy dotfiles")]
     Deploy(DeployOpts),
-    #[clap(about = "dry run")]
+    #[clap(override_help = "dry run")]
     DryRun(DryRunOpts),
-    #[clap(about = "generate shell completion")]
+    #[clap(override_help = "generate shell completion")]
     Completion(CompletionOpts),
 }
 
@@ -37,15 +37,11 @@ struct CompletionOpts {
 
 #[derive(Parser)]
 struct DeployOpts {
-    #[clap(index = 1, about = "specify configuration file e.g. \"dotfiles.yaml\"")]
+    #[clap(index = 1, help = "specify configuration file e.g. \"dotfiles.yaml\"")]
     config: String,
-    #[clap(long = "no-cache", about = "deploy without cache")]
+    #[clap(long = "no-cache", help = "deploy without cache")]
     no_cache: bool,
-    #[clap(
-        short,
-        long,
-        about = "specify scenario with no auto scenario detection"
-    )]
+    #[clap(short, long, help = "specify scenario with no auto scenario detection")]
     #[clap(short = 's', long = "scenario")]
     scenario: Option<String>,
     #[clap(short = 'V', long)]
@@ -54,15 +50,11 @@ struct DeployOpts {
 
 #[derive(Parser)]
 struct DryRunOpts {
-    #[clap(index = 1, about = "specify configuration file e.g. \"dotfiles.yaml\"")]
+    #[clap(index = 1, help = "specify configuration file e.g. \"dotfiles.yaml\"")]
     config: String,
-    #[clap(long = "no-cache", about = "dry-run without cache")]
+    #[clap(long = "no-cache", help = "dry-run without cache")]
     no_cache: bool,
-    #[clap(
-        short,
-        long,
-        about = "specify scenario with no auto scenario detection"
-    )]
+    #[clap(short, long, help = "specify scenario with no auto scenario detection")]
     scenario: Option<String>,
     #[clap(short = 'V', long)]
     verbose: bool,
