@@ -24,12 +24,13 @@ fn symlink(src: &Path, dest: &Path) -> io::Result<()> {
     }
 }
 
+#[async_trait::async_trait]
 impl crate::Task for LinkTask {
     fn name(&self) -> String {
         format!("link {} => {}", self.src, self.dest)
     }
 
-    fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
+    async fn execute(&self, _: &crate::TaskContext) -> crate::TaskResult {
         let src = crate::util::resolve_liquid_template(&self.src).map_err(|e| {
             crate::TaskError::WellKnown(format!("cannot resolve tasks.link.src due to {:?}", e))
         })?;

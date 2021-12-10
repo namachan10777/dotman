@@ -35,12 +35,13 @@ fn check_sha256(sha: &str, path: &Path) -> io::Result<bool> {
     Ok(hex::encode(hashed) == sha)
 }
 
+#[async_trait::async_trait]
 impl crate::Task for ShTask {
     fn name(&self) -> String {
         format!("sh \"{} {}\"", self.cmd.0, self.cmd.1.join(" "))
     }
 
-    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
+    async fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         match &self.test {
             Some((path, Some(sha256))) => {
                 let path = crate::util::resolve_liquid_template(path)

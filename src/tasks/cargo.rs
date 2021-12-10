@@ -90,6 +90,7 @@ pub struct CargoTask {
     version: Option<String>,
 }
 
+#[async_trait::async_trait]
 impl crate::Task for CargoTask {
     fn name(&self) -> String {
         if let Some(version) = &self.version {
@@ -99,9 +100,9 @@ impl crate::Task for CargoTask {
         }
     }
 
-    fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
-        let packages = if ctx.cache.borrow().is_some() {
-            rmp_serde::from_read_ref(&ctx.cache.borrow().as_ref().expect("checked").clone())
+    async fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
+        let packages = if ctx.cache.read().await.is_some() {
+            rmp_serde::from_read_ref(&ctx.cache.read().await.as_ref().expect("checked").clone())
                 .map_err(|e| TaskError::Unknown(e.into()))?
         } else {
             let output = duct::cmd("cargo", &["install", "--list"])
@@ -116,7 +117,7 @@ impl crate::Task for CargoTask {
                     "cannot parse installed cargo package information. this is bug".to_owned(),
                 )
             })?;
-            *ctx.cache.borrow_mut() =
+            *ctx.cache.write().await =
                 Some(rmp_serde::to_vec(&packages).map_err(|e| TaskError::Unknown(e.into()))?);
             packages
         };

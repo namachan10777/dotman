@@ -1,11 +1,11 @@
+use futures::stream::StreamExt;
 use regex::Regex;
-use std::cell::RefCell;
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::rc::Rc;
 use std::{collections::HashMap, path::Path};
 use std::{fmt, fs};
 use termion::color;
+use tokio::sync::RwLock;
 use yaml_rust::YamlLoader;
 
 pub mod ast;
@@ -14,12 +14,13 @@ pub mod util;
 
 use thiserror::Error;
 
+#[async_trait::async_trait]
 /// The trait of Task
 pub trait Task {
     /// return human-readable identity name.
     fn name(&self) -> String;
     /// execute with context.
-    fn execute(&self, ctx: &TaskContext) -> TaskResult;
+    async fn execute(&self, ctx: &TaskContext) -> TaskResult;
 }
 
 #[derive(Debug, Clone)]
@@ -55,6 +56,7 @@ pub enum TaskEntity {
     Brew(tasks::brew::BrewTask),
 }
 
+#[async_trait::async_trait]
 impl Task for TaskEntity {
     fn name(&self) -> String {
         match self {
@@ -68,15 +70,15 @@ impl Task for TaskEntity {
         }
     }
 
-    fn execute(&self, ctx: &TaskContext) -> TaskResult {
+    async fn execute(&self, ctx: &TaskContext) -> TaskResult {
         match self {
-            Self::Cargo(task) => task.execute(ctx),
-            Self::Cp(task) => task.execute(ctx),
-            Self::Env(task) => task.execute(ctx),
-            Self::Link(task) => task.execute(ctx),
-            Self::Sh(task) => task.execute(ctx),
-            Self::Wget(task) => task.execute(ctx),
-            Self::Brew(task) => task.execute(ctx),
+            Self::Cargo(task) => task.execute(ctx).await,
+            Self::Cp(task) => task.execute(ctx).await,
+            Self::Env(task) => task.execute(ctx).await,
+            Self::Link(task) => task.execute(ctx).await,
+            Self::Sh(task) => task.execute(ctx).await,
+            Self::Wget(task) => task.execute(ctx).await,
+            Self::Brew(task) => task.execute(ctx).await,
         }
     }
 }
@@ -118,7 +120,7 @@ impl fmt::Debug for PlayBook {
 
 /// execution context to pass to Task
 #[derive(Debug)]
-pub struct TaskContext {
+pub struct TaskContext<'a> {
     /// Base directory to execute deploy
     pub base: PathBuf,
     /// Dry-run flag
@@ -126,7 +128,7 @@ pub struct TaskContext {
     /// Selected deploy scenario
     pub scenario: String,
     /// Cache shared between same task type
-    pub cache: Rc<RefCell<Option<Vec<u8>>>>,
+    pub cache: &'a RwLock<Option<Vec<u8>>>,
 }
 
 /// Critical errors
@@ -608,7 +610,7 @@ impl PlayBook {
     }
 
     /// Utility to execute playbook graphicaly
-    pub fn execute_graphicaly(
+    pub async fn execute_graphicaly(
         &self,
         dryrun: bool,
         scenario: Option<&str>,
@@ -617,7 +619,7 @@ impl PlayBook {
         let (scenario, taskgroups) = self.deploys(scenario)?;
         let mut caches = HashMap::new();
         for task in &self.task_ids {
-            caches.insert(task, Rc::new(RefCell::new(None)));
+            caches.insert(task, RwLock::new(None));
         }
 
         let mut change_count = 0;
@@ -630,9 +632,9 @@ impl PlayBook {
                     dryrun,
                     scenario: scenario.clone(),
                     base: self.base.clone(),
-                    cache: caches.get(&id).expect("already registered").clone(),
+                    cache: caches.get(&id).expect("already registered"),
                 };
-                let result = task.execute(&ctx);
+                let result = task.execute(&ctx).await;
                 match (result, verbose_level) {
                     (Ok(true), VerboseLevel::Compact) => {
                         change_count += 1;
@@ -706,9 +708,14 @@ impl PlayBook {
                 );
             }
         }
-        Ok(caches
-            .into_iter()
-            .flat_map(|(k, v)| v.borrow().as_ref().map(|v| (k.to_owned(), v.to_owned())))
-            .collect::<HashMap<_, _>>())
+        Ok(futures::stream::iter(caches)
+            .filter_map(|(k, v)| async move {
+                v.read()
+                    .await
+                    .as_ref()
+                    .map(|v| (k.to_owned(), v.to_owned()))
+            })
+            .collect::<HashMap<_, _>>()
+            .await)
     }
 }
