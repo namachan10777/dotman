@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, path::Path};
 use std::{fmt, fs};
 use termion::color;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 use yaml_rust::YamlLoader;
 
 pub mod ast;
@@ -92,6 +92,7 @@ pub struct PlayBook {
     taskgroups: TaskGroups,
     base: PathBuf,
     task_ids: Vec<String>,
+    serialize_ids: Vec<String>,
     scenarios: Vec<Scenario>,
 }
 
@@ -508,6 +509,7 @@ pub type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 pub trait TaskBuilder {
     fn parse(key: &str, hash: &HashMap<String, ast::Value>) -> Option<Result<TaskEntity, Error>>;
     fn ids<'a>(&'a self) -> &'a [&str];
+    fn serialize_ids<'a>(&'a self) -> &'a [&str];
     fn cache(&self, key: &str) -> Option<Vec<u8>>;
 }
 
@@ -585,6 +587,11 @@ impl PlayBook {
                     Error::PlaybookLoadFailed(format!("cannot take parent of {}", config))
                 })?
                 .to_owned(),
+            serialize_ids: taskbuilders
+                .serialize_ids()
+                .iter()
+                .map(|s| (*s).to_owned())
+                .collect::<Vec<_>>(),
             scenarios,
         })
     }
@@ -622,6 +629,12 @@ impl PlayBook {
         for task in &self.task_ids {
             caches.insert(task, Arc::new(RwLock::new(None)));
         }
+        let serialize_lock = Arc::new(
+            self.serialize_ids
+                .iter()
+                .map(|id| (id.to_owned(), Mutex::new(())))
+                .collect::<HashMap<_, _>>(),
+        );
 
         let change_count = Arc::new(RwLock::new(0));
         let skip_count = Arc::new(RwLock::new(0));
@@ -636,75 +649,83 @@ impl PlayBook {
             })
             .collect::<Vec<_>>()
             .concat();
-        futures::stream::iter(tasks).for_each(|(group, id, task)| {
-            let scenario = scenario.clone();
-            let caches = caches.clone();
-            let change_count = change_count.clone();
-            let skip_count = skip_count.clone();
-            async move {
-                let task_name = task.name();
-                let ctx = TaskContext {
-                    dryrun,
-                    scenario: scenario.clone(),
-                    base: self.base.clone(),
-                    cache: caches.get(&id).expect("already registered"),
-                };
-                let result = task.execute(&ctx).await;
-                match (result, verbose_level) {
-                    (Ok(true), VerboseLevel::Compact) => {
-                        *change_count.write().await += 1;
-                        println!("[{}]", group);
-                        println!(
-                            "{}[Changed] {}{}",
-                            color::Fg(color::Yellow),
-                            color::Fg(color::White),
-                            task_name
-                        );
-                    }
-                    (Ok(false), VerboseLevel::Compact) => {
-                        *skip_count.write().await += 1;
-                    }
-                    (Ok(true), VerboseLevel::ShowAllTask) => {
-                        println!("[{}]", group);
-                        println!(
-                            "{}[Changed] {}{}",
-                            color::Fg(color::Yellow),
-                            color::Fg(color::White),
-                            task_name
-                        );
-                    }
-                    (Ok(false), VerboseLevel::ShowAllTask) => {
-                        println!("[{}]", group);
-                        println!(
-                            "{}[Ok]      {}{}",
-                            color::Fg(color::Green),
-                            color::Fg(color::LightWhite),
-                            task_name
-                        );
-                    }
-                    (Err(TaskError::WellKnown(msg)), _) => {
-                        println!("[{}]", group);
-                        println!(
-                            "{}[Failed]  {}{}",
-                            color::Fg(color::Red),
-                            color::Fg(color::Reset),
-                            task_name
-                        );
-                        println!("  -> {}", msg);
-                    }
-                    (Err(TaskError::Unknown(e)), _) => {
-                        println!("[{}]", group);
-                        println!(
-                            "{}[Failed]  {}{}",
-                            color::Fg(color::Red),
-                            color::Fg(color::Reset),
-                            task_name
-                        );
-                        println!("  -> {}", e);
+        futures::stream::iter(tasks)
+            .for_each(|(group, id, task)| {
+                let scenario = scenario.clone();
+                let caches = caches.clone();
+                let change_count = change_count.clone();
+                let skip_count = skip_count.clone();
+                let serialize_lock = serialize_lock.clone();
+                async move {
+                    let _guard = if let Some(lock) = serialize_lock.get(id) {
+                        Some(lock.lock().await)
+                    } else {
+                        None
+                    };
+                    let task_name = task.name();
+                    let ctx = TaskContext {
+                        dryrun,
+                        scenario: scenario.clone(),
+                        base: self.base.clone(),
+                        cache: caches.get(&id).expect("already registered"),
+                    };
+                    let result = task.execute(&ctx).await;
+                    match (result, verbose_level) {
+                        (Ok(true), VerboseLevel::Compact) => {
+                            *change_count.write().await += 1;
+                            println!("[{}]", group);
+                            println!(
+                                "{}[Changed] {}{}",
+                                color::Fg(color::Yellow),
+                                color::Fg(color::White),
+                                task_name
+                            );
+                        }
+                        (Ok(false), VerboseLevel::Compact) => {
+                            *skip_count.write().await += 1;
+                        }
+                        (Ok(true), VerboseLevel::ShowAllTask) => {
+                            println!("[{}]", group);
+                            println!(
+                                "{}[Changed] {}{}",
+                                color::Fg(color::Yellow),
+                                color::Fg(color::White),
+                                task_name
+                            );
+                        }
+                        (Ok(false), VerboseLevel::ShowAllTask) => {
+                            println!("[{}]", group);
+                            println!(
+                                "{}[Ok]      {}{}",
+                                color::Fg(color::Green),
+                                color::Fg(color::LightWhite),
+                                task_name
+                            );
+                        }
+                        (Err(TaskError::WellKnown(msg)), _) => {
+                            println!("[{}]", group);
+                            println!(
+                                "{}[Failed]  {}{}",
+                                color::Fg(color::Red),
+                                color::Fg(color::Reset),
+                                task_name
+                            );
+                            println!("  -> {}", msg);
+                        }
+                        (Err(TaskError::Unknown(e)), _) => {
+                            println!("[{}]", group);
+                            println!(
+                                "{}[Failed]  {}{}",
+                                color::Fg(color::Red),
+                                color::Fg(color::Reset),
+                                task_name
+                            );
+                            println!("  -> {}", e);
+                        }
                     }
                 }
-            }
-        }).await;
+            })
+            .await;
         if verbose_level == &VerboseLevel::Compact {
             if *change_count.read().await > 0 {
                 println!(

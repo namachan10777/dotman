@@ -67,6 +67,7 @@ struct Cache {
 
 struct TaskBuilder {
     ids: Vec<&'static str>,
+    serialize_ids: Vec<&'static str>,
     cache: Cache,
 }
 
@@ -99,25 +100,37 @@ impl dotman::TaskBuilder for TaskBuilder {
     fn ids(&self) -> &[&str] {
         self.ids.as_slice()
     }
+
+    fn serialize_ids(&self) -> &[&str] {
+        self.serialize_ids.as_slice()
+    }
 }
 
 impl TaskBuilder {
     fn from_cache_path<P: AsRef<Path>>(path: Option<P>) -> Self {
         let mut ids = vec!["cp", "env", "sh", "cargo", "link"];
+        let mut serialize_ids = vec!["cargo", "brew"];
         #[cfg(feature = "network")]
         ids.push("wget");
         #[cfg(target_os = "macos")]
         ids.push("brew");
+        #[cfg(target_os = "macos")]
+        serialize_ids.push("brew");
         if let Some(path) = path {
             if let Ok(f) = fs::File::open(path) {
                 if let Ok(cache) = serde_json::from_reader(f) {
-                    return Self { ids, cache };
+                    return Self {
+                        ids,
+                        cache,
+                        serialize_ids,
+                    };
                 }
             }
         };
         Self {
             cache: Cache { cargo: None },
             ids,
+            serialize_ids,
         }
     }
 }
