@@ -10,6 +10,7 @@ use nom::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tokio::process;
 
 #[derive(Debug)]
 pub enum BrewTask {
@@ -57,17 +58,29 @@ mod test_brew_list_parser {
     }
 }
 
-fn calcurate_cache() -> Result<Cache, TaskError> {
-    let output_formulae = duct::cmd("brew", &["list", "--formulae", "--versions"])
-        .read()
+async fn calcurate_cache() -> Result<Cache, TaskError> {
+    let output_formulae = process::Command::new("brew")
+        .arg("list")
+        .arg("--formula")
+        .arg("--versions")
+        .output()
+        .await
         .map_err(|_| {
-            TaskError::WellKnown("cannot fetch installed cargo package information".to_owned())
-        })?;
-    let output_cask = duct::cmd("brew", &["list", "--casks", "--versions"])
-        .read()
+            TaskError::WellKnown("cannot fetch installed brew package information".to_owned())
+        })?
+        .stdout;
+    let output_formulae = String::from_utf8_lossy(&output_formulae);
+    let output_cask = process::Command::new("brew")
+        .arg("list")
+        .arg("--casks")
+        .arg("--versions")
+        .output()
+        .await
         .map_err(|_| {
-            TaskError::WellKnown("cannot fetch installed cargo package information".to_owned())
-        })?;
+            TaskError::WellKnown("cannot fetch installed brew package information".to_owned())
+        })?
+        .stdout;
+    let output_cask = String::from_utf8_lossy(&output_cask);
     let (_, packages_formulae) = parse_brew_list(&output_formulae).map_err(|_| {
         TaskError::WellKnown(
             "cannot parse installed cargo package information. this is bug".to_owned(),
@@ -106,39 +119,51 @@ impl crate::Task for BrewTask {
             rmp_serde::from_read_ref(ctx.cache.read().await.as_ref().expect("already checked"))
                 .map_err(|e| TaskError::Unknown(e.into()))?
         } else {
-            let cache = calcurate_cache()?;
+            let cache = calcurate_cache().await?;
             *ctx.cache.write().await =
                 Some(rmp_serde::to_vec(&cache).map_err(|e| TaskError::Unknown(e.into()))?);
             cache
         };
         let cmd = match self {
             BrewTask::Cask { name, ver } => match (ver, packages.casks.get(name)) {
-                (Some(ver), Some(ver_)) if ver != ver_ => Some(duct::cmd(
-                    "brew",
-                    &["install", "--casks", &format!("{}@{}", name, ver)],
-                )),
-                (Some(ver), None) => Some(duct::cmd(
-                    "brew",
-                    &["install", "--casks", &format!("{}@{}", name, ver)],
-                )),
-                (None, None) => Some(duct::cmd("brew", &["install", "--casks", name])),
+                (Some(ver), Some(ver_)) if ver != ver_ => Some(
+                    process::Command::new("brew")
+                        .args(&["install", "--casks", &format!("{}@{}", name, ver)])
+                        .output(),
+                ),
+                (Some(ver), None) => Some(
+                    process::Command::new("brew")
+                        .args(&["install", "--casks", &format!("{}@{}", name, ver)])
+                        .output(),
+                ),
+                (None, None) => Some(
+                    process::Command::new("brew")
+                        .args(&["install", "--casks", name])
+                        .output(),
+                ),
                 (_, _) => None,
             },
             BrewTask::Formulae { name, ver } => match (ver, packages.formulae.get(name)) {
-                (Some(ver), Some(ver_)) if ver != ver_ => Some(duct::cmd(
-                    "brew",
-                    &["install", &format!("{}@{}", name, ver)],
-                )),
-                (Some(ver), None) => Some(duct::cmd(
-                    "brew",
-                    &["install", &format!("{}@{}", name, ver)],
-                )),
-                (None, None) => Some(duct::cmd("brew", &["install", name])),
+                (Some(ver), Some(ver_)) if ver != ver_ => Some(
+                    process::Command::new("brew")
+                        .args(&["install", &format!("{}@{}", name, ver)])
+                        .output(),
+                ),
+                (Some(ver), None) => Some(
+                    process::Command::new("brew")
+                        .args(&["install", &format!("{}@{}", name, ver)])
+                        .output(),
+                ),
+                (None, None) => Some(
+                    process::Command::new("brew")
+                        .args(&["install", name])
+                        .output(),
+                ),
                 (_, _) => None,
             },
         };
         if let Some(cmd) = cmd {
-            cmd.read().map_err(|e| {
+            cmd.await.map_err(|e| {
                 TaskError::WellKnown(format!(
                     "cannot install package {} due to {:?}",
                     self.name(),

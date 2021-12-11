@@ -2,7 +2,7 @@
 use sha2::Digest;
 use std::collections::HashMap;
 use std::path::Path;
-use tokio::{fs, io, io::AsyncReadExt};
+use tokio::{fs, io, io::AsyncReadExt, process};
 
 use crate::{TaskEntity, TaskError};
 
@@ -55,8 +55,10 @@ impl crate::Task for ShTask {
                 {
                     Ok(false)
                 } else {
-                    duct::cmd(&self.cmd.0, &self.cmd.1)
-                        .read()
+                    process::Command::new(&self.cmd.0)
+                        .args(&self.cmd.1)
+                        .output()
+                        .await
                         .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
                     if !check_sha256(sha256, Path::new(&path))
                         .await
@@ -76,8 +78,10 @@ impl crate::Task for ShTask {
                 if fs::metadata(&path).await.is_ok() {
                     return Ok(false);
                 }
-                duct::cmd(&self.cmd.0, &self.cmd.1)
-                    .read()
+                process::Command::new(&self.cmd.0)
+                    .args(&self.cmd.1)
+                    .output()
+                    .await
                     .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
                 if fs::metadata(&path).await.is_ok() {
                     Ok(false)
@@ -89,8 +93,10 @@ impl crate::Task for ShTask {
                 }
             }
             None => {
-                duct::cmd(&self.cmd.0, &self.cmd.1)
-                    .read()
+                process::Command::new(&self.cmd.0)
+                    .args(&self.cmd.1)
+                    .output()
+                    .await
                     .map_err(|e| crate::TaskError::WellKnown(format!("sh error {:?}", e)))?;
                 Ok(true)
             }

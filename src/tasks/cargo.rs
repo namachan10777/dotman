@@ -10,6 +10,7 @@ use nom::{
     IResult,
 };
 use std::collections::HashMap;
+use tokio::process;
 
 type Package = (String, String);
 type Packages = HashMap<String, String>;
@@ -98,13 +99,18 @@ impl crate::Task for CargoTask {
             rmp_serde::from_read_ref(&ctx.cache.read().await.as_ref().expect("checked").clone())
                 .map_err(|e| TaskError::Unknown(e.into()))?
         } else {
-            let output = duct::cmd("cargo", &["install", "--list"])
-                .read()
+            let output = process::Command::new("cargo")
+                .arg("install")
+                .arg("--list")
+                .output()
+                .await
                 .map_err(|_| {
                     TaskError::WellKnown(
                         "cannot fetch installed cargo package information".to_owned(),
                     )
-                })?;
+                })?
+                .stdout;
+            let output = String::from_utf8_lossy(&output);
             let (_, packages) = parse_cargo_install_list(&output).map_err(|_| {
                 TaskError::WellKnown(
                     "cannot parse installed cargo package information. this is bug".to_owned(),
@@ -117,8 +123,10 @@ impl crate::Task for CargoTask {
         match &self.version {
             Some(version) => {
                 if packages.get(&self.package) != Some(version) {
-                    duct::cmd("cargo", &["install", &self.package, "--version", version])
-                        .read()
+                    process::Command::new("cargo")
+                        .args(&["install", &self.package, "--version", version])
+                        .output()
+                        .await
                         .map_err(|e| {
                             TaskError::WellKnown(format!(
                                 "cannot install package {}:{} due to {:?}",
@@ -134,8 +142,10 @@ impl crate::Task for CargoTask {
                 if packages.contains_key(&self.package) {
                     Ok(false)
                 } else {
-                    duct::cmd("cargo", &["install", &self.package])
-                        .read()
+                    process::Command::new("cargo")
+                        .args(&["install", &self.package])
+                        .output()
+                        .await
                         .map_err(|e| {
                             TaskError::WellKnown(format!(
                                 "cannot install package {} due to {:?}",
