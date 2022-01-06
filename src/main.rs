@@ -200,15 +200,15 @@ async fn run(opts: Opts) -> Result<(), dotman::Error> {
         }
         Subcommand::Completion(completion_opts) => {
             let target = match completion_opts.shell.as_str() {
-                "fish" => clap_generate::Shell::Fish,
-                "zsh" => clap_generate::Shell::Zsh,
-                "bash" => clap_generate::Shell::Bash,
-                "powershell" => clap_generate::Shell::PowerShell,
-                "elvish" => clap_generate::Shell::Elvish,
+                "fish" => clap_complete::Shell::Fish,
+                "zsh" => clap_complete::Shell::Zsh,
+                "bash" => clap_complete::Shell::Bash,
+                "powershell" => clap_complete::Shell::PowerShell,
+                "elvish" => clap_complete::Shell::Elvish,
                 _ => unreachable!(),
             };
             use clap::IntoApp;
-            clap_generate::generate(target, &mut Opts::into_app(), "dotman", &mut io::stdout());
+            clap_complete::generate(target, &mut Opts::into_app(), "dotman", &mut io::stdout());
             Ok(())
         }
     }
