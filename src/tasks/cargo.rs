@@ -124,7 +124,7 @@ impl crate::Task for CargoTask {
             Some(version) => {
                 if packages.get(&self.package) != Some(version) {
                     process::Command::new("cargo")
-                        .args(&["install", &self.package, "--version", version])
+                        .args(["install", &self.package, "--version", version])
                         .output()
                         .await
                         .map_err(|e| {
@@ -143,7 +143,7 @@ impl crate::Task for CargoTask {
                     Ok(false)
                 } else {
                     process::Command::new("cargo")
-                        .args(&["install", &self.package])
+                        .args(["install", &self.package])
                         .output()
                         .await
                         .map_err(|e| {

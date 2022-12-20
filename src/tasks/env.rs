@@ -35,7 +35,7 @@ impl crate::Task for EnvTask {
                 let value = resolve_liquid_template(value).map_err(|_| {
                     crate::TaskError::WellKnown(format!("cannot resolve env value {}", value))
                 })?;
-                match env::var(&name) {
+                match env::var(name) {
                     Ok(s) => {
                         changed |= s != value;
                     }
@@ -47,7 +47,7 @@ impl crate::Task for EnvTask {
                     }
                 }
                 env::set_var(name, value);
-            } else if Err(env::VarError::NotPresent) != env::var(&name) {
+            } else if Err(env::VarError::NotPresent) != env::var(name) {
                 env::remove_var(name);
                 changed = true;
             }

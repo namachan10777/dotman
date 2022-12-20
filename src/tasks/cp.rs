@@ -67,7 +67,7 @@ async fn file_table(
         } else {
             FileType::Other(src_descendant.to_owned())
         };
-        let stripped = src_descendant.strip_prefix(&Path::new(src))?.to_owned();
+        let stripped = src_descendant.strip_prefix(Path::new(src))?.to_owned();
         if is_target_root(&stripped) {
             hash.insert(
                 src_descendant,
@@ -87,7 +87,7 @@ async fn file_table(
         } else {
             FileType::Other(dest_descendant.to_owned())
         };
-        let stripped = dest_descendant.strip_prefix(&Path::new(dest))?.to_owned();
+        let stripped = dest_descendant.strip_prefix(Path::new(dest))?.to_owned();
         if is_target_root(&stripped) {
             hash.entry(src.to_owned())
                 .and_modify(|pair| *pair = (pair.0.clone(), dest_filetype.clone()))

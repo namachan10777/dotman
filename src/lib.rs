@@ -368,17 +368,14 @@ fn match_scenario<'a>(
     scenarios: &'a [Scenario],
     node_info: &NodeInformation,
 ) -> Option<&'a Scenario> {
-    for scenario in scenarios {
-        if scenario.matches.iter().all(|matcher| match matcher {
+    scenarios.iter().find(|&scenario| {
+        scenario.matches.iter().all(|matcher| match matcher {
             TargetMatcher::HostName(_, hostname_re) => {
                 hostname_re.is_match(&node_info.hostname.to_string_lossy())
             }
             TargetMatcher::Root(is_root) => *is_root == node_info.root,
-        }) {
-            return Some(scenario);
-        }
-    }
-    None
+        })
+    })
 }
 
 #[cfg(test)]
@@ -508,12 +505,12 @@ pub type Stats = Vec<(String, Vec<(String, TaskResult)>)>;
 
 pub trait TaskBuilder {
     fn parse(key: &str, hash: &HashMap<String, ast::Value>) -> Option<Result<TaskEntity, Error>>;
-    fn ids<'a>(&'a self) -> &'a [&str];
-    fn serialize_ids<'a>(&'a self) -> &'a [&str];
+    fn ids(&self) -> &[&str];
+    fn serialize_ids(&self) -> &[&str];
     fn cache(&self, key: &str) -> Option<Vec<u8>>;
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VerboseLevel {
     Compact,
     ShowAllTask,

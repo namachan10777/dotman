@@ -143,7 +143,7 @@ mod test {
             "d" => 4,
         };
         let mut not_allowed = not_allowed_member(&map, &[&"a", &"c"]);
-        not_allowed.sort_by(|(k1, _), (k2, _)| k1.cmp(&k2));
+        not_allowed.sort_by(|(k1, _), (k2, _)| k1.cmp(k2));
 
         assert_eq!(not_allowed, vec![(&"b", &2), (&"d", &4)]);
     }

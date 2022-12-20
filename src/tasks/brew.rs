@@ -128,17 +128,17 @@ impl crate::Task for BrewTask {
             BrewTask::Cask { name, ver } => match (ver, packages.casks.get(name)) {
                 (Some(ver), Some(ver_)) if ver != ver_ => Some(
                     process::Command::new("brew")
-                        .args(&["install", "--casks", &format!("{}@{}", name, ver)])
+                        .args(["install", "--casks", &format!("{}@{}", name, ver)])
                         .output(),
                 ),
                 (Some(ver), None) => Some(
                     process::Command::new("brew")
-                        .args(&["install", "--casks", &format!("{}@{}", name, ver)])
+                        .args(["install", "--casks", &format!("{}@{}", name, ver)])
                         .output(),
                 ),
                 (None, None) => Some(
                     process::Command::new("brew")
-                        .args(&["install", "--casks", name])
+                        .args(["install", "--casks", name])
                         .output(),
                 ),
                 (_, _) => None,
@@ -146,17 +146,17 @@ impl crate::Task for BrewTask {
             BrewTask::Formulae { name, ver } => match (ver, packages.formulae.get(name)) {
                 (Some(ver), Some(ver_)) if ver != ver_ => Some(
                     process::Command::new("brew")
-                        .args(&["install", &format!("{}@{}", name, ver)])
+                        .args(["install", &format!("{}@{}", name, ver)])
                         .output(),
                 ),
                 (Some(ver), None) => Some(
                     process::Command::new("brew")
-                        .args(&["install", &format!("{}@{}", name, ver)])
+                        .args(["install", &format!("{}@{}", name, ver)])
                         .output(),
                 ),
                 (None, None) => Some(
                     process::Command::new("brew")
-                        .args(&["install", name])
+                        .args(["install", name])
                         .output(),
                 ),
                 (_, _) => None,
