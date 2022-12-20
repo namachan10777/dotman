@@ -12,7 +12,7 @@ network = ["reqwest"]
 
 [dependencies]
 anyhow = "1.0.52"
-async-trait = "0.1.52"
+async-trait = "0.1.60"
 clap = { version="3.0.10", features=["derive"] }
 clap_complete = "3.0.2"
 futures = "0.3.19"
