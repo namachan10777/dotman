@@ -167,7 +167,8 @@ async fn run(opts: Opts) -> Result<(), dotman::Error> {
             let mut f = fs::File::create(cache_path).map_err(|e| {
                 dotman::Error::CannotLoadCache(format!("cannot write cache due to {:?}", e))
             })?;
-            let cargo_cache = rmp_serde::from_read_ref(&cache.get("cargo").unwrap()).unwrap();
+            let cargo_cache =
+                rmp_serde::from_read(io::Cursor::new(&cache.get("cargo").unwrap())).unwrap();
             let cache = Cache { cargo: cargo_cache };
             let writer = io::BufWriter::new(&mut f);
             serde_json::to_writer_pretty(writer, &cache).map_err(|e| {
