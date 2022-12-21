@@ -9,7 +9,7 @@ use nom::{
     IResult,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, io};
 use tokio::process;
 
 #[derive(Debug)]
@@ -116,8 +116,10 @@ impl crate::Task for BrewTask {
 
     async fn execute(&self, ctx: &crate::TaskContext) -> crate::TaskResult {
         let packages = if ctx.cache.read().await.is_some() {
-            rmp_serde::from_read_ref(ctx.cache.read().await.as_ref().expect("already checked"))
-                .map_err(|e| TaskError::Unknown(e.into()))?
+            rmp_serde::from_read(io::Cursor::new(
+                ctx.cache.read().await.as_ref().expect("already checked"),
+            ))
+            .map_err(|e| TaskError::Unknown(e.into()))?
         } else {
             let cache = calcurate_cache().await?;
             *ctx.cache.write().await =
