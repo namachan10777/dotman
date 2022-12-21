@@ -2,7 +2,7 @@
 use futures::future::BoxFuture;
 use futures::stream::StreamExt;
 use futures::FutureExt;
-use kstring::KString;
+use kstring::KStringBase;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -355,7 +355,7 @@ impl CpContext {
             .map(|(target, mut object)| {
                 if !object.contains_key("_scenario") {
                     object.insert(
-                        KString::from_static("_scenario"),
+                        KStringBase::from_static("_scenario"),
                         liquid::model::Value::scalar(ctx.scenario.clone()),
                     );
                 }
@@ -435,11 +435,12 @@ fn parse_cp_templates(
         })?
         .iter()
         .map(|(name, val)| {
-            let name = KString::from_string(name.to_owned());
+            let name = KStringBase::from_string(name.to_owned());
             match val {
-                crate::ast::Value::Str(str) => {
-                    context.insert(name, liquid::model::Value::scalar(str.to_owned()))
-                }
+                crate::ast::Value::Str(str) => context.insert(
+                    KStringBase::from(str),
+                    liquid::model::Value::scalar(str.to_owned()),
+                ),
                 crate::ast::Value::Int(int) => {
                     context.insert(name, liquid::model::Value::scalar(*int))
                 }
