@@ -51,7 +51,7 @@ jobs:
           args: --release --target ${{ matrix.target }} --features "${{ matrix.features }}" --verbose
 
       - name: UPX GitHub Action
-        uses: crazy-max/ghaction-upx@v1.5.0 
+        uses: crazy-max/ghaction-upx@v2.1.0 
         with:
           files: |-
             target/${{ matrix.target }}/release/dotman
