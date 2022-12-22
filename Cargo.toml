@@ -13,8 +13,8 @@ network = ["reqwest"]
 [dependencies]
 anyhow = "1.0.68"
 async-trait = "0.1.60"
-clap = { version="3.2.23", features=["derive"] }
-clap_complete = "3.2.5"
+clap = { version="4.0.30", features=["derive"] }
+clap_complete = "4.0.6"
 futures = "0.3.25"
 hex = "0.4.3"
 hostname = "0.3.1"

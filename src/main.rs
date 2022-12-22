@@ -1,4 +1,5 @@
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::Shell;
 use dotman::VerboseLevel;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -6,6 +7,7 @@ use std::path::Path;
 use std::{fs, io, process};
 use termion::color;
 #[derive(Parser)]
+#[command(name = "dotman")]
 struct Opts {
     #[clap(subcommand)]
     subcmd: Subcommand,
@@ -23,16 +25,8 @@ enum Subcommand {
 
 #[derive(Parser)]
 struct CompletionOpts {
-    #[clap(
-        short,
-        long,
-        possible_value = "fish",
-        possible_value = "zsh",
-        possible_value = "bash",
-        possible_value = "elvish",
-        possible_value = "powershell"
-    )]
-    shell: String,
+    #[clap(short, long)]
+    shell: Shell,
 }
 
 #[derive(Parser)]
@@ -200,16 +194,10 @@ async fn run(opts: Opts) -> Result<(), dotman::Error> {
             Ok(())
         }
         Subcommand::Completion(completion_opts) => {
-            let target = match completion_opts.shell.as_str() {
-                "fish" => clap_complete::Shell::Fish,
-                "zsh" => clap_complete::Shell::Zsh,
-                "bash" => clap_complete::Shell::Bash,
-                "powershell" => clap_complete::Shell::PowerShell,
-                "elvish" => clap_complete::Shell::Elvish,
-                _ => unreachable!(),
-            };
-            use clap::IntoApp;
-            clap_complete::generate(target, &mut Opts::into_app(), "dotman", &mut io::stdout());
+            let generator = completion_opts.shell;
+            let mut cmd = Opts::command();
+            let name = cmd.get_name().to_string();
+            clap_complete::generate(generator, &mut cmd, name, &mut io::stdout());
             Ok(())
         }
     }
