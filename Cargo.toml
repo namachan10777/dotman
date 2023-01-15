@@ -14,7 +14,7 @@ network = ["reqwest"]
 anyhow = "1.0.68"
 async-trait = "0.1.61"
 clap = { version="4.1.1", features=["derive"] }
-clap_complete = "4.0.7"
+clap_complete = "4.1.0"
 futures = "0.3.25"
 hex = "0.4.3"
 hostname = "0.3.1"
